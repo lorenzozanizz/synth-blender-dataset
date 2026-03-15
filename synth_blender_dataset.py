@@ -12,6 +12,11 @@ Features:
 - Batch render images automatically
 - Export datasets for computer vision pipelines (YOLO)
 
+
+GitHub: https://github.com/lorenzozanizz/synth-blender-dataset
+Documentation: https://github.com/lorenzozanizz/synth-blender-dataset/wiki
+
+
 Version: 1.0.0
 Blender: 4.x
 License: MIT
@@ -19,7 +24,7 @@ License: MIT
 
 bl_info  = {
     "name": "Random Dataset Generator",
-    "author": "Your Name",
+    "author": "lorenzozanizz",
     "version": (1, 0, 0),
     "blender": (4, 5, 0),
     "location": "Sidebar > Randomizer",
@@ -27,6 +32,22 @@ bl_info  = {
     "category": "Render",
 }
 
+import logging
+
+# Immediately define the logger at the module level, this module is
+# to be shared by all operations.
+logger = None
+current_log_file: str = ""
+
+import subprocess
+import platform
+import os
+
+from abc import ABC, abstractmethod
+from enum import Enum
+from datetime import datetime
+
+# Bpy imports
 import bpy
 from bpy.props import StringProperty, IntProperty, BoolProperty, EnumProperty
 
@@ -58,6 +79,7 @@ class RandomizerPanel(bpy.types.Panel):
     bl_idname = panel_conflict_rename("random_dataset")
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
+    bl_order = 0
 
     def draw(self, context):
 
@@ -95,10 +117,10 @@ class RegistrationPanel(bpy.types.Panel):
     bl_options = { 'DEFAULT_CLOSED' }
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-
+    bl_order = 1
     def draw(self, _context):
         # Currently Empty
-        _a = NotImplemented
+        layout = self.layout
 
 
 class InfoPanel(bpy.types.Panel):
@@ -113,7 +135,7 @@ class InfoPanel(bpy.types.Panel):
     bl_options = { 'DEFAULT_CLOSED' }
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-
+    bl_order = 3
     def draw(self, _context):
         layout = self.layout
 
@@ -137,7 +159,130 @@ class InfoPanel(bpy.types.Panel):
         op = row.operator("wm.url_open", text="Documentation", icon='FILE_FOLDER')
         op.url = "https://github.com/lorenzozanizz/synth-blender-dataset/wiki"
 
+
+class OpenLogsOperator(bpy.types.Operator):
+    """Open the log file in default editor"""
+    bl_idname = "randomizer.open_log_file"
+    bl_label = "Open Log File"
+
+    def execute(self, context):
+        global current_log_file
+
+        if not os.path.exists(current_log_file):
+            self.report({'ERROR'}, "Log file does not exist.")
+            return { 'CANCELLED' }
+
+        # Open file with default app
+        try:
+            if platform.system() == "Windows":
+                os.startfile(current_log_file)
+            elif platform.system() == "Darwin":  # macOS
+                subprocess.Popen(["open", current_log_file])
+            else:  # Linux
+                subprocess.Popen(["xdg-open", current_log_file])
+
+        except Exception as e:
+            self.report({ 'ERROR' }, f"Could not open log file: {e}")
+
+        return { 'FINISHED' }
+
+
+class SettingsPanel(bpy.types.Panel):
+    """ The main panel for the randomizer class, containing the hooks for the
+    configuration file, the saving file, the amount of samples, the seed for the
+    random generators, the prefix to the save files, the label save format
+    """
+
+    bl_label = "Settings"
+    bl_category = PANEL_CATEGORY
+    bl_idname = panel_conflict_rename("random_settings")
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_options = { 'DEFAULT_CLOSED' }
+    bl_order = 2
+
+    def draw(self, context):
+        layout = self.layout
+        scene = context.scene
+        # Title
+        row = layout.row(align=True)
+        row.label(text="Logging", icon='GREASEPENCIL')
+
+        row.prop(scene, "randomizer_enable_logging")
+
+        box = layout.box()
+        box.enabled = scene.randomizer_enable_logging
+        box.prop(scene, "randomizer_logging_path")
+        row = box.row(align=True)
+        row.operator("randomizer.open_log_file", text="Open logs", icon="KEY_MENU")
+
+        row.operator("randomizer.setup_log", text="Save path", icon="FILE_TICK")
+        layout.separator()
+
+def setup_logger_from_scene(context):
+    """ Setup logger using scene property """
+    global logger
+    global current_log_file
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    log_path = os.path.join(context.scene.randomizer_logging_path, f"logs_{timestamp}.txt")
+    current_log_file = log_path
+
+    # Remove existing handlers
+    if logger:
+        for handler in logger.handlers[:]:
+            logger.removeHandler(handler)
+
+    logger = logging.getLogger("default_logger")
+    logger.setLevel(logging.DEBUG)
+
+    try:
+        os.makedirs(os.path.dirname(log_path), exist_ok=True)
+
+        file_handler = logging.FileHandler(log_path)
+        file_handler.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter(
+            '%(asctime)s - [%(levelname)s] - %(message)s'
+        )
+        file_handler.setFormatter(formatter)
+        logger.addHandler(file_handler)
+
+        console_handler = logging.StreamHandler()
+        console_handler.setFormatter(formatter)
+        logger.addHandler(console_handler)
+
+        logger.info(f"Completed logger setup: {log_path}")
+        return True
+
+    except Exception as e:
+        context.report({'ERROR'}, f"Could not setup logger: {e}")
+        return False
+
+
+class ApplyLogPathOperator(bpy.types.Operator):
+    bl_idname = "randomizer.setup_log"
+    bl_label = "Apply Log Path"
+
+    def execute(self, context):
+        if setup_logger_from_scene(context):
+            self.report({'INFO'}, "Logger updated!")
+            return { 'FINISHED' }
+        else:
+            self.report({'ERROR'}, "Failed to update logger")
+            return { 'CANCELLED' }
+
+
+
 # ------------------------= SAMPLING DATA STRUCTURES =-----------------------
+
+RECOGNIZED_DISTRIBUTIONS = ("normal", "poisson", "uniform", "gamma", "custom")
+
+class DistributionType(Enum):
+    NORMAL = 0
+    POISSON = 1
+    UNIFORM = 2
+    CUSTOM = 4
 
 
 # ------------------------= SAMPLE GENERATION OPERATOR =-----------------------
@@ -150,17 +295,33 @@ class RandomizerGenerateOperator(bpy.types.Operator):
     bl_options = { 'REGISTER', 'UNDO' }
 
     def execute(self, context):
-      raise NotImplementedError
+        """Get all selected nodes"""
+
+        selected = []
+        for area in context.screen.areas:
+            if area.type == 'NODE_EDITOR':
+                space = area.spaces.active
+                if space.node_tree:
+                    for node in space.node_tree.nodes:
+                        if node.select:
+                            selected.append(node)
+
+        scene = context.scene
+        config_path = scene.randomizer_config_path
+
+        return selected
 
 # ------------------------= BLENDER PANEL GUI CONSTANTS =-----------------------
 
 registration_classes = (
-    RandomizerPanel, RandomizerGenerateOperator, RegistrationPanel, InfoPanel
+    RandomizerPanel, RegistrationPanel, SettingsPanel, InfoPanel,
+    OpenLogsOperator, ApplyLogPathOperator, RandomizerGenerateOperator
 )
 
 registration_properties = (
     "randomizer_config_path", "randomizer_destination_path", "randomizer_append_checkbox",
-    "randomizer_save_prefix", "randomizer_seed", "randomizer_amount", "randomizer_label_format"
+    "randomizer_save_prefix", "randomizer_seed", "randomizer_amount", "randomizer_label_format",
+    "randomizer_enable_logging", "randomizer_logging_path",
 )
 
 visual_gui_properties = {
@@ -175,7 +336,7 @@ visual_gui_properties = {
         description="Save folder destination"
     ),
     "randomizer_append_checkbox": BoolProperty(
-        name="Start counter from last number",
+        name="Initialize counter to last number",
         default=True,
         description="Start numbering at the last identified number in the destination folder",
     ),
@@ -198,6 +359,17 @@ visual_gui_properties = {
     "randomizer_label_format": EnumProperty(
         name="Label Format",
         items=[("YOLO", "YOLO", "Export labels in YOLO format")]
+    ),
+    "randomizer_logging_path": StringProperty(
+        name="Log Path",
+        subtype='FILE_PATH',
+        description="Path where addon logs will be saved",
+        default=os.path.expanduser("~/logs/")
+    ),
+    "randomizer_enable_logging": BoolProperty(
+        name="Enable Logging",
+        default=False,
+        description="Enable Logging"
     )
 }
 
