@@ -33,6 +33,8 @@ from .pipeline import classes as pipe_classes
 from .pipeline import properties as pipeline_properties
 from .ui import properties as ui_properties
 
+from .utils.logger import UniqueLogger
+
 import bpy
 from nodeitems_utils import register_node_categories, unregister_node_categories
 
@@ -86,3 +88,5 @@ def unregister():
     # Unregister all previously registered classes
     for cls in reversed(registration_classes):
         bpy.utils.unregister_class(cls)
+
+    UniqueLogger.cleanup()

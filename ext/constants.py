@@ -6,7 +6,7 @@
 prefix_ext_conflict_rename = lambda name: "synth_blender_dataset_" + name
 panel_conflict_rename = lambda name: "VIEW3D_PT_" + name
 
-MAIN_PANEL_NAME = "Synthetic Dataset Generator"
+MAIN_PANEL_NAME = "Generator"
 PANEL_CATEGORY  = "Synthetic"
 
 REPO_URL = "https://github.com/lorenzozanizz/synth-blender-dataset"

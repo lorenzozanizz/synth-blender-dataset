@@ -1,14 +1,12 @@
 import os
 import json
-import os.path as path
-from datetime import datetime
-import logging
 import platform
 import subprocess
 
 from bpy.types import Operator
 from bpy.props import StringProperty
 
+from ..utils.logger import UniqueLogger
 
 class LoadPipelineOperator(Operator):
 
@@ -72,66 +70,48 @@ class OpenLogsOperator(Operator):
     bl_label = "Open Log File"
 
     def execute(self, _context):
-        global current_log_file
+        """
 
-        if not os.path.exists(current_log_file):
-            self.report({'ERROR'}, "Log file does not exist.")
+        :param _context:
+        :return:
+        """
+
+        if not UniqueLogger.available():
+            self.report({ 'ERROR' }, "Log file does not exist.")
             return { 'CANCELLED' }
 
         # Open file with default app
+        log_path = UniqueLogger.get_path()
         try:
             if platform.system() == "Windows":
-                os.startfile(current_log_file)
+                os.startfile(log_path)
+            # https://wenku.csdn.net/answer/3pg0xo8hc0
             elif platform.system() == "Darwin":  # macOS
-                subprocess.Popen(["open", current_log_file])
+                subprocess.Popen(["open", log_path])
             else:  # Linux
-                subprocess.Popen(["xdg-open", current_log_file])
+                subprocess.Popen(["xdg-open", log_path])
 
         except Exception as e:
-            self.report({ 'ERROR' }, f"Could not open log file: {e}")
+            self.report({ 'ERROR' }, f"Could not open log file: {e}.")
 
         return { 'FINISHED' }
 
 
 
-def setup_logger_from_scene(context):
+def setup_logger_from_scene(context) -> bool:
     """ Setup logger using scene property """
-    global logger
-    global current_log_file
-
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    log_path = os.path.join(context.scene.randomizer_logging_path, f"logs_{timestamp}.txt")
-    current_log_file = log_path
-
-    # Remove existing handlers
-    if logger:
-        for handler in logger.handlers[:]:
-            logger.removeHandler(handler)
-
-    logger = logging.getLogger("default_logger")
-    logger.setLevel(logging.DEBUG)
 
     try:
-        os.makedirs(os.path.dirname(log_path), exist_ok=True)
-
-        file_handler = logging.FileHandler(log_path)
-        file_handler.setLevel(logging.DEBUG)
-
-        formatter = logging.Formatter(
-            '%(asctime)s - [%(levelname)s] - %(message)s'
-        )
-        file_handler.setFormatter(formatter)
-        logger.addHandler(file_handler)
-
-        console_handler = logging.StreamHandler()
-        console_handler.setFormatter(formatter)
-        logger.addHandler(console_handler)
-
-        logger.info(f"Completed logger setup: {log_path}")
+        # Clean up the previous logger, e.g. generate a new writing path
+        UniqueLogger.cleanup()
+        # Now set up the new logger which sets multiple logger variables (the path,
+        # the availability of the logger with UniqueLogger.available()
+        directory = context.scene.randomizer_logging_path
+        UniqueLogger.initialize_logging(directory)
         return True
 
     except Exception as e:
-        context.report({'ERROR'}, f"Could not setup logger: {e}")
+        context.report({ 'ERROR' }, f"Could not setup logger: {e}.")
         return False
 
 
@@ -140,6 +120,11 @@ class ApplyLogPathOperator(Operator):
     bl_label = "Apply Log Path"
 
     def execute(self, context):
+        """
+
+        :param context:
+        :return:
+        """
         if setup_logger_from_scene(context):
             self.report({'INFO'}, "Logger updated!")
             return { 'FINISHED' }

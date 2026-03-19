@@ -3,7 +3,7 @@ from ..constants import DISTRO_EDITOR_NAME
 from bpy.types import Node, NodeTree, NodeSocket
 from nodeitems_utils import NodeCategory
 
-from bpy.props import StringProperty, EnumProperty, FloatProperty
+from bpy.props import StringProperty, EnumProperty, FloatProperty, IntProperty
 
 
 class DistributionSocket(NodeSocket):
@@ -13,9 +13,8 @@ class DistributionSocket(NodeSocket):
     def draw_color(self, context, node):
         return (1.0, 0.8, 0.0, 1.0)
 
-    def  draw(sef, context, layout, node, text):
+    def  draw(self, context, layout, node, text):
         pass
-
 
 
 class DistributionNodeTree(NodeTree):
@@ -34,7 +33,7 @@ class DistributionRootNode(Node):
         return ntree.bl_idname == 'DistributionNodeTree'
 
     def init(self, context):
-        self.outputs.new("DistributionSocket", "Out")
+        self.inputs.new("DistributionSocket", "Out")
 
 
 class DistributionConstantNode(Node):
@@ -42,12 +41,14 @@ class DistributionConstantNode(Node):
     bl_label = "Constant"
     bl_icon = "NODETREE"
 
+    value: FloatProperty(name="Value", default=1)  # type: ignore
+
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'DistributionNodeTree'
 
     def init(self, context):
-        self.inputs.new("DistributionSocket", "Out")
+        self.outputs.new("DistributionSocket", "Out")
 
 
 class DistributionSelectorNode(Node):
@@ -55,12 +56,16 @@ class DistributionSelectorNode(Node):
     bl_label = 'Selector'
     bl_icon = 'NODETREE'
 
+    num_inputs: IntProperty(name="Fan in", default=2) # type: ignore
+
     @classmethod
     def poll(cls, ntree):
         return ntree.bl_idname == 'DistributionNodeTree'
 
     def init(self, context):
         self.outputs.new('DistributionSocket', 'Out')
+        self.inputs.new('DistributionSocket', 'One')
+        self.inputs.new('DistributionSocket', 'Two')
 
     def draw_buttons(self, context, layout):
         pass
