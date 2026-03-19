@@ -31,6 +31,7 @@ from .distribution import node_categories
 from .pipeline import classes as pipe_classes
 
 from .pipeline import properties as pipeline_properties
+from .pipeline import register_handlers, unregister_handlers
 from .ui import properties as ui_properties
 
 from .utils.logger import UniqueLogger
@@ -73,7 +74,7 @@ def register():
         setattr(bpy.types.Scene, prop_name, prop_value)
 
     register_node_categories(NODE_CATEGORIES_NAME, node_categories)
-
+    register_handlers()
 
 def unregister():
     """ Unregister the classes and properties for the GUI extension
@@ -90,3 +91,4 @@ def unregister():
         bpy.utils.unregister_class(cls)
 
     UniqueLogger.cleanup()
+    unregister_handlers()

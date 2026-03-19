@@ -121,6 +121,11 @@ class UniqueLogger:
             logger.info(f"Completed: {name} ({duration:.2f}s)")
 
     @staticmethod
+    def quick_log(text: str):
+        logger = UniqueLogger.get_logger("default")
+        logger.info(text)
+
+    @staticmethod
     def cleanup():
         """Clean up logging on addon unload."""
 

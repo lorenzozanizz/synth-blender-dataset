@@ -1,12 +1,20 @@
 from ..constants import PANEL_CATEGORY, panel_conflict_rename
+from ..pipeline.registry import OperationRegistry
+from ..pipeline.data import PipeNames
+from ..utils.logger import UniqueLogger
 
 from bpy.types import Panel, UIList, Menu
 from bpy.props import StringProperty, EnumProperty
 
 
 pipe_to_ico_mapping = {
-
-
+    PipeNames.SCALE: "CON_SIZELIKE",
+    PipeNames.ROTATION: "CON_ROTLIKE",
+    PipeNames.POSITION: "EMPTY_ARROWS",
+    PipeNames.VISIBILITY: "MOD_OPACITY",
+    PipeNames.MOVE: "EMPTY_AXIS",
+    PipeNames.MATERIAL: "MATERIAL",
+    PipeNames.TEXTURE: "NODE_TEXTURE"
 }
 
 class RegistrationPanel(Panel):
@@ -55,14 +63,15 @@ class RegistrationPanel(Panel):
 
         # Which view are we in?
         if active == 'ops':
-            self.draw_list_view(layout, context, pipeline)
+            self.draw_list_view(context, pipeline)
         elif active == 'config':
-            self.draw_edit_view(layout, context, pipeline)
+            self.draw_edit_view(context, pipeline)
 
 
-    def draw_list_view(self, layout, context, pipeline):
+    def draw_list_view(self, context, pipeline):
         """Show list of operations with +/- buttons"""
         scene = context.scene
+        layout = self.layout
 
         # Load/Save buttons
         layout.label(text=f"Pipeline length: {len(pipeline.operations)} operation"
@@ -115,8 +124,10 @@ class RegistrationPanel(Panel):
         row.operator('randomizer.save_pipeline', text='Save', icon="FILE_TICK")
 
 
-    def draw_edit_view(self, layout, context, pipeline):
+    def draw_edit_view(self, context, pipeline):
         """Show detailed editor for selected operation"""
+        layout = self.layout
+        scene = context.scene
 
         if not pipeline.operations:
             layout.label(text='There are no operations.')
@@ -129,16 +140,17 @@ class RegistrationPanel(Panel):
         layout.label(text=f"Editing: {operation.operation_type}", icon='PREFERENCES')
         layout.separator()
 
-        # Edit properties
-        box = layout.box()
-        col = box.column()
-        col.prop(operation, 'operation_type')
-        col.prop(operation, 'seed')
+        reg_op = OperationRegistry.get_operation(operation.operation_type)
 
-        col.prop(operation, 'intensity')
+        # Draw its editor - just one line!
+        reg_op.draw_editor(layout, context)
+
 
         layout.separator()
         layout.operator("randomizer.open_distribution_editor", text="Open tree")
+
+        layout.operator('randomizer.set_pipeline_tab',
+                         text="Ok", emboss=True).tab = 'ops'
 
         # Back button
         # layout.operator('wm.back_from_edit', text='Back to List', icon='BACK')
@@ -204,7 +216,6 @@ class PipelineOperationsList(UIList):
         row.operator('randomizer.edit_operation', text='', icon='GREASEPENCIL').op_index = index
 
 
-
 # Submenu for lighting operations
 class AddLightingCategoryPipeMenu(Menu):
     bl_label = 'Lighting'
@@ -234,11 +245,11 @@ class AddObjectCategoryPipeMenu(Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.operator('randomizer.add_operation', text='Rotation', icon='CON_ROTLIKE').op_name = "Rotation"
-        layout.operator('randomizer.add_operation', text='Move', icon='EMPTY_AXIS').op_name = "Move"
-        layout.operator('randomizer.add_operation', text='Position', icon='EMPTY_ARROWS').op_name = "Position"
-        layout.operator('randomizer.add_operation', text='Visibility', icon='MOD_OPACITY').op_name = "Visibility"
-
+        for name in (
+            PipeNames.ROTATION, PipeNames.MOVE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY
+        ):
+            layout.operator("randomizer.add_operation", text=name.value,
+                            icon=pipe_to_ico_mapping[name]).op_name = name.value
 
 # Submenu for camera operations
 class AddCameraCategoryPipeMenu(Menu):
@@ -257,4 +268,8 @@ class AddMaterialCategoryPipeMenu(Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text='Material')
+        for name in (
+            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY
+        ):
+            layout.operator("randomizer.add_operation", text=name.value,
+                            icon=pipe_to_ico_mapping[name]).op_name = name.value

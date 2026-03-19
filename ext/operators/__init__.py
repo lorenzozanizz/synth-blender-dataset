@@ -3,6 +3,7 @@ from .graphical_ops import (OpenDistributionOperator,
 from .io_ops import (ApplyLogPathOperator, OpenLogsOperator, SavePipelineAsOperator, LoadPipelineOperator)
 from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, PipeRemoveOperator)
 from .run_ops import GenerateOperator
+from .distribution_ops import AddDistributionOperator, RemoveDistributionOperator
 
 operators = (
 
@@ -17,6 +18,9 @@ operators = (
     EditPipeOperator, MenuOperator, PipeAddOperator, PipeRemoveOperator,
 
     #
-    GenerateOperator
+    GenerateOperator,
+
+    #
+    AddDistributionOperator, RemoveDistributionOperator
 
 )

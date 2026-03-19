@@ -72,16 +72,6 @@ class EditPipeOperator(Operator):
     op_index: IntProperty(default=0)        # type: ignore
 
     def execute(self, context):
-        """
-        node, material = get_selected_node_and_material(context)
-        if not node:
-            return { 'CANCELLED' }
-
-        logger.info( material )
-        logger.info( node )
-
-        logger.info( serialize_node_reference(node, material, context) )
-        """
         pipeline = context.scene.pipeline_data
         # Select the operation in the UIList
         pipeline.active_operation_index = self.op_index
