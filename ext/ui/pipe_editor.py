@@ -1,7 +1,6 @@
 from ..constants import PANEL_CATEGORY, panel_conflict_rename
 from ..pipeline.registry import OperationRegistry
 from ..pipeline.data import PipeNames
-from ..utils.logger import UniqueLogger
 
 from bpy.types import Panel, UIList, Menu
 from bpy.props import StringProperty, EnumProperty
@@ -147,13 +146,9 @@ class RegistrationPanel(Panel):
 
 
         layout.separator()
-        layout.operator("randomizer.open_distribution_editor", text="Open tree")
 
-        layout.operator('randomizer.set_pipeline_tab',
-                         text="Ok", emboss=True).tab = 'ops'
+        layout.operator('randomizer.set_pipeline_tab', text="Save", emboss=True).tab = 'ops'
 
-        # Back button
-        # layout.operator('wm.back_from_edit', text='Back to List', icon='BACK')
 
     def draw_filter(self, _context, layout):
         """Draw the filter options and search bar"""
@@ -269,7 +264,7 @@ class AddMaterialCategoryPipeMenu(Menu):
     def draw(self, context):
         layout = self.layout
         for name in (
-            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY
+            PipeNames.MATERIAL, PipeNames.TEXTURE
         ):
             layout.operator("randomizer.add_operation", text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value

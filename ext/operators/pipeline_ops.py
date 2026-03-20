@@ -65,7 +65,6 @@ class MenuOperator(Operator):
 
 
 class EditPipeOperator(Operator):
-
     bl_idname = "randomizer.edit_operation"
     bl_label = "Select Node"
 
@@ -79,4 +78,25 @@ class EditPipeOperator(Operator):
         # Switch to edit tab
         context.window_manager['pipeline_tab'] = 'config'
 
+        return { 'FINISHED' }
+
+
+class CaptureObjectsOperator(Operator):
+    """Capture currently selected objects"""
+
+    bl_idname = "randomizer.capture_objects"
+    bl_label = "Capture Objects"
+
+    def execute(self, context):
+        selected = context.selected_objects
+
+        if not selected:
+            self.report({ 'WARNING' }, "No objects selected")
+            return { 'CANCELLED' }
+
+        # Store names
+        names = ", ".join([obj.name for obj in selected])
+        context.scene.targeted_objects_display = names
+
+        self.report({ 'INFO' }, f"Captured {len(selected)} objects")
         return { 'FINISHED' }
