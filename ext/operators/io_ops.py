@@ -21,7 +21,7 @@ class SavePipelineAsOperator(Operator):
     bl_idname = "randomizer.save_pipeline"
     bl_label = "Write back the pipeline"
 
-    filepath: StringProperty(subtype='FILE_PATH', default='pipeline.json')
+    filepath: StringProperty(subtype='FILE_PATH', default='pipeline.json')          # type: ignore
 
     def execute(self, context):
         try:

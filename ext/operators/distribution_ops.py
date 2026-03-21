@@ -1,4 +1,5 @@
 from bpy.types import Operator
+from bpy.props import StringProperty
 import bpy
 
 class AddDistributionOperator(Operator):
@@ -24,8 +25,46 @@ class RemoveDistributionOperator(Operator):
         scene = context.scene
         idx = scene.selected_distribution_index
         distributions = scene.available_distributions
+
         if idx < len(distributions):
             tree = distributions.node_tree
             bpy.data.node_groups.remove(tree)
             distributions.remove(idx)
+
+        # Clamp index if needed
+        if scene.selected_distribution_index >= len(distributions):
+            scene.selected_distribution_index = max(0, len(distributions) - 1)
         return { 'FINISHED' }
+
+
+class AddImagePathOperator(Operator):
+    """Add image file to list"""
+    bl_idname = "randomizer.add_image_path"
+    bl_label = "Add Image"
+
+    filepath: StringProperty(subtype='FILE_PATH')           # type: ignore
+
+    def execute(self, context):
+        item = context.scene.image_paths.add()
+        item.path = self.filepath
+        return {'FINISHED'}
+
+    def invoke(self, context, event):
+        context.window_manager.fileselect_add(self)
+        return {'RUNNING_MODAL'}
+
+
+class RemoveImagePathOperator(Operator):
+    """Remove image path from list"""
+    bl_idname = "randomizer.remove_image_path"
+    bl_label = "Remove Image"
+
+    def execute(self, context):
+        scene = context.scene
+        idx = scene.selected_image_path_index
+
+        if idx < len(scene.image_paths):
+            scene.image_paths.remove(idx)
+
+        return {'FINISHED'}
+

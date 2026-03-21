@@ -76,10 +76,10 @@ class DistributionContinuousNode(Node):
     bl_label = 'Continuous'
     bl_icon = 'NODETREE'
 
-    dist_type: EnumProperty(
-        items=[('NORMAL', 'Normal', ''), ('UNIFORM', 'Uniform', '')])
-    mean: FloatProperty(default=0.5)
-    sigma: FloatProperty(default=0.2)
+    dist_type: EnumProperty(                                            # type: ignore
+        items=[('NORMAL', 'Normal', ''), ('UNIFORM', 'Uniform', '')])   # type: ignore
+    mean: FloatProperty(default=0.5)                                    # type: ignore
+    sigma: FloatProperty(default=0.2)                                   # type: ignore
 
     @classmethod
     def poll(cls, ntree):
@@ -97,7 +97,7 @@ class DistributionDiscreteNode(Node):
     bl_label = 'Discrete'
     bl_icon = 'NODETREE'
 
-    values: StringProperty(default='1,2,3')
+    values: StringProperty(default='1,2,3')                     # type: ignore
 
     @classmethod
     def poll(cls, ntree):
@@ -116,3 +116,6 @@ class DistributionNodeCategory(NodeCategory):
     def poll(cls, context):
         return context.space_data.tree_type == 'DistributionNodeTree'
 
+
+def get_tree_dimensionality(tree):
+    return 1

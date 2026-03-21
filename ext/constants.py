@@ -1,6 +1,7 @@
 """
 
 """
+from enum import Enum
 
 
 prefix_ext_conflict_rename = lambda name: "synth_blender_dataset_" + name
@@ -17,3 +18,14 @@ TARGET_VERSION = "4.5.0"
 
 NODE_CATEGORIES_NAME = "DISTRIBUTION_NODE_CATEGORIES"
 DISTRO_EDITOR_NAME   = "DistributionNodeTree"
+
+
+class PipeNames(Enum):
+    SCALE       = "Scale"
+    ROTATION    = "Rotation"
+    MOVE        = "Move"
+    POSITION    = "Position"
+    VISIBILITY  = "Visibility"
+
+    MATERIAL    = "Material"
+    TEXTURE     = "Texture"

@@ -1,7 +1,10 @@
 import os
 
+from .pipe_editor import get_distribution_by_dims
+from .pipe_editor import ImagePath
+
 from bpy.props import (
-    StringProperty, IntProperty, BoolProperty, EnumProperty
+    StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty
 )
 
 ext_ui_properties = {
@@ -58,4 +61,88 @@ ext_ui_properties = {
         default=False,
         description="Enable Logging"
     )
+}
+
+
+
+operation_properties = {
+    "use_distribution_tree": BoolProperty(
+        name="Use advanced Distribution Editor nodes",
+        default=False
+    ),
+    "selected_distribution_index": IntProperty(default=0),
+    "distribution_dimension_error": StringProperty(default=""),
+    "randomize_x": BoolProperty(default=True),
+    "randomize_y": BoolProperty(default=True),
+    "randomize_z": BoolProperty(default=True),
+    "do_clamp": BoolProperty(
+        name="Clamp",
+        default=False,
+        description="Start numbering at the last identified number in the destination folder"
+    ),
+    "clamping_factors": FloatVectorProperty(
+        name="",
+        size=2,
+        default=(0.0, 0.0)
+    ),
+    "do_discretize": BoolProperty(
+        name="Discretize values",
+        default=False,
+        description="Start numbering at the last identified number in the destination folder"
+    ),
+    "do_offset": BoolProperty(
+        name="Offset mode",
+        default=False,
+        description="Consider the extracted values as offset to the current value."
+    ),
+    "simple_distribution_enum": EnumProperty(
+        items=get_distribution_by_dims,                     # type: ignore
+        name="Type"
+    ),
+    "targeted_objects_display": StringProperty(
+        name="Targeted Objects",
+        default="None"
+    ),
+    "targeted_material_display": StringProperty(
+        name="Targeted Objects",
+        default="None"
+    ),
+    "use_folder_mode": BoolProperty(
+        name="Use Folder",
+        description="Toggle between folder and individual files",
+        default=True
+    ),
+    "image_folder": StringProperty(
+        name="Image Folder",
+        description="Path to image folder",
+        subtype='DIR_PATH'
+    ),
+    "selected_image_path_index": IntProperty(default=0),
+    "image_paths": CollectionProperty(type=ImagePath)
+}
+
+#
+distribution_settings = {
+
+    # Scalars
+    'dist_min': FloatProperty(name="Minimum", default=0.0),
+    'dist_max': FloatProperty(name="Maximum", default=1.0),
+    'dist_mean': FloatProperty(name="Mean", default=0.5),
+    'dist_std': FloatProperty(name="Standard Dev.", default=0.1),
+    'dist_alpha': FloatProperty(name="Alpha", default=2.0),
+    'dist_beta': FloatProperty(name="Beta", default=2.0),
+    'dist_p': FloatProperty(name="P", default=0.5),
+    'dist_n': IntProperty(name="N", default=10),
+    'dist_variance': FloatProperty(name="Variance", default=1.0),
+
+    # Vectors
+    # ( we will use the first two entries of the vector for 2d distributions
+    'dist_mean_vec': FloatVectorProperty(name="Mean", size=3, default=(0, 0, 0)),
+    'dist_min_vec': FloatVectorProperty(name="Minimum Vector", size=3, default=(0, 0, 0)),
+    'dist_max_vec': FloatVectorProperty(name="Maximum Vector", size=3, default=(1, 1, 1)),
+
+    # To implement a matrix we may use 2d/3 float vector properties... i dont know
+    # if its worth the hassle, for now keep that feature incomplete in this version!
+    # 'dist_cov_matrix': ...
+
 }

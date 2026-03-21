@@ -7,7 +7,7 @@ class PipelineOperation(PropertyGroup):
     """Single operation in the pipeline"""
     operation_type: StringProperty(name='Type', default='randomize_pose')   # type: ignore
     enabled: BoolProperty(name='Enabled', default=True)                     # type: ignore
-    seed: IntProperty(name='Seed', default=0)                               # type: ignore
+    name: StringProperty(name='Name', default="Unnamed")                    # type: ignore
     intensity: StringProperty(name='Intensity', default='0.5')              # type: ignore
 
 
@@ -28,16 +28,6 @@ class DistributionItem(PropertyGroup):
         name="Node Tree",
         description="Reference to the actual DistributionNodeTree instance"
     )
-
-class PipeNames(Enum):
-    SCALE = "Scale"
-    ROTATION = "Rotation"
-    MOVE = "Move"
-    POSITION = "Position"
-    VISIBILITY = "Visibility"
-
-    MATERIAL = "Material"
-    TEXTURE = "Texture"
 
 data_properties = {
     "pipeline_data": PointerProperty(

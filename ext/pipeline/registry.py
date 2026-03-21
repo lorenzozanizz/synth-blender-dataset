@@ -9,14 +9,14 @@ class OperationRegistry:
     _operations = {}
 
     @classmethod
-    def register(cls, operation_class: type):
-        """Register an operation class."""
-        op = operation_class()
-        cls._operations[op.operation_type] = operation_class
-        return operation_class
+    def register(cls, op_type: str):
+        def decorator(drawer_cls):
+            cls._operations[op_type] = drawer_cls
+            return drawer_cls
+        return decorator
 
     @classmethod
-    def get_operation(cls, operation_type: str) -> 'PipelineOperation':
+    def get(cls, operation_type: str) -> 'PipelineOperation':
         """Get an operation instance by type."""
         if operation_type not in cls._operations:
             raise ValueError(f"Unknown operation type: {operation_type}")

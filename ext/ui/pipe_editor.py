@@ -1,270 +1,391 @@
-from ..constants import PANEL_CATEGORY, panel_conflict_rename
-from ..pipeline.registry import OperationRegistry
-from ..pipeline.data import PipeNames
+"""
+"""
 
-from bpy.types import Panel, UIList, Menu
-from bpy.props import StringProperty, EnumProperty
+from ..constants import PipeNames
+from ..utils.logger import UniqueLogger
+from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS, Distribution
+from ..distribution.nodes import get_tree_dimensionality
+from abc import ABC
+from typing import Tuple
 
-
-pipe_to_ico_mapping = {
-    PipeNames.SCALE: "CON_SIZELIKE",
-    PipeNames.ROTATION: "CON_ROTLIKE",
-    PipeNames.POSITION: "EMPTY_ARROWS",
-    PipeNames.VISIBILITY: "MOD_OPACITY",
-    PipeNames.MOVE: "EMPTY_AXIS",
-    PipeNames.MATERIAL: "MATERIAL",
-    PipeNames.TEXTURE: "NODE_TEXTURE"
-}
-
-class RegistrationPanel(Panel):
-    """ The panel containing information regarding the registrations of new sampling
-    operations (to be determined)
-    """
-
-    bl_label = "Pipeline Editor"
-    bl_idname = panel_conflict_rename("random_operator_registration")
-    bl_options = { 'DEFAULT_CLOSED' }
-    bl_space_type = 'VIEW_3D'
-    bl_category = PANEL_CATEGORY
-    bl_region_type = 'UI'
-    bl_order = 1
+from bpy.types import UIList, PropertyGroup
+from bpy.props import StringProperty
+import bpy
 
 
-    def draw(self, context):
-        # Currently Empty
-        layout = self.layout
-        layout.operator("object.randomizer_node_selector", text="Pick node", icon="LINE_DATA")
-        scene = context.scene
+class OperationDrawerRegistry:
+
+    _drawers = {}
+
+    @classmethod
+    def register(cls, op_type: str):
+        def decorator(drawer_cls):
+            cls._drawers[op_type] = drawer_cls
+            return drawer_cls
+        return decorator
+
+    @classmethod
+    def get(cls, op_type: str):
+        return cls._drawers.get(op_type)
+
+    @classmethod
+    def get_all_types(cls) -> list:
+        """Get all available operation types."""
+        return list(cls._drawers.keys())
+
+class PipeDrawer(ABC):
+    """Base class for all pipeline operations."""
+
+    operation_type: str  # "Scale", "Rotation", etc
+
+    @staticmethod
+    def draw_editor(layout, context):
+        """Draw this operation's editor UI."""
+        pass
+
+class ImagePath(PropertyGroup):
+    """Single image file path"""
+    path: StringProperty(name="Path", subtype='FILE_PATH')      # type: ignore
 
 
-        box = layout.box()
-        box.label(text="Load pipeline", icon="WORDWRAP_OFF")
-        box.prop(scene, "randomizer_config_path")
-        box.operator("randomizer.load_pipeline", text="Load", icon="FILE")
+class PathsUIList(UIList):
+    """UIList for individual image paths"""
 
-        # === TAB BAR ===
-        row = layout.row()
-        active = context.window_manager.get('pipeline_tab', 'ops')
-
-        for tab_id, tab_label in [('ops', 'View Pipeline'), ('config', 'Edit Current')]:
-            row.operator('randomizer.set_pipeline_tab',
-                         text=tab_label,
-                         depress=(tab_id == active),
-                         emboss=True).tab = tab_id
-
-        layout.separator()
-        scene = context.scene
-        pipeline = scene.pipeline_data
-
-
-        # === COLLECTION PROPERTIES - Use .add() ===
-        # Add a new operation to the list
-
-        # Which view are we in?
-        if active == 'ops':
-            self.draw_list_view(context, pipeline)
-        elif active == 'config':
-            self.draw_edit_view(context, pipeline)
-
-
-    def draw_list_view(self, context, pipeline):
-        """Show list of operations with +/- buttons"""
-        scene = context.scene
-        layout = self.layout
-
-        # Load/Save buttons
-        layout.label(text=f"Pipeline length: {len(pipeline.operations)} operation"
-                          f"{'' if len(pipeline.operations) == 1 else 's'}")
-
-        layout.separator()
-
-        table = layout.column(align=True)
-        # Create column header row.
-        head = table.box()
-        head.scale_y = 0.6  # shrink in height
-        cols = head.column_flow(columns=5)  # ensure same number of columns
-        sub = cols.row(align=True)
-        sub.scale_x = 0.3
-        sub.label(text="#")
-        cols.label(text="Operation")
-        cols.label(text="Target")
-        cols.label(text="Enabled")
-        table.enabled = False
-
-        row = layout.row()
-        row.template_list(
-            'PipelineOperationsList',  # UIList class name
-            'pipeline_operations',  # Unique ID
-            pipeline,  # Data object
-            'operations',  # Collection property name
-            pipeline,  # Active data object
-            'active_operation_index'  # Active index property name
-        )
-
-        col = row.column(align=True)
-        col.operator('randomizer.add_operation_menu', icon='ADD', text='')
-        col.operator('randomizer.remove_operation', icon='REMOVE', text='')
-        col.separator()
-
-        col.operator('randomizer.up_operation', icon='BACK', text='')
-        col.operator('randomizer.down_operation', icon='FORWARD', text='')
-
-        layout.separator()
-
-        # === SAVE SECTION ===
-
-        box = layout.box()
-        col = box.column(align=True)
-        col.label(text='Save Pipeline', icon='FILE_TICK')
-        col.separator()
-        col.prop(scene, "randomizer_pipeline_save_path")
-        col.separator()
-        row = col.row(align=True)
-        row.operator('randomizer.save_pipeline', text='Save', icon="FILE_TICK")
-
-
-    def draw_edit_view(self, context, pipeline):
-        """Show detailed editor for selected operation"""
-        layout = self.layout
-        scene = context.scene
-
-        if not pipeline.operations:
-            layout.label(text='There are no operations.')
-            return
-
-        op_index = pipeline.active_operation_index
-        operation = pipeline.operations[op_index]
-
-        # Header
-        layout.label(text=f"Editing: {operation.operation_type}", icon='PREFERENCES')
-        layout.separator()
-
-        reg_op = OperationRegistry.get_operation(operation.operation_type)
-
-        # Draw its editor - just one line!
-        reg_op.draw_editor(layout, context)
-
-
-        layout.separator()
-
-        layout.operator('randomizer.set_pipeline_tab', text="Save", emboss=True).tab = 'ops'
-
-
-    def draw_filter(self, _context, layout):
-        """Draw the filter options and search bar"""
-        row = layout.row()
-
-        # Search text input (automatic)
-        row.prop(self, "filter_name", text="")
-
-        # Filter by operation type (optional)
-        row = layout.row(align=True)
-        row.prop(self, "filter_operation_type", expand=True)
-
-    def filter_items(self, _context, data, name):
-        """Filter and sort items based on search"""
-        items = getattr(data, name)
-
-        # Create filter list (1 = show, 0 = hide)
-        flt_flags = [self.bitflag_filter_item] * len(items)
-        flt_neworder = list(range(len(items)))
-
-        # Filter by search name
-        if self.filter_name:
-            for idx, item in enumerate(items):
-                if self.filter_name.lower() not in item.operation_type.lower():
-                    flt_flags[idx] = 0
-
-        return flt_flags, flt_neworder
-
-    # Add filter properties
-    filter_name: StringProperty(default="", options={'TEXTSEARCH'}) # type: ignore
-    filter_operation_type: EnumProperty( # type: ignore
-        items=[
-            ('ALL', 'All', 'Show all'),
-            ('RANDOMIZE', 'Randomize', 'Show randomize ops'),
-        ],
-        default='ALL'
-    )
-
-
-class PipelineOperationsList(UIList):
-
-    def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_propname, index):
-        # item = the current PipelineOperation
-
-        operation = item
-
-        # Left side: icon + operation name
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
         row = layout.row(align=True)
         sub = row.row(align=True)
-        sub.scale_x = 0.3  # Make it tiny
+        sub.scale_x = 0.3
         sub.label(text=f"{index + 1}")
+        row.label(text=item.path, icon='IMAGE_DATA')
 
-        row.label(text=operation.operation_type, icon='LIGHT')
+def get_selected_axis_dimension(scene):
+    """
 
-        # Middle: show some property
-        row.label(text=f"Seed: {operation.seed}")
+    :param scene:
+    :return:
+    """
+    is_x = 1 if scene.randomize_x else 0
+    is_y = 1 if scene.randomize_y else 0
+    is_z = 1 if scene.randomize_z else 0
+    return is_x + is_y + is_z
 
-        row.prop(operation, 'enabled', text='')
-        # Right side: edit button
-        row.operator('randomizer.edit_operation', text='', icon='GREASEPENCIL').op_index = index
 
 
-# Submenu for lighting operations
-class AddLightingCategoryPipeMenu(Menu):
-    bl_label = 'Lighting'
-    bl_idname = 'AddLightingCategoryPipeMenu'
+class DistributionTreeList(UIList):
 
-    def draw(self, context):
-        layout = self.layout
+    def draw_item(self, _context, layout, _data, item, icon, active_data, active_propname, index):
+        """Draw each distribution tree."""
+
+        distribution_item = item
+
         row = layout.row(align=True)
-        layout.label(text='Lighting')
+        # Middle: Tree name with icon
+
+        row.label(text=distribution_item.name, icon='NODETREE')
+
+        # Right: Dimensionality
+        if distribution_item.node_tree:
+            dims = get_tree_dimensionality(distribution_item.node_tree)
+            row.label(text=f"{dims}D", icon='EMPTY_ARROWS')
+        else:
+            # Tree pointer is broken
+            row.label(text="Broken Tree Link", icon='ERROR')
 
 
-# Submenu for constraint operations
-class AddConstraintCategoryPipeMenu(Menu):
-    bl_label = 'Constraints'
-    bl_idname = 'AddConstraintCategoryPipeMenu'
 
-    def draw(self, context):
-        layout = self.layout
+class AxisTarget:
+
+    @staticmethod
+    def draw(layout, context):
+        layout = layout
+        scene = context.scene
+
+        # 3 checkboxes in a row
         row = layout.row(align=True)
-        layout.label(text='Constraints')
+        row.label(text="Axis:")
+
+        sub = row.row(align=True)
+        sub.scale_x = 0.7  # Shrink to 30% width
+        sub.prop(scene, "randomize_x", text="X", toggle=True)
+        sub.prop(scene, "randomize_y", text="Y", toggle=True)
+        sub.prop(scene, "randomize_z", text="Z", toggle=True)
+        row.separator()
+        row.label(text = f"({get_selected_axis_dimension(scene)} Dims.)")
 
 
-# Submenu for object operations
-class AddObjectCategoryPipeMenu(Menu):
-    bl_label = 'Object'
-    bl_idname = 'AddObjectCategoryPipeMenu'
+def get_distribution_by_dims(scene, _context) -> list[Tuple]:
+    """Get distributions matching selected axes"""
 
-    def draw(self, context):
-        layout = self.layout
-        for name in (
-            PipeNames.ROTATION, PipeNames.MOVE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY
-        ):
-            layout.operator("randomizer.add_operation", text=name.value,
-                            icon=pipe_to_ico_mapping[name]).op_name = name.value
+    num_dims = get_selected_axis_dimension(scene)
 
-# Submenu for camera operations
-class AddCameraCategoryPipeMenu(Menu):
-    bl_label = 'Camera'
-    bl_idname = 'AddCameraCategoryPipeMenu'
-
-    def draw(self, context):
-        layout = self.layout
-        layout.label(text='Camera')
+    if num_dims == 1:
+        return [(dist.name, dist.value.title(), "") for dist in ONE_D_DISTRIBUTIONS]
+    elif num_dims >= 2:
+        return [(dist.name, dist.value.title(), "") for dist in UPPER_D_DISTRIBUTIONS]
+    else:
+        return [('NONE', "None", "")]
 
 
-# Submenu for material operations
-class AddMaterialCategoryPipeMenu(Menu):
-    bl_label = 'Material'
-    bl_idname = 'AddMaterialCategoryPipeMenu'
+def get_all_distribution_trees():
+    """Get all saved DistributionNodeTree instances."""
+    return [tree for tree in bpy.data.node_groups
+            if tree.bl_idname == "DistributionNodeTree"]
 
-    def draw(self, context):
-        layout = self.layout
-        for name in (
-            PipeNames.MATERIAL, PipeNames.TEXTURE
-        ):
-            layout.operator("randomizer.add_operation", text=name.value,
-                            icon=pipe_to_ico_mapping[name]).op_name = name.value
+def get_saved_distributions_names(_context):
+    items = []
+    for tree in bpy.data.node_groups:
+        if tree.bl_idname == "DistributionNodeTree":
+            items.append((tree.name, tree.name, ""))
+    return items if items else [("NONE", "None", "")]
+
+
+class ObjectTargeter:
+
+    @staticmethod
+    def draw(layout, context):
+        """
+
+        :param layout:
+        :param context:
+        :return:
+        """
+        scene = context.scene
+        box = layout.box().row()
+        box.label(text="Target:")
+        box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
+        box.operator("randomizer.capture_objects", text="Capture Selected", icon='GREASEPENCIL')
+
+
+class MaterialTargeter:
+
+    @staticmethod
+    def draw(layout, context):
+        """
+
+        :param layout:
+        :param context:
+        :return:
+        """
+        scene = context.scene
+        box = layout.box().row()
+        box.label(text="Material:")
+        box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
+        box.operator("randomizer.capture_material", text="Capture Selected", icon='GREASEPENCIL')
+
+
+class PathListSelector:
+
+    @staticmethod
+    def draw(layout, context):
+        scene = context.scene
+        # Toggle button
+        layout.prop(scene, "use_folder_mode", text="Use Folder Mode")
+
+        if scene.use_folder_mode:
+            box = layout.box()
+            box.label(text="Folder Selection")
+            box.prop(scene, "image_folder", text="")
+
+        else:
+            box = layout.box()
+            box.label(text="Individual Files")
+
+            row = box.row()
+            row.template_list(
+                PathsUIList.__name__,
+                "image_paths_list",
+                scene, "image_paths",
+                scene, "selected_image_path_index"
+            )
+
+            # +/- buttons
+            col = row.column()
+            col.operator("randomizer.add_image_path", icon='ADD', text='')
+            col.operator("randomizer.remove_image_path", icon='REMOVE', text='')
+
+def sync_distribution_handler(scene):
+    """Synchronizes scene.available_distributions with actual bpy.data.node_groups."""
+
+    # Get all actual DistributionNodeTree instances
+    actual_trees = [
+        tree for tree in bpy.data.node_groups
+        if tree.bl_idname == "DistributionNodeTree"
+    ]
+    UniqueLogger.quick_log(str(actual_trees))
+
+    # Get names of existing items
+    existing_names = {item.name for item in scene.available_distributions}
+    actual_names = {tree.name for tree in actual_trees}
+
+    # Remove items that no longer exist
+    items_to_remove = []
+    for idx, item in enumerate(scene.available_distributions):
+        if item.name not in actual_names:
+            items_to_remove.append(idx)
+
+    for idx in reversed(items_to_remove):
+        scene.available_distributions.remove(idx)
+
+    # Add new items and update pointers
+    for tree in actual_trees:
+        if tree.name not in existing_names:
+            item = scene.available_distributions.add()
+            item.name = tree.name
+            item.node_tree = tree
+        else:
+            for item in scene.available_distributions:
+                if item.name == tree.name:
+                    # Reconcile possible missing links
+                    item.node_tree = tree
+                    break
+    if scene.selected_distribution_index >= len(scene.available_distributions):
+        scene.selected_distribution_index = max(0, len(scene.available_distributions) - 1)
+
+
+class NodeDistributionSelector:
+
+    @staticmethod
+    def draw(layout, context):
+        """
+
+        :param layout:
+        :param context:
+        :return:
+        """
+        scene = context.scene
+        layout.prop(scene, "use_distribution_tree")
+
+        if scene.use_distribution_tree:
+            box = layout.box()
+            box.label(text="Saved Distributions")
+            row = box.row()
+            row.template_list(
+                DistributionTreeList.__name__,
+                "distribution_trees",
+                scene, "available_distributions",  # Will populate this
+                scene, "selected_distribution_index"
+            )
+
+            # Add/Remove buttons
+            col = row.column()
+            col.operator("randomizer.add_distribution", icon='ADD', text='')
+            col.operator("randomizer.remove_distribution", icon='REMOVE', text='')
+
+            if len(scene.available_distributions) == 0:
+                return
+            # Error message space
+            if scene.distribution_dimension_error:
+                box.label(text="Dimension mismatch", icon='ERROR')
+                box.label(text=scene.distribution_dimension_error)
+            else:
+                box.label(text="Valid distribution", icon='CHECKMARK')
+        else:
+            SimplifiedDistributionSelector.draw(layout, context)
+
+class SimplifiedDistributionSelector:
+
+    # This prefix is applied to all property names, used for clarity
+    _name_prefix = "dist_"
+
+    @staticmethod
+    def draw(layout, context):
+        """
+
+        :param layout:
+        :param context:
+        :return:
+        """
+        scene = context.scene
+        box = layout.box()
+        box.label(text="Preset Distributions")
+        box.prop(scene, "simple_distribution_enum")
+
+        value = scene.simple_distribution_enum.upper()
+        num_dims = get_selected_axis_dimension(scene)
+        if value != "NONE":
+            interested_properties = DISTRIBUTION_PROPERTIES_MAP[value]
+
+            # Vector properties need to change with dimension.
+            for property_name in interested_properties:
+                extended_name = SimplifiedDistributionSelector._name_prefix + property_name
+                if "vec" in property_name:
+                    row = box.row(align=True)
+                    row.label(text=vector_names[extended_name])
+                    row.prop(scene, extended_name, index=0, text="X")
+                    row.prop(scene, extended_name, index=1, text="Y")
+
+                    if num_dims == 3:
+                        row.prop(scene, extended_name, index=2, text="Z")
+                else:
+                    box.prop(context.scene, extended_name)
+
+
+        # SimplifiedDistributionSelector.dispatch_draw(str_value, box, context)
+
+        row = box.row(align=True)
+        row.prop(context.scene, "do_offset")
+        row.prop(context.scene, "do_discretize")
+
+        row = box.row(align=True)
+        row.prop(context.scene, "do_clamp")
+        row.prop(context.scene, "clamping_factors")
+
+
+class SimplePropertyDrawer(PipeDrawer):
+
+    @staticmethod
+    def draw_editor(layout, context):
+        """
+
+        :return:
+        """
+        ObjectTargeter.draw(layout, context)
+        layout.separator()
+        AxisTarget.draw(layout, context)
+        layout.separator()
+        NodeDistributionSelector.draw(layout, context)
+
+# The following operations
+
+@OperationDrawerRegistry.register(PipeNames.SCALE.value)
+class RandomizeScaleOperation(SimplePropertyDrawer):
+    pass
+
+@OperationDrawerRegistry.register(PipeNames.ROTATION.value)
+class RandomizeRotationOperation(SimplePropertyDrawer):
+    pass
+
+@OperationDrawerRegistry.register(PipeNames.POSITION.value)
+class RandomizeRotationOperation(SimplePropertyDrawer):
+    pass
+
+@OperationDrawerRegistry.register(PipeNames.TEXTURE.value)
+class RandomizeTextureOperation(PipeDrawer):
+
+    @staticmethod
+    def draw_editor(layout, context):
+        """
+
+        :return:
+        """
+        MaterialTargeter.draw(layout, context)
+        layout.separator()
+        PathListSelector.draw(layout, context)
+
+
+DISTRIBUTION_PROPERTIES_MAP = {
+    Distribution.UNIFORM.name: ['min', 'max'],
+    Distribution.MULTIVARIATE_UNIFORM.name: ['min_vec', 'max_vec'],
+    Distribution.BETA.name: ['alpha', 'beta', 'min', 'max'],
+    Distribution.GEOMETRIC.name: ['p'],
+    Distribution.BINOMIAL.name: ['n', 'p'],
+    Distribution.GAUSSIAN.name: ['mean', 'std'],
+    Distribution.MULTIVARIATE_GAUSSIAN.name: ['mean_vec', 'cov_matrix'],
+    Distribution.MULTIVARIATE_ISOTROPIC_GAUSSIAN.name: ['mean_vec', 'variance'],
+}
+
+vector_names = {
+    "dist_mean_vec": "Mean Vector",
+    "dist_min_vec": "Minimum Vector",
+    "dist_max_vec": "Maximum Vector"
+}

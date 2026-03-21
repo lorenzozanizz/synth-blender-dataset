@@ -1,6 +1,5 @@
 from nodeitems_utils import NodeItem
 
-from .computation import *
 from .nodes import *
 
 node_categories = [

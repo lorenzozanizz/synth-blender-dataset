@@ -100,3 +100,51 @@ class CaptureObjectsOperator(Operator):
 
         self.report({ 'INFO' }, f"Captured {len(selected)} objects")
         return { 'FINISHED' }
+
+
+class CaptureMaterialOperator(Operator):
+    """Capture currently selected objects"""
+
+    bl_idname = "randomizer.capture_material"
+    bl_label = "Capture Objects"
+
+    def execute(self, context):
+        selected, mat_name = self.get_selected_node_and_material(context)
+
+        if not selected:
+            return { 'CANCELLED' }
+
+        # Store name
+        lab = selected.label
+        context.scene.targeted_material_display = f"{mat_name} > {lab}"
+
+        self.report({ 'INFO' }, f"Captured: {mat_name} > {lab}")
+        return { 'FINISHED' }
+
+    def get_selected_node_and_material(self, context) -> tuple:
+        """Get the currently selected node in the active editor"""
+
+        # Get active editor area
+        for area in context.screen.areas:
+            if area.type == 'NODE_EDITOR':
+                # Get the node tree
+                space = area.spaces.active
+                node_tree = space.node_tree
+                if node_tree:
+                    mat_name = "Unknown Material"
+                    if hasattr(space, "id") and space.id:
+                        mat_name = space.id.name
+
+                    # Find selected nodes
+                    for node in node_tree.nodes:
+                        if not node.select:
+                            continue
+                        if not node.bl_idname == 'ShaderNodeTexImage':
+                            return None, None
+                        # At this point the node is selected and an image texture node.
+                        if not node.label or node.bl_label.strip() == "":
+                            self.report({'WARNING'}, f"Node must have a label to ensure safety!")
+                            return None, None
+                        else:
+                            return node, mat_name
+        return None, None
