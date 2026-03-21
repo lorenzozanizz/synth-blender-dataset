@@ -1,7 +1,7 @@
 import os
 
 from .pipe_editor import get_distribution_by_dims
-from .pipe_editor import ImagePath
+from .pipe_editor import ImagePath, ObjectPosition
 
 from bpy.props import (
     StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty
@@ -118,7 +118,9 @@ operation_properties = {
         subtype='DIR_PATH'
     ),
     "selected_image_path_index": IntProperty(default=0),
-    "image_paths": CollectionProperty(type=ImagePath)
+    "image_paths": CollectionProperty(type=ImagePath),
+    "selected_position_index": IntProperty(default=0),
+    "position_collection": CollectionProperty(type=ObjectPosition)
 }
 
 #
@@ -129,10 +131,10 @@ distribution_settings = {
     'dist_max': FloatProperty(name="Maximum", default=1.0),
     'dist_mean': FloatProperty(name="Mean", default=0.5),
     'dist_std': FloatProperty(name="Standard Dev.", default=0.1),
-    'dist_alpha': FloatProperty(name="Alpha", default=2.0),
-    'dist_beta': FloatProperty(name="Beta", default=2.0),
-    'dist_p': FloatProperty(name="P", default=0.5),
-    'dist_n': IntProperty(name="N", default=10),
+    'dist_alpha': FloatProperty(name="Alpha", default=2.0, min=0.0),
+    'dist_beta': FloatProperty(name="Beta", default=2.0, min=0.0),
+    'dist_p': FloatProperty(name="P", description="Probability", default=0.5, max=1.0, min=0.0),
+    'dist_n': IntProperty(name="N", default=10, min=0),
     'dist_variance': FloatProperty(name="Variance", default=1.0),
 
     # Vectors

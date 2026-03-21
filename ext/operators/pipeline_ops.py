@@ -1,5 +1,6 @@
 from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
+import bpy
 
 class PipeAddOperator(Operator):
 
@@ -105,8 +106,8 @@ class CaptureObjectsOperator(Operator):
 class CaptureMaterialOperator(Operator):
     """Capture currently selected objects"""
 
-    bl_idname = "randomizer.capture_material"
-    bl_label = "Capture Objects"
+    bl_idname = "randomizer.capture_texture"
+    bl_label = "Capture Texture"
 
     def execute(self, context):
         selected, mat_name = self.get_selected_node_and_material(context)
@@ -148,3 +149,55 @@ class CaptureMaterialOperator(Operator):
                         else:
                             return node, mat_name
         return None, None
+
+class CaptureObjectPositionOperator(Operator):
+
+    bl_idname = "randomizer.capture_obj_position"
+    bl_label = "Capture Object Position"
+
+    def execute(self, context):
+        obj = bpy.context.active_object
+        if not obj:
+            self.report({ 'WARNING' }, "No objects selected")
+            return {'CANCELLED'}
+        positions = context.scene.position_collection
+        new_op = positions.add()
+        new_op.pos = obj.location
+
+        self.report({'INFO'}, f"Captured position from currently selected object.")
+        return {'FINISHED'}
+
+
+class PositionAddOperator(Operator):
+
+    bl_idname = "randomizer.add_position"
+    bl_label = "Add a new target position"
+
+    op_name: StringProperty(default="Nothing")  # type: ignore
+
+    def execute(self, context):
+        positions = context.scene.position_collection
+        positions.add()
+        return { 'FINISHED' }
+
+
+class PositionRemoveOperator(Operator):
+
+    bl_idname = "randomizer.remove_position"
+    bl_label = "Delete the selected target position"
+
+    def execute(self, context):
+        scene = context.scene
+        positions = context.scene.position_collection
+        index = positions.selected_position_index
+
+        if not positions:
+            self.report({'WARNING'}, 'No Position to remove')
+            return {'CANCELLED'}
+
+        positions.remove(index)
+
+        if scene.selected_position_index >= len(positions):
+            scene.selected_position_index = max(0, len(positions) - 1)
+
+        return { 'FINISHED' }

@@ -9,7 +9,7 @@ from abc import ABC
 from typing import Tuple
 
 from bpy.types import UIList, PropertyGroup
-from bpy.props import StringProperty
+from bpy.props import StringProperty, FloatVectorProperty
 import bpy
 
 
@@ -58,6 +58,21 @@ class PathsUIList(UIList):
         sub.label(text=f"{index + 1}")
         row.label(text=item.path, icon='IMAGE_DATA')
 
+class ObjectPosition(PropertyGroup):
+    """Single image file path"""
+    pos: FloatVectorProperty(name="Position",  size=3, default=(0, 0, 0))                   # type: ignore
+
+class PositionsUIList(UIList):
+    """UIList for individual image paths"""
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        row = layout.row(align=True)
+        sub = row.row(align=True)
+        sub.scale_x = 0.3
+        sub.label(text=f"{index + 1}")
+        row.prop(item, "pos", text="Position", emboss=False)
+
+
 def get_selected_axis_dimension(scene):
     """
 
@@ -68,8 +83,6 @@ def get_selected_axis_dimension(scene):
     is_y = 1 if scene.randomize_y else 0
     is_z = 1 if scene.randomize_z else 0
     return is_x + is_y + is_z
-
-
 
 class DistributionTreeList(UIList):
 
@@ -153,7 +166,7 @@ class ObjectTargeter:
         box = layout.box().row()
         box.label(text="Target:")
         box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
-        box.operator("randomizer.capture_objects", text="Capture Selected", icon='GREASEPENCIL')
+        box.operator("randomizer.capture_objects", text="Capture Selected", icon='EYEDROPPER')
 
 
 class MaterialTargeter:
@@ -170,7 +183,7 @@ class MaterialTargeter:
         box = layout.box().row()
         box.label(text="Material:")
         box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
-        box.operator("randomizer.capture_material", text="Capture Selected", icon='GREASEPENCIL')
+        box.operator("randomizer.capture_texture", text="Capture Selected", icon='EYEDROPPER')
 
 
 class PathListSelector:
@@ -280,7 +293,7 @@ class NodeDistributionSelector:
             else:
                 box.label(text="Valid distribution", icon='CHECKMARK')
         else:
-            SimplifiedDistributionSelector.draw(layout, context)
+            SimplifiedDistributionSelector.draw_from_enum(layout, context)
 
 class SimplifiedDistributionSelector:
 
@@ -288,7 +301,7 @@ class SimplifiedDistributionSelector:
     _name_prefix = "dist_"
 
     @staticmethod
-    def draw(layout, context):
+    def draw_from_enum(layout, context):
         """
 
         :param layout:
@@ -300,38 +313,96 @@ class SimplifiedDistributionSelector:
         box.label(text="Preset Distributions")
         box.prop(scene, "simple_distribution_enum")
 
-        value = scene.simple_distribution_enum.upper()
-        num_dims = get_selected_axis_dimension(scene)
-        if value != "NONE":
-            interested_properties = DISTRIBUTION_PROPERTIES_MAP[value]
-
-            # Vector properties need to change with dimension.
-            for property_name in interested_properties:
-                extended_name = SimplifiedDistributionSelector._name_prefix + property_name
-                if "vec" in property_name:
-                    row = box.row(align=True)
-                    row.label(text=vector_names[extended_name])
-                    row.prop(scene, extended_name, index=0, text="X")
-                    row.prop(scene, extended_name, index=1, text="Y")
-
-                    if num_dims == 3:
-                        row.prop(scene, extended_name, index=2, text="Z")
-                else:
-                    box.prop(context.scene, extended_name)
+        SimplifiedDistributionSelector.draw_for(
+            box, context,
+            dist_name=(scene.simple_distribution_enum or "").upper(),
+            num_dims = get_selected_axis_dimension(scene),
+            show_cmds=True
+        )
 
 
-        # SimplifiedDistributionSelector.dispatch_draw(str_value, box, context)
+    @staticmethod
+    def draw_for(layout, context, dist_name: str, label: str =None, num_dims: int = 1, show_cmds: bool = False):
+        """
 
-        row = box.row(align=True)
+        :param label:
+        :param layout:
+        :param context:
+        :param num_dims:
+        :param dist_name:
+        :param show_cmds:
+        :return:
+        """
+        scene = context.scene
+        box = layout.box()
+
+        if dist_name == "NONE":
+            layout.label(text="No distribution.")
+            return
+        if label and label != "":
+            box.label(text=label)
+
+        interested_properties = DISTRIBUTION_PROPERTIES_MAP[dist_name]
+
+        # Vector properties need to change with dimension.
+        for property_name in interested_properties:
+            extended_name = SimplifiedDistributionSelector._name_prefix + property_name
+            if "vec" in property_name:
+                row = box.row(align=True)
+                row.label(text=vector_names[extended_name])
+                row.prop(scene, extended_name, index=0, text="X")
+                row.prop(scene, extended_name, index=1, text="Y")
+
+                if num_dims == 3:
+                    row.prop(scene, extended_name, index=2, text="Z")
+            else:
+                box.prop(context.scene, extended_name)
+
+        if show_cmds:
+            SimplifiedDistributionSelector.draw_options(box, context)
+
+    @staticmethod
+    def draw_options(layout, context):
+        """
+
+        :param layout:
+        :param context:
+        :return:
+        """
+        row = layout.row(align=True)
         row.prop(context.scene, "do_offset")
         row.prop(context.scene, "do_discretize")
 
-        row = box.row(align=True)
+        row = layout.row(align=True)
         row.prop(context.scene, "do_clamp")
         row.prop(context.scene, "clamping_factors")
 
+class PositionListSelector:
 
-class SimplePropertyDrawer(PipeDrawer):
+    @staticmethod
+    def draw(layout, context):
+        scene = context.scene
+
+        box = layout.box()
+        box.label(text="Saved Positions")
+        row = box.row()
+        row.template_list(
+            PositionsUIList.__name__,
+            "selected_positions",
+            scene, "position_collection",  # Will populate this
+            scene, "selected_position_index"
+        )
+
+        # Add/Remove buttons
+        col = row.column()
+        col.operator("randomizer.add_position", icon='ADD', text='')
+        col.operator("randomizer.remove_position", icon='REMOVE', text='')
+        col.operator("randomizer.capture_obj_position", icon='EYEDROPPER', text='')
+
+class MaterialSelector:
+    pass
+
+class ScalarPropertyDrawer(PipeDrawer):
 
     @staticmethod
     def draw_editor(layout, context):
@@ -348,15 +419,15 @@ class SimplePropertyDrawer(PipeDrawer):
 # The following operations
 
 @OperationDrawerRegistry.register(PipeNames.SCALE.value)
-class RandomizeScaleOperation(SimplePropertyDrawer):
+class RandomizeScaleOperation(ScalarPropertyDrawer):
     pass
 
 @OperationDrawerRegistry.register(PipeNames.ROTATION.value)
-class RandomizeRotationOperation(SimplePropertyDrawer):
+class RandomizeRotationOperation(ScalarPropertyDrawer):
     pass
 
 @OperationDrawerRegistry.register(PipeNames.POSITION.value)
-class RandomizeRotationOperation(SimplePropertyDrawer):
+class RandomizeRotationOperation(ScalarPropertyDrawer):
     pass
 
 @OperationDrawerRegistry.register(PipeNames.TEXTURE.value)
@@ -373,11 +444,44 @@ class RandomizeTextureOperation(PipeDrawer):
         PathListSelector.draw(layout, context)
 
 
+@OperationDrawerRegistry.register(PipeNames.VISIBILITY.value)
+class RandomizeVisibilityOperation:
+
+    @staticmethod
+    def draw_editor(layout, context):
+        # Allow the user to select the object for which visibility is to change
+        ObjectTargeter.draw(layout, context)
+        layout.separator()
+        SimplifiedDistributionSelector.draw_for(
+            layout, context, Distribution.BERNOULLI.name, label="Probability")
+
+@OperationDrawerRegistry.register(PipeNames.MOVE.value)
+class RandomizeMoveOperation:
+
+    @staticmethod
+    def draw_editor(layout, context):
+        # Allow the user to select the object for which visibility is to change
+        ObjectTargeter.draw(layout, context)
+        layout.separator()
+        PositionListSelector.draw(layout, context)
+
+@OperationDrawerRegistry.register(PipeNames.MATERIAL.value)
+class RandomizeMaterialOperation(ScalarPropertyDrawer):
+
+    @staticmethod
+    def draw_editor(layout, context):
+        # Allow the user to select the object for which visibility is to change
+        ObjectTargeter.draw(layout, context)
+        layout.separator()
+        PositionListSelector.draw(layout, context)
+
+
 DISTRIBUTION_PROPERTIES_MAP = {
     Distribution.UNIFORM.name: ['min', 'max'],
     Distribution.MULTIVARIATE_UNIFORM.name: ['min_vec', 'max_vec'],
     Distribution.BETA.name: ['alpha', 'beta', 'min', 'max'],
     Distribution.GEOMETRIC.name: ['p'],
+    Distribution.BERNOULLI.name: ['p'],
     Distribution.BINOMIAL.name: ['n', 'p'],
     Distribution.GAUSSIAN.name: ['mean', 'std'],
     Distribution.MULTIVARIATE_GAUSSIAN.name: ['mean_vec', 'cov_matrix'],

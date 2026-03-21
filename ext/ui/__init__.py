@@ -3,7 +3,7 @@ from .pipeline_viewer_list import (RegistrationPanel, AddCameraCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
                                    PipelineOperationsList,)
 from .properties import ext_ui_properties, distribution_settings, operation_properties
-from .pipe_editor import DistributionTreeList, sync_distribution_handler, PathsUIList, ImagePath
+from .pipe_editor import DistributionTreeList, sync_distribution_handler, PathsUIList, ImagePath, PositionsUIList, ObjectPosition
 
 import bpy
 
@@ -22,7 +22,7 @@ classes = (
     RandomizerPanel, SettingsPanel, InfoPanel, RegistrationPanel, AddCameraCategoryPipeMenu,
     AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList,
     AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu, DistributionTreeList, PathsUIList,
-    ImagePath
+    ImagePath, PositionsUIList, ObjectPosition
 )
 
 # Update the main UI properties of the pipeline with settings for the configuration of each pipe's distributions

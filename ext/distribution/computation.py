@@ -7,6 +7,7 @@ from enum import Enum
 RECOGNIZED_DISTRIBUTIONS = ("normal", "poisson", "uniform", "gamma", "custom")
 
 class Distribution(Enum):
+    BERNOULLI = "Bernoulli"
     UNIFORM = "Uniform"
     MULTIVARIATE_UNIFORM = "Multivariate Uniform"
     BETA = "Beta"

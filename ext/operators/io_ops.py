@@ -2,11 +2,15 @@ import os
 import json
 import platform
 import subprocess
+import io
+from contextlib import redirect_stdout
 
 from bpy.types import Operator
 from bpy.props import StringProperty
 
 from ..utils.logger import UniqueLogger
+
+import bpy
 
 class LoadPipelineOperator(Operator):
 
@@ -14,7 +18,15 @@ class LoadPipelineOperator(Operator):
     bl_label = "Load Pipeline"
 
     def execute(self, context):
-        pass
+        """Capture undo history by redirecting stdout"""
+
+        f = io.StringIO()
+        with redirect_stdout(f):
+            context.window_manager.print_undo_steps()
+
+        output = f.getvalue()
+        UniqueLogger.quick_log(output)
+        return {'FINISHED'}
 
 class SavePipelineAsOperator(Operator):
 
