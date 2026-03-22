@@ -201,3 +201,58 @@ class PositionRemoveOperator(Operator):
             scene.selected_position_index = max(0, len(positions) - 1)
 
         return { 'FINISHED' }
+
+
+
+class AddMaterialToListOperator(Operator):
+    """Add selected material to list"""
+    bl_idname = "randomizer.add_material_to_list"
+    bl_label = "Add Material"
+
+    # Dropdown property with all materials
+    material: bpy.props.EnumProperty(                           # type: ignore
+        name="Material",
+        description="Select material to add",
+        items= lambda self, context: [                           # type: ignore
+            (mat.name, mat.name, "")
+            for mat in bpy.data.materials
+        ] or [("NONE", "No materials", "")]
+    )
+
+    def execute(self, context):
+        scene = context.scene
+
+        mat = bpy.data.materials.get(self.material)
+
+        if not mat:
+            self.report({'WARNING'}, "Material not found")
+            return { 'CANCELLED' }
+
+        for item in scene.material_list:
+            if item.material == mat:
+                self.report({'INFO'}, f"{mat.name} already in list")
+                return { 'CANCELLED' }
+
+        new_item = scene.material_list.add()
+        new_item.material = mat
+
+        self.report({'INFO'}, f"Added {mat.name}")
+        return {'FINISHED'}
+
+    def invoke(self, context, _event):
+        return context.window_manager.invoke_props_dialog(self)
+
+
+class RemoveMaterialFromListOperator(Operator):
+    """Remove material from list"""
+    bl_idname = "randomizer.remove_material_from_list"
+    bl_label = "Remove"
+
+    def execute(self, context):
+        scene = context.scene
+        idx = scene.material_list_index
+
+        if idx < len(scene.material_list):
+            scene.material_list.remove(idx)
+
+        return {'FINISHED'}

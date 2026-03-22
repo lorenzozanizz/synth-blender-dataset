@@ -15,7 +15,9 @@ pipe_to_ico_mapping = {
     PipeNames.VISIBILITY: "MOD_OPACITY",
     PipeNames.MOVE: "EMPTY_AXIS",
     PipeNames.MATERIAL: "MATERIAL",
-    PipeNames.TEXTURE: "NODE_TEXTURE"
+    PipeNames.TEXTURE: "NODE_TEXTURE",
+    PipeNames.ROUGHNESS: "VPAINT_HLT",
+    PipeNames.METALLIC: "TPAINT_HLT",
 }
 
 class RegistrationPanel(Panel):
@@ -262,7 +264,7 @@ class AddMaterialCategoryPipeMenu(Menu):
     def draw(self, context):
         layout = self.layout
         for name in (
-            PipeNames.MATERIAL, PipeNames.TEXTURE
+            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.METALLIC, PipeNames.ROUGHNESS
         ):
             layout.operator("randomizer.add_operation", text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value

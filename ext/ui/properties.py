@@ -1,7 +1,7 @@
 import os
 
 from .pipe_editor import get_distribution_by_dims
-from .pipe_editor import ImagePath, ObjectPosition
+from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem
 
 from bpy.props import (
     StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty
@@ -120,7 +120,10 @@ operation_properties = {
     "selected_image_path_index": IntProperty(default=0),
     "image_paths": CollectionProperty(type=ImagePath),
     "selected_position_index": IntProperty(default=0),
-    "position_collection": CollectionProperty(type=ObjectPosition)
+    "position_collection": CollectionProperty(type=ObjectPosition),
+    "material_list": CollectionProperty(type=MaterialListItem),
+    "material_list_index": IntProperty(default=0)
+
 }
 
 #

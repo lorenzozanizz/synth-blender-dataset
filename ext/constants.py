@@ -21,11 +21,33 @@ DISTRO_EDITOR_NAME   = "DistributionNodeTree"
 
 
 class PipeNames(Enum):
+    """
+
+    """
+
     SCALE       = "Scale"
     ROTATION    = "Rotation"
     MOVE        = "Move"
     POSITION    = "Position"
     VISIBILITY  = "Visibility"
 
+    # Material
     MATERIAL    = "Material"
     TEXTURE     = "Texture"
+    INTENSITY   = "Intensity"
+    METALLIC    = "Metallic"
+    ROUGHNESS   = "Roughness"
+
+    # Lighting
+    TEMPERATURE = "Temperature"
+    POWER       = "Power"
+    COLOR       = "Color"
+
+    # Constraints
+    OVERLAP     = "Overlap"
+    OCCLUSION   = "Occlusion"
+    DISTANCE    = "Distance"
+    BOUND       = "Bound"
+    GROUND      = "Ground"
+
+    # Noise

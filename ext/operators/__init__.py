@@ -3,7 +3,7 @@ from .graphical_ops import (OpenDistributionOperator,
 from .io_ops import (ApplyLogPathOperator, OpenLogsOperator, SavePipelineAsOperator, LoadPipelineOperator)
 from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, PipeRemoveOperator,
                            CaptureObjectsOperator, CaptureMaterialOperator, CaptureObjectPositionOperator,
-                           PositionRemoveOperator, PositionAddOperator)
+                           PositionRemoveOperator, PositionAddOperator, AddMaterialToListOperator, RemoveMaterialFromListOperator)
 from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator,
                                RemoveImagePathOperator)
 
@@ -18,7 +18,7 @@ operators = (
 
     #
     EditPipeOperator, MenuOperator, PipeAddOperator, PipeRemoveOperator, CaptureObjectsOperator, CaptureMaterialOperator,
-    PositionRemoveOperator, PositionAddOperator, CaptureObjectPositionOperator,
+    PositionRemoveOperator, PositionAddOperator, CaptureObjectPositionOperator, AddMaterialToListOperator, RemoveMaterialFromListOperator,
     #
     AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator, RemoveImagePathOperator
 

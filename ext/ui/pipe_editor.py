@@ -8,8 +8,8 @@ from ..distribution.nodes import get_tree_dimensionality
 from abc import ABC
 from typing import Tuple
 
-from bpy.types import UIList, PropertyGroup
-from bpy.props import StringProperty, FloatVectorProperty
+from bpy.types import UIList, PropertyGroup, Material
+from bpy.props import StringProperty, FloatVectorProperty, PointerProperty
 import bpy
 
 
@@ -169,7 +169,7 @@ class ObjectTargeter:
         box.operator("randomizer.capture_objects", text="Capture Selected", icon='EYEDROPPER')
 
 
-class MaterialTargeter:
+class ImageTextureTargeter:
 
     @staticmethod
     def draw(layout, context):
@@ -253,7 +253,6 @@ def sync_distribution_handler(scene):
                     break
     if scene.selected_distribution_index >= len(scene.available_distributions):
         scene.selected_distribution_index = max(0, len(scene.available_distributions) - 1)
-
 
 class NodeDistributionSelector:
 
@@ -399,9 +398,6 @@ class PositionListSelector:
         col.operator("randomizer.remove_position", icon='REMOVE', text='')
         col.operator("randomizer.capture_obj_position", icon='EYEDROPPER', text='')
 
-class MaterialSelector:
-    pass
-
 class ScalarPropertyDrawer(PipeDrawer):
 
     @staticmethod
@@ -415,6 +411,51 @@ class ScalarPropertyDrawer(PipeDrawer):
         AxisTarget.draw(layout, context)
         layout.separator()
         NodeDistributionSelector.draw(layout, context)
+
+class MaterialListItem(PropertyGroup):
+    """Single material in list"""
+    material: PointerProperty(              # type: ignore
+        type=Material,
+        name="Material"
+    )
+
+class MaterialUIList(UIList):
+    """UIList for materials"""
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        mat = item.material
+
+        if mat:
+            row = layout.row(align=True)
+            sub = row.sub()
+            sub.label(text=f"{index + 1}")
+            sub.scale_x = 0.3
+            row.label(text=mat.name, icon='MATERIAL')
+        else:
+            row = layout.row()
+            row.label(text="(Empty)")
+
+
+class MaterialSelector:
+
+    @staticmethod
+    def draw(layout, context):
+        scene = context.scene
+
+        # List
+        row = layout.row()
+        row.template_list(
+            MaterialUIList.__name__,
+            "material_list",
+            scene, "material_list",
+            scene, "material_list_index"
+        )
+
+        # +/- buttons
+        col = row.column()
+        col.operator("randomizer.add_material_to_list", icon='ADD', text='')
+        col.operator("randomizer.remove_material_from_list", icon='REMOVE', text='')
+
 
 # The following operations
 
@@ -439,7 +480,7 @@ class RandomizeTextureOperation(PipeDrawer):
 
         :return:
         """
-        MaterialTargeter.draw(layout, context)
+        ImageTextureTargeter.draw(layout, context)
         layout.separator()
         PathListSelector.draw(layout, context)
 
@@ -460,20 +501,32 @@ class RandomizeMoveOperation:
 
     @staticmethod
     def draw_editor(layout, context):
-        # Allow the user to select the object for which visibility is to change
         ObjectTargeter.draw(layout, context)
         layout.separator()
         PositionListSelector.draw(layout, context)
 
 @OperationDrawerRegistry.register(PipeNames.MATERIAL.value)
-class RandomizeMaterialOperation(ScalarPropertyDrawer):
+class RandomizeMaterialOperation:
 
     @staticmethod
     def draw_editor(layout, context):
-        # Allow the user to select the object for which visibility is to change
         ObjectTargeter.draw(layout, context)
         layout.separator()
-        PositionListSelector.draw(layout, context)
+        MaterialSelector.draw(layout, context)
+
+@OperationDrawerRegistry.register(PipeNames.METALLIC.value)
+class RandomizeMaterialOperation:
+
+    @staticmethod
+    def draw_editor(layout, context):
+        MaterialSelector.draw(layout, context)
+
+@OperationDrawerRegistry.register(PipeNames.ROUGHNESS.value)
+class RandomizeMaterialOperation:
+
+    @staticmethod
+    def draw_editor(layout, context):
+        MaterialSelector.draw(layout, context)
 
 
 DISTRIBUTION_PROPERTIES_MAP = {
