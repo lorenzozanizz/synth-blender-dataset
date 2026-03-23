@@ -45,7 +45,7 @@ class SavePipelineAsOperator(Operator):
                     {
                         'operation_type': op.operation_type,
                         'seed': op.seed,
-                        'intensity': op.intensity,
+                        'intensity': op.config,
                         'enabled': op.enabled,
                     }
                     for op in pipeline.operations

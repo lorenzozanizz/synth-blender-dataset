@@ -1,5 +1,5 @@
 from .panels import RandomizerPanel, SettingsPanel, InfoPanel
-from .pipeline_viewer_list import (RegistrationPanel, AddCameraCategoryPipeMenu, AddLightingCategoryPipeMenu,
+from .pipeline_list_viewer import (RegistrationPanel, AddCameraCategoryPipeMenu, AddLightingCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
                                    PipelineOperationsList, AddExperimentalCategoryPipeMenu)
 from .properties import ext_ui_properties, distribution_settings, operation_properties

@@ -17,11 +17,7 @@ class PipelineOperation(ABC):
     operation_type: str  # "randomize_position", "randomize_rotation", etc.
 
     @abstractmethod
-    def get_default_config(self) -> dict:
-        """Return default config for this operation."""
-        pass
-
-    def get_config(self) -> dict:
+    def from_config(self) -> dict:
         pass
 
     @abstractmethod
@@ -33,8 +29,8 @@ class PipelineOperation(ABC):
 @OperationRegistry.register(PipeNames.SCALE.value)
 class RandomizeScaleOperation(PipelineOperation):
 
-    def get_default_config(self):
-        return { }
+    def from_config(self) -> dict:
+        pass
 
     def execute(self, scene, objects):
         # Your logic

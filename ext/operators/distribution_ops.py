@@ -27,7 +27,7 @@ class RemoveDistributionOperator(Operator):
         distributions = scene.available_distributions
 
         if idx < len(distributions):
-            tree = distributions.node_tree
+            tree = distributions[idx].node_tree
             bpy.data.node_groups.remove(tree)
             distributions.remove(idx)
 

@@ -1,5 +1,5 @@
 from .graphical_ops import (OpenDistributionOperator,
-                           PipeUpOperator, PipeDownOperator, ChangePipelineViewerTabOperator)
+                           PipeUpOperator, PipeDownOperator, ChangePipelineViewerTabOperator, AddFolderOperator)
 from .io_ops import (ApplyLogPathOperator, OpenLogsOperator, SavePipelineAsOperator, LoadPipelineOperator)
 from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, PipeRemoveOperator,
                            CaptureObjectsOperator, CaptureTextureOperator, CaptureObjectPositionOperator,
@@ -12,7 +12,7 @@ operators = (
 
     #
     OpenDistributionOperator, PipeUpOperator, PipeDownOperator,
-    ChangePipelineViewerTabOperator,
+    ChangePipelineViewerTabOperator, AddFolderOperator,
 
     #
     ApplyLogPathOperator, OpenLogsOperator, SavePipelineAsOperator, LoadPipelineOperator,

@@ -1,6 +1,7 @@
 from typing import Union
 
 from ..utils.logger import UniqueLogger
+from ..ui.pipe_schema import PipeSchemaRegistry, PipeSchema
 
 from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
@@ -18,7 +19,7 @@ class PipeAddOperator(Operator):
         new_op = pipeline.operations.add()
         new_op.operation_type = self.op_name
         new_op.seed = 0
-        new_op.intensity = '0.5'
+        new_op.config = '0.5'
         new_op.enabled = True
         return { 'FINISHED' }
 
@@ -61,6 +62,7 @@ class MenuOperator(Operator):
     def draw_menu(self, menu, context):
         layout = menu.layout
 
+        layout.operator("randomizer.add_folder", text="Folder", icon="FILE")
         # Lighting category
         layout.menu('AddLightingCategoryPipeMenu', icon="LIGHT")
         layout.menu('AddCameraCategoryPipeMenu', icon="VIEW_CAMERA")
@@ -81,6 +83,13 @@ class EditPipeOperator(Operator):
         # Select the operation in the UIList
         pipeline.active_operation_index = self.op_index
 
+        # Load the current pipe object and arrange the config panel so that it matches the
+        # current pipe configuration.
+        operation = pipeline.operations[self.op_index]
+        op_name = operation.operation_type
+        config_setup: PipeSchema = PipeSchemaRegistry.get(op_name)
+        if config_setup:
+            config_setup.apply_config_to_ui(context, operation=operation, config = operation.config)
         # Switch to edit tab
         context.window_manager['pipeline_tab'] = 'config'
 

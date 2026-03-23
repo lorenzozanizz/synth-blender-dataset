@@ -1,5 +1,3 @@
-from enum import Enum
-
 from bpy.types import PropertyGroup, NodeTree
 from bpy.props import PointerProperty, StringProperty, BoolProperty, IntProperty, CollectionProperty
 
@@ -8,7 +6,7 @@ class PipelineOperation(PropertyGroup):
     operation_type: StringProperty(name='Type', default='randomize_pose')   # type: ignore
     enabled: BoolProperty(name='Enabled', default=True)                     # type: ignore
     name: StringProperty(name='Name', default="Unnamed")                    # type: ignore
-    intensity: StringProperty(name='Intensity', default='0.5')              # type: ignore
+    config: StringProperty(name='Config', default='{ }')                 # type: ignore
 
 
 class PipelineData(PropertyGroup):
