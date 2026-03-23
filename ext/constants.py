@@ -37,6 +37,7 @@ class PipeNames(Enum):
     INTENSITY   = "Intensity"
     METALLIC    = "Metallic"
     ROUGHNESS   = "Roughness"
+    NODE_PROP   = "Node Property"
 
     # Lighting
     TEMPERATURE = "Temperature"

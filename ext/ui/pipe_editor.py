@@ -444,6 +444,7 @@ class MaterialSelector:
 
         # List
         row = layout.row()
+        row.label(text="Select target materials:")
         row.template_list(
             MaterialUIList.__name__,
             "material_list",
@@ -455,6 +456,16 @@ class MaterialSelector:
         col = row.column()
         col.operator("randomizer.add_material_to_list", icon='ADD', text='')
         col.operator("randomizer.remove_material_from_list", icon='REMOVE', text='')
+
+class NodeTargeter:
+
+    @staticmethod
+    def draw(layout, context):
+        scene = context.scene
+        box = layout.box().row()
+        box.label(text="Target:")
+        box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
+        box.operator("randomizer.capture_general_node", text="Capture Selected", icon='EYEDROPPER')
 
 
 # The following operations
@@ -515,19 +526,35 @@ class RandomizeMaterialOperation:
         MaterialSelector.draw(layout, context)
 
 @OperationDrawerRegistry.register(PipeNames.METALLIC.value)
-class RandomizeMaterialOperation:
+class RandomizeMetallicOperation:
 
     @staticmethod
     def draw_editor(layout, context):
         MaterialSelector.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context)
 
 @OperationDrawerRegistry.register(PipeNames.ROUGHNESS.value)
-class RandomizeMaterialOperation:
+class RandomizeRoughnessOperation:
 
     @staticmethod
     def draw_editor(layout, context):
         MaterialSelector.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context)
 
+@OperationDrawerRegistry.register(PipeNames.INTENSITY.value)
+class RandomizeNodeIntensityOperation:
+
+    @staticmethod
+    def draw_editor(layout, context):
+        pass
+
+@OperationDrawerRegistry.register(PipeNames.NODE_PROP.value)
+class RandomizeNodePropOperation:
+
+    @staticmethod
+    def draw_editor(layout, context):
+
+        NodeTargeter.draw(layout, context)
 
 DISTRIBUTION_PROPERTIES_MAP = {
     Distribution.UNIFORM.name: ['min', 'max'],

@@ -14,10 +14,14 @@ pipe_to_ico_mapping = {
     PipeNames.POSITION: "EMPTY_ARROWS",
     PipeNames.VISIBILITY: "MOD_OPACITY",
     PipeNames.MOVE: "EMPTY_AXIS",
+
     PipeNames.MATERIAL: "MATERIAL",
     PipeNames.TEXTURE: "NODE_TEXTURE",
     PipeNames.ROUGHNESS: "VPAINT_HLT",
     PipeNames.METALLIC: "TPAINT_HLT",
+    PipeNames.NODE_PROP: "CURSOR",
+
+    PipeNames.INTENSITY: "FORCE_TURBULENCE",
 }
 
 class RegistrationPanel(Panel):
@@ -202,7 +206,8 @@ class PipelineOperationsList(UIList):
         sub.scale_x = 0.3  # Make it tiny
         sub.label(text=f"{index + 1}")
 
-        row.label(text=operation.operation_type, icon='LIGHT')
+        type_enum = next(en for en in PipeNames if en.value == operation.operation_type)
+        row.label(text=operation.operation_type, icon=pipe_to_ico_mapping[type_enum])
 
         # Middle: show some property
         row.prop(item, "name", text="", emboss=False)
@@ -264,7 +269,15 @@ class AddMaterialCategoryPipeMenu(Menu):
     def draw(self, context):
         layout = self.layout
         for name in (
-            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.METALLIC, PipeNames.ROUGHNESS
+            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.METALLIC, PipeNames.ROUGHNESS, PipeNames.INTENSITY, PipeNames.NODE_PROP
         ):
             layout.operator("randomizer.add_operation", text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value
+
+class AddExperimentalCategoryPipeMenu(Menu):
+
+    bl_label = 'Experimental'
+    bl_idname = 'AddExperimentalCategoryPipeMenu'
+
+    def draw(self, context):
+        layout = self.layout

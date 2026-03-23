@@ -1,3 +1,7 @@
+from typing import Union
+
+from ..utils.logger import UniqueLogger
+
 from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
 import bpy
@@ -63,6 +67,7 @@ class MenuOperator(Operator):
         layout.menu('AddObjectCategoryPipeMenu', icon="CUBE")
         layout.menu('AddMaterialCategoryPipeMenu', icon="MATERIAL")
         layout.menu('AddConstraintCategoryPipeMenu', icon="RESTRICT_INSTANCED_OFF")
+        layout.menu('AddExperimentalCategoryPipeMenu', icon="EXPERIMENTAL")
 
 
 class EditPipeOperator(Operator):
@@ -103,14 +108,44 @@ class CaptureObjectsOperator(Operator):
         return { 'FINISHED' }
 
 
-class CaptureMaterialOperator(Operator):
+def get_selected_node_and_material(reporter, context, node_name: Union[str, None]) -> tuple:
+    """Get the currently selected node in the active editor"""
+
+    # Get active editor area
+    for area in context.screen.areas:
+        if area.type == 'NODE_EDITOR':
+            # Get the node tree
+            space = area.spaces.active
+            node_tree = space.node_tree
+            if node_tree:
+                mat_name = "Unknown Material"
+                if hasattr(space, "id") and space.id:
+                    mat_name = space.id.name
+
+                # Find selected nodes
+                for node in node_tree.nodes:
+                    if not node.select:
+                        continue
+                    # If the node_name value is set, check if the node matches
+                    if node_name is not None and node.bl_idname != node_name:
+                        return None, None
+                    # At this point the node is selected and is of the correct node type.
+                    if not node.label or node.bl_label.strip() == "":
+                        reporter.report({'WARNING'}, f"Node must have a label to ensure safety!")
+                        return None, None
+                    else:
+                        return node, mat_name
+    return None, None
+
+
+class CaptureTextureOperator(Operator):
     """Capture currently selected objects"""
 
     bl_idname = "randomizer.capture_texture"
     bl_label = "Capture Texture"
 
     def execute(self, context):
-        selected, mat_name = self.get_selected_node_and_material(context)
+        selected, mat_name = get_selected_node_and_material(self, context, 'ShaderNodeTexImage')
 
         if not selected:
             return { 'CANCELLED' }
@@ -122,33 +157,6 @@ class CaptureMaterialOperator(Operator):
         self.report({ 'INFO' }, f"Captured: {mat_name} > {lab}")
         return { 'FINISHED' }
 
-    def get_selected_node_and_material(self, context) -> tuple:
-        """Get the currently selected node in the active editor"""
-
-        # Get active editor area
-        for area in context.screen.areas:
-            if area.type == 'NODE_EDITOR':
-                # Get the node tree
-                space = area.spaces.active
-                node_tree = space.node_tree
-                if node_tree:
-                    mat_name = "Unknown Material"
-                    if hasattr(space, "id") and space.id:
-                        mat_name = space.id.name
-
-                    # Find selected nodes
-                    for node in node_tree.nodes:
-                        if not node.select:
-                            continue
-                        if not node.bl_idname == 'ShaderNodeTexImage':
-                            return None, None
-                        # At this point the node is selected and an image texture node.
-                        if not node.label or node.bl_label.strip() == "":
-                            self.report({'WARNING'}, f"Node must have a label to ensure safety!")
-                            return None, None
-                        else:
-                            return node, mat_name
-        return None, None
 
 class CaptureObjectPositionOperator(Operator):
 
@@ -255,4 +263,54 @@ class RemoveMaterialFromListOperator(Operator):
         if idx < len(scene.material_list):
             scene.material_list.remove(idx)
 
+        return {'FINISHED'}
+
+class CaptureDistributionValueNode(Operator):
+
+    bl_idname = "randomizer.capture_value"
+    bl_label = "Capture Value Node"
+
+    def execute(self, context):
+        selected, mat_name = get_selected_node_and_material(self, context, 'ShaderNodeValue')
+
+        if not selected:
+            return { 'CANCELLED' }
+
+        # Store name
+        lab = selected.label
+        # context.scene.targeted_material_display = f"{mat_name} > {lab}"
+
+        self.report({ 'INFO' }, f"Captured: {mat_name} > {lab}")
+        return { 'FINISHED' }
+
+
+class CaptureAndModifyNodeProperties(Operator):
+
+    bl_idname = "randomizer.capture_general_node"
+    bl_label = "Capture Node"
+
+    def execute(self, context):
+
+        node, mat_name = get_selected_node_and_material(self, context, None)
+
+        if not node:
+            return {'CANCELLED'}
+
+        # Store name
+        lab = node.label
+        # context.scene.targeted_material_display = f"{mat_name} > {lab}"
+        UniqueLogger.quick_log(f"Node: {node.name} ({node.bl_label})")
+
+        UniqueLogger.quick_log(f"Node: {node.name} ({node.bl_label})")
+        UniqueLogger.quick_log(f"Node Type: {node.bl_idname}\n")
+
+        UniqueLogger.quick_log("INPUTS:")
+        UniqueLogger.quick_log("-" * 60)
+        for input_socket in node.inputs:
+            UniqueLogger.quick_log(f"  Name: {input_socket.name}")
+            UniqueLogger.quick_log(f"  Type: {input_socket.type}")
+            UniqueLogger.quick_log(f"  Default Value: {input_socket.default_value}")
+            UniqueLogger.quick_log(f"  BL IDName: {input_socket.bl_idname}")
+
+        self.report({'INFO'}, f"Captured: {mat_name} > {lab}")
         return {'FINISHED'}

@@ -1,7 +1,7 @@
 from .panels import RandomizerPanel, SettingsPanel, InfoPanel
 from .pipeline_viewer_list import (RegistrationPanel, AddCameraCategoryPipeMenu, AddLightingCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
-                                   PipelineOperationsList,)
+                                   PipelineOperationsList, AddExperimentalCategoryPipeMenu)
 from .properties import ext_ui_properties, distribution_settings, operation_properties
 from .pipe_editor import (DistributionTreeList, sync_distribution_handler, PathsUIList, ImagePath, PositionsUIList,
                           ObjectPosition, MaterialListItem, MaterialUIList)
@@ -21,7 +21,7 @@ def unregister_handlers():
 
 classes = (
     RandomizerPanel, SettingsPanel, InfoPanel, RegistrationPanel, AddCameraCategoryPipeMenu,
-    AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList,
+    AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList, AddExperimentalCategoryPipeMenu,
     AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu, DistributionTreeList, PathsUIList,
     ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList
 )
