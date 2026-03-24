@@ -10,7 +10,6 @@ from ..constants import PipeNames
 from abc import ABC, abstractmethod
 
 
-
 class PipelineOperation(ABC):
     """Base class for all pipeline operations."""
 

@@ -2,10 +2,11 @@ from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTION
 from ..distribution.nodes import get_tree_dimensionality
 from ..utils.logger import UniqueLogger
 
+from abc import ABC, abstractmethod
 from typing import Tuple
 
 import bpy
-from bpy.props import StringProperty, FloatVectorProperty, PointerProperty
+from bpy.props import StringProperty, FloatVectorProperty, PointerProperty, BoolProperty
 from bpy.types import UIList, PropertyGroup, Material
 
 
@@ -52,6 +53,7 @@ class MaterialListItem(PropertyGroup):
 class MaterialUIList(UIList):
     """UIList for materials"""
 
+    @staticmethod
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_propname, index):
         mat = item.material
 
@@ -64,7 +66,6 @@ class MaterialUIList(UIList):
         else:
             row = layout.row()
             row.label(text="(Empty)")
-
 
 
 def get_selected_axis_dimension(scene):
@@ -100,7 +101,38 @@ class DistributionTreeList(UIList):
             row.label(text="Broken Tree Link", icon='ERROR')
 
 
-class AxisTarget:
+class EditorWidget(ABC):
+
+    @staticmethod
+    @abstractmethod
+    def draw(layout, context) -> None:
+        """
+
+        :param layout:
+        :param context:
+        :return:
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def extract_data(context) -> dict:
+        """
+
+        :return:
+        """
+        pass
+
+    @staticmethod
+    @abstractmethod
+    def data_keys() -> frozenset:
+        pass
+
+#
+
+class AxisTarget(EditorWidget):
+
+    _keys = frozenset({"do_x", "do_y", "do_z", "dims"})
 
     @staticmethod
     def draw(layout, context):
@@ -119,6 +151,21 @@ class AxisTarget:
         row.separator()
         row.label(text=f"({get_selected_axis_dimension(scene)} Dims.)")
 
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            "do_x": scene.randomize_x,
+            "do_y": scene.randomize_y,
+            "do_z": scene.randomize_z,
+            "dims": get_selected_axis_dimension(context.scene),
+        }
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        return AxisTarget._keys
+
+#
 
 def get_distribution_by_dims(scene, _context) -> list[Tuple]:
     """Get distributions matching selected axes"""
@@ -132,8 +179,11 @@ def get_distribution_by_dims(scene, _context) -> list[Tuple]:
     else:
         return [('NONE', "None", "")]
 
+#
 
-class ObjectTargeter:
+class ObjectTargeter(EditorWidget):
+
+    _keys = frozenset({"do_x", "do_y", "do_z", "dims"})
 
     @staticmethod
     def draw(layout, context):
@@ -149,8 +199,26 @@ class ObjectTargeter:
         box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
         box.operator("randomizer.capture_objects", text="Capture Selected", icon='EYEDROPPER')
 
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
 
-class ImageTextureTargeter:
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
+
+
+#
+
+class ImageTextureTargeter(EditorWidget):
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
 
     @staticmethod
     def draw(layout, context):
@@ -166,8 +234,17 @@ class ImageTextureTargeter:
         box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
         box.operator("randomizer.capture_texture", text="Capture Selected", icon='EYEDROPPER')
 
+#
 
-class PathListSelector:
+class PathListSelector(EditorWidget):
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
 
     @staticmethod
     def draw(layout, context):
@@ -236,8 +313,17 @@ def sync_distribution_handler(scene):
     if scene.selected_distribution_index >= len(scene.available_distributions):
         scene.selected_distribution_index = max(0, len(scene.available_distributions) - 1)
 
+#
 
-class NodeDistributionSelector:
+class NodeDistributionSelector(EditorWidget):
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
 
     @staticmethod
     def draw(layout, context):
@@ -275,10 +361,19 @@ class NodeDistributionSelector:
             else:
                 box.label(text="Valid distribution", icon='CHECKMARK')
         else:
-            SimplifiedDistributionSelector.draw_from_enum(layout, context)
+            SimplifiedDistributionSelector.draw(layout, context)
 
+#
 
-class SimplifiedDistributionSelector:
+class SimplifiedDistributionSelector(EditorWidget):
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
 
     _distribution_map = {
         Distribution.UNIFORM.name: ['min', 'max'],
@@ -296,7 +391,7 @@ class SimplifiedDistributionSelector:
     _name_prefix = "dist_"
 
     @staticmethod
-    def draw_from_enum(layout, context):
+    def draw(layout, context):
         """
 
         :param layout:
@@ -378,8 +473,17 @@ class SimplifiedDistributionSelector:
         row.prop(context.scene, "do_clamp")
         row.prop(context.scene, "clamping_factors")
 
+#
 
-class PositionListSelector:
+class PositionListSelector(EditorWidget):
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
 
     @staticmethod
     def draw(layout, context):
@@ -401,8 +505,17 @@ class PositionListSelector:
         col.operator("randomizer.remove_position", icon='REMOVE', text='')
         col.operator("randomizer.capture_obj_position", icon='EYEDROPPER', text='')
 
+#
 
-class MaterialSelector:
+class MaterialSelector(EditorWidget):
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
 
     @staticmethod
     def draw(layout, context):
@@ -423,8 +536,17 @@ class MaterialSelector:
         col.operator("randomizer.add_material_to_list", icon='ADD', text='')
         col.operator("randomizer.remove_material_from_list", icon='REMOVE', text='')
 
+#
 
-class NodeTargeter:
+class NodeTargeter(EditorWidget):
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
 
     @staticmethod
     def draw(layout, context):

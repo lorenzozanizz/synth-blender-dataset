@@ -23,7 +23,7 @@ classes = (
     RandomizerPanel, SettingsPanel, InfoPanel, RegistrationPanel, AddCameraCategoryPipeMenu,
     AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList, AddExperimentalCategoryPipeMenu,
     AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu, DistributionTreeList, PathsUIList,
-    ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList
+    ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList,
 )
 
 # Update the main UI properties of the pipeline with settings for the configuration of each pipe's distributions

@@ -3,17 +3,16 @@ from enum import Enum
 
 # Use a common sampling raw distribution for all kinds of entries, in this way
 # we can apply the seed to this single RNG and obtain reproducibility.
-
-RECOGNIZED_DISTRIBUTIONS = ("normal", "poisson", "uniform", "gamma", "custom")
-
 class Distribution(Enum):
+
     BERNOULLI = "Bernoulli"
     UNIFORM = "Uniform"
-    MULTIVARIATE_UNIFORM = "Multivariate Uniform"
     BETA = "Beta"
     GEOMETRIC = "Geometric"
     BINOMIAL = "Binomial"
     GAUSSIAN = "Gaussian"
+
+    MULTIVARIATE_UNIFORM = "Multivariate Uniform"
     MULTIVARIATE_GAUSSIAN = "Multivariate Gaussian"
     MULTIVARIATE_ISOTROPIC_GAUSSIAN = "Multivariate Isotropic Gaussian"
 
