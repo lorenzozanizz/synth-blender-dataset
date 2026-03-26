@@ -1,4 +1,4 @@
-from typing import Union
+from .names import Labels
 
 from ..utils.logger import UniqueLogger
 from ..ui.pipe_schema import PipeSchemaRegistry, PipeSchema
@@ -7,9 +7,11 @@ from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
 import bpy
 
+from typing import Union
+
 class PipeAddOperator(Operator):
 
-    bl_idname = "randomizer.add_operation"
+    bl_idname = Labels.ADD_PIPE.value
     bl_label = "Add a new pipe to the pipeline"
 
     op_name: StringProperty(default="Nothing")  # type: ignore
@@ -26,7 +28,7 @@ class PipeAddOperator(Operator):
 
 class PipeRemoveOperator(Operator):
 
-    bl_idname = "randomizer.remove_operation"
+    bl_idname = Labels.REMOVE_PIPE.value
     bl_label = "Select Node"
 
     def execute(self, context):
@@ -49,7 +51,7 @@ class PipeRemoveOperator(Operator):
 
 
 class MenuOperator(Operator):
-    bl_idname = 'randomizer.add_operation_menu'
+    bl_idname = Labels.ADD_MENU_LIST_.value
     bl_label = 'Add Operation'
 
     def execute(self, context):
@@ -73,7 +75,7 @@ class MenuOperator(Operator):
 
 
 class EditPipeOperator(Operator):
-    bl_idname = "randomizer.edit_operation"
+    bl_idname = Labels.EDIT_PIPE.value
     bl_label = "Select Node"
 
     op_index: IntProperty(default=0)        # type: ignore
@@ -99,7 +101,7 @@ class EditPipeOperator(Operator):
 class CaptureObjectsOperator(Operator):
     """Capture currently selected objects"""
 
-    bl_idname = "randomizer.capture_objects"
+    bl_idname = Labels.CAPTURE_OBJECT.value
     bl_label = "Capture Objects"
 
     def execute(self, context):
@@ -150,7 +152,7 @@ def get_selected_node_and_material(reporter, context, node_name: Union[str, None
 class CaptureTextureOperator(Operator):
     """Capture currently selected objects"""
 
-    bl_idname = "randomizer.capture_texture"
+    bl_idname = Labels.CAPTURE_TEXTURE_NODE.value
     bl_label = "Capture Texture"
 
     def execute(self, context):
@@ -169,7 +171,7 @@ class CaptureTextureOperator(Operator):
 
 class CaptureObjectPositionOperator(Operator):
 
-    bl_idname = "randomizer.capture_obj_position"
+    bl_idname = Labels.CAPTURE_OBJ_POSITION.value
     bl_label = "Capture Object Position"
 
     def execute(self, context):
@@ -187,7 +189,7 @@ class CaptureObjectPositionOperator(Operator):
 
 class PositionAddOperator(Operator):
 
-    bl_idname = "randomizer.add_position"
+    bl_idname = Labels.ADD_POSITION_POOL.value
     bl_label = "Add a new target position"
 
     op_name: StringProperty(default="Nothing")  # type: ignore
@@ -200,7 +202,7 @@ class PositionAddOperator(Operator):
 
 class PositionRemoveOperator(Operator):
 
-    bl_idname = "randomizer.remove_position"
+    bl_idname = Labels.REMOVE_POSITION_POOL.value
     bl_label = "Delete the selected target position"
 
     def execute(self, context):
@@ -223,7 +225,7 @@ class PositionRemoveOperator(Operator):
 
 class AddMaterialToListOperator(Operator):
     """Add selected material to list"""
-    bl_idname = "randomizer.add_material_to_list"
+    bl_idname = Labels.ADD_MATERIAL_POOL.value
     bl_label = "Add Material"
 
     # Dropdown property with all materials
@@ -262,7 +264,7 @@ class AddMaterialToListOperator(Operator):
 
 class RemoveMaterialFromListOperator(Operator):
     """Remove material from list"""
-    bl_idname = "randomizer.remove_material_from_list"
+    bl_idname = Labels.REMOVE_MATERIAL_POOL.value
     bl_label = "Remove"
 
     def execute(self, context):
@@ -276,7 +278,7 @@ class RemoveMaterialFromListOperator(Operator):
 
 class CaptureDistributionValueNode(Operator):
 
-    bl_idname = "randomizer.capture_value"
+    bl_idname = Labels.CAPTURE_VALUE_NODE.value
     bl_label = "Capture Value Node"
 
     def execute(self, context):
@@ -295,7 +297,7 @@ class CaptureDistributionValueNode(Operator):
 
 class CaptureAndModifyNodeProperties(Operator):
 
-    bl_idname = "randomizer.capture_general_node"
+    bl_idname = Labels.CAPTURE_GENERAL_NODE.value
     bl_label = "Capture Node"
 
     def execute(self, context):

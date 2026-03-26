@@ -114,9 +114,13 @@ class ChangePipelineViewerTabOperator(Operator):
 
 
 class AddFolderOperator(Operator):
+    """
+
+    """
 
     bl_idname = 'randomizer.add_folder'
     bl_label = "Add folder"
 
     def execute(self, context):
-        pass
+
+        return { 'FINISHED' }

@@ -41,6 +41,8 @@ class RandomizerPanel(Panel):
         layout.separator()  # Adds vertical space
         layout.operator("object.randomizer_generate", text="Generate", icon="TRIA_RIGHT")
 
+    def extract_data(self, context) -> dict:
+        return { }
 
 class SettingsPanel(Panel):
     """ The main panel for the randomizer class, containing the hooks for the

@@ -1,3 +1,4 @@
+from ..operators.names import Labels
 from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS, Distribution
 from ..distribution.nodes import get_tree_dimensionality
 from ..utils.logger import UniqueLogger
@@ -533,12 +534,12 @@ class MaterialSelector(EditorWidget):
 
         # +/- buttons
         col = row.column()
-        col.operator("randomizer.add_material_to_list", icon='ADD', text='')
-        col.operator("randomizer.remove_material_from_list", icon='REMOVE', text='')
+        col.operator(Labels.ADD_MATERIAL_POOL.value, icon='ADD', text='')
+        col.operator(Labels.REMOVE_MATERIAL_POOL.value, icon='REMOVE', text='')
 
 #
 
-class NodeTargeter(EditorWidget):
+class PropertyTargeter(EditorWidget):
 
     @staticmethod
     def extract_data(context) -> dict:
@@ -554,4 +555,26 @@ class NodeTargeter(EditorWidget):
         box = layout.box().row()
         box.label(text="Target:")
         box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
-        box.operator("randomizer.capture_general_node", text="Capture Selected", icon='EYEDROPPER')
+        box.operator(Labels.CAPTURE_GENERAL_NODE.value, text="Capture Selected", icon='EYEDROPPER')
+
+        selected_node_property = True
+        if selected_node_property:
+            pass
+
+class ValueTargeter(EditorWidget):
+
+    @staticmethod
+    def data_keys() -> frozenset:
+        pass
+
+    @staticmethod
+    def draw(layout, context):
+        scene = context.scene
+        box = layout.box().row()
+        box.label(text="Value Node:")
+        box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
+        box.operator(Labels.CAPTURE_VALUE_NODE, text="Capture Selected", icon='EYEDROPPER')
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        return { }

@@ -183,7 +183,8 @@ class RandomizeNodeIntensityOperation(PipeDrawer):
         :param context:
         :return:
         """
-        pass
+        ValueTargeter.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context)
 
 @OperationDrawerRegistry.register(PipeNames.NODE_PROP.value)
 class RandomizeNodePropOperation(PipeDrawer):
@@ -196,5 +197,5 @@ class RandomizeNodePropOperation(PipeDrawer):
         :param context:
         :return:
         """
-
-        NodeTargeter.draw(layout, context)
+        PropertyTargeter.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context)

@@ -52,3 +52,4 @@ class PipeNames(Enum):
     GROUND      = "Ground"
 
     # Noise
+    MOTION_BLUR = "Motion Blur"
