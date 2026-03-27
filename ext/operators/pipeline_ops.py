@@ -101,7 +101,7 @@ class EditPipeOperator(Operator):
 class CaptureObjectsOperator(Operator):
     """Capture currently selected objects"""
 
-    bl_idname = Labels.CAPTURE_OBJECT.value
+    bl_idname = Labels.CAPTURE_OBJECTS.value
     bl_label = "Capture Objects"
 
     def execute(self, context):

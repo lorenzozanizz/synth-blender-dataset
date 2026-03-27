@@ -170,7 +170,8 @@ class RandomizeRoughnessOperation(PipeDrawer):
         :return:
         """
         MaterialSelector.draw(layout, context)
-        NodeDistributionSelector.draw(layout, context)
+        force_axis_dimension(context.scene, dim=1)
+        NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.INTENSITY.value)
 class RandomizeNodeIntensityOperation(PipeDrawer):
@@ -184,7 +185,8 @@ class RandomizeNodeIntensityOperation(PipeDrawer):
         :return:
         """
         ValueTargeter.draw(layout, context)
-        NodeDistributionSelector.draw(layout, context)
+        # force_axis_dimension(context.scene, dim=1)
+        NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.NODE_PROP.value)
 class RandomizeNodePropOperation(PipeDrawer):

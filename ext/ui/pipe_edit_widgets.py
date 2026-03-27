@@ -60,7 +60,7 @@ class MaterialUIList(UIList):
 
         if mat:
             row = layout.row(align=True)
-            sub = row.sub()
+            sub = row.row()
             sub.label(text=f"{index + 1}")
             sub.scale_x = 0.3
             row.label(text=mat.name, icon='MATERIAL')
@@ -79,6 +79,24 @@ def get_selected_axis_dimension(scene):
     is_y = 1 if scene.randomize_y else 0
     is_z = 1 if scene.randomize_z else 0
     return is_x + is_y + is_z
+
+def force_axis_dimension(scene, dim):
+    if dim == 0:
+        scene.randomize_x = False
+        scene.randomize_y = False
+        scene.randomize_z = False
+    elif dim == 1:
+        scene.randomize_x = True
+        scene.randomize_y = False
+        scene.randomize_z = False
+    elif dim == 2:
+        scene.randomize_x = True
+        scene.randomize_y = True
+        scene.randomize_z = False
+    else:
+        scene.randomize_x = True
+        scene.randomize_y = True
+        scene.randomize_z = True
 
 
 class DistributionTreeList(UIList):
@@ -124,16 +142,9 @@ class EditorWidget(ABC):
         """
         pass
 
-    @staticmethod
-    @abstractmethod
-    def data_keys() -> frozenset:
-        pass
-
 #
 
 class AxisTarget(EditorWidget):
-
-    _keys = frozenset({"do_x", "do_y", "do_z", "dims"})
 
     @staticmethod
     def draw(layout, context):
@@ -162,10 +173,6 @@ class AxisTarget(EditorWidget):
             "dims": get_selected_axis_dimension(context.scene),
         }
 
-    @staticmethod
-    def data_keys() -> frozenset:
-        return AxisTarget._keys
-
 #
 
 def get_distribution_by_dims(scene, _context) -> list[Tuple]:
@@ -184,8 +191,6 @@ def get_distribution_by_dims(scene, _context) -> list[Tuple]:
 
 class ObjectTargeter(EditorWidget):
 
-    _keys = frozenset({"do_x", "do_y", "do_z", "dims"})
-
     @staticmethod
     def draw(layout, context):
         """
@@ -198,16 +203,11 @@ class ObjectTargeter(EditorWidget):
         box = layout.box().row()
         box.label(text="Target:")
         box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
-        box.operator("randomizer.capture_objects", text="Capture Selected", icon='EYEDROPPER')
+        box.operator(Labels.CAPTURE_OBJECTS.value, text="Capture Selected", icon='EYEDROPPER')
 
     @staticmethod
     def extract_data(context) -> dict:
         pass
-
-    @staticmethod
-    def data_keys() -> frozenset:
-        pass
-
 
 #
 
@@ -215,10 +215,6 @@ class ImageTextureTargeter(EditorWidget):
 
     @staticmethod
     def extract_data(context) -> dict:
-        pass
-
-    @staticmethod
-    def data_keys() -> frozenset:
         pass
 
     @staticmethod
@@ -233,7 +229,7 @@ class ImageTextureTargeter(EditorWidget):
         box = layout.box().row()
         box.label(text="Material:")
         box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
-        box.operator("randomizer.capture_texture", text="Capture Selected", icon='EYEDROPPER')
+        box.operator(Labels.CAPTURE_TEXTURE_NODE.value, text="Capture Selected", icon='EYEDROPPER')
 
 #
 
@@ -241,10 +237,6 @@ class PathListSelector(EditorWidget):
 
     @staticmethod
     def extract_data(context) -> dict:
-        pass
-
-    @staticmethod
-    def data_keys() -> frozenset:
         pass
 
     @staticmethod
@@ -272,8 +264,8 @@ class PathListSelector(EditorWidget):
 
             # +/- buttons
             col = row.column()
-            col.operator("randomizer.add_image_path", icon='ADD', text='')
-            col.operator("randomizer.remove_image_path", icon='REMOVE', text='')
+            col.operator(Labels.ADD_IMAGE_PATH_POOL.value, icon='ADD', text='')
+            col.operator(Labels.REMOVE_IMAGE_PATH_POOL.value, icon='REMOVE', text='')
 
 
 def sync_distribution_handler(scene):
@@ -323,13 +315,10 @@ class NodeDistributionSelector(EditorWidget):
         pass
 
     @staticmethod
-    def data_keys() -> frozenset:
-        pass
-
-    @staticmethod
-    def draw(layout, context):
+    def draw(layout, context, dim = None):
         """
 
+        :param dim:
         :param layout:
         :param context:
         :return:
@@ -337,6 +326,9 @@ class NodeDistributionSelector(EditorWidget):
         scene = context.scene
         layout.prop(scene, "use_distribution_tree")
 
+        if dim is not None:
+            force_axis_dimension(layout, dim)
+        dimension = dim if dim is not None else get_selected_axis_dimension(scene)
         if scene.use_distribution_tree:
             box = layout.box()
             box.label(text="Saved Distributions")
@@ -350,8 +342,8 @@ class NodeDistributionSelector(EditorWidget):
 
             # Add/Remove buttons
             col = row.column()
-            col.operator("randomizer.add_distribution", icon='ADD', text='')
-            col.operator("randomizer.remove_distribution", icon='REMOVE', text='')
+            col.operator(Labels.ADD_DISTRIBUTION.value, icon='ADD', text='')
+            col.operator(Labels.REMOVE_DISTRIBUTION.value, icon='REMOVE', text='')
 
             if len(scene.available_distributions) == 0:
                 return
@@ -362,15 +354,11 @@ class NodeDistributionSelector(EditorWidget):
             else:
                 box.label(text="Valid distribution", icon='CHECKMARK')
         else:
-            SimplifiedDistributionSelector.draw(layout, context)
+            SimplifiedDistributionSelector.draw(layout, context, dim=dimension)
 
 #
 
 class SimplifiedDistributionSelector(EditorWidget):
-
-    @staticmethod
-    def data_keys() -> frozenset:
-        pass
 
     @staticmethod
     def extract_data(context) -> dict:
@@ -392,9 +380,10 @@ class SimplifiedDistributionSelector(EditorWidget):
     _name_prefix = "dist_"
 
     @staticmethod
-    def draw(layout, context):
+    def draw(layout, context, dim=None):
         """
 
+        :param dim:
         :param layout:
         :param context:
         :return:
@@ -407,7 +396,7 @@ class SimplifiedDistributionSelector(EditorWidget):
         SimplifiedDistributionSelector.draw_for(
             box, context,
             dist_name=(scene.simple_distribution_enum or "").upper(),
-            num_dims=get_selected_axis_dimension(scene),
+            num_dims= dim if dim is not None else get_selected_axis_dimension(scene),
             show_cmds=True
         )
 
@@ -425,11 +414,12 @@ class SimplifiedDistributionSelector(EditorWidget):
         """
 
         scene = context.scene
-        box = layout.box()
 
         if dist_name == "NONE":
             layout.label(text="No distribution.")
             return
+
+        box = layout.box()
         if label and label != "":
             box.label(text=label)
 
@@ -450,8 +440,9 @@ class SimplifiedDistributionSelector(EditorWidget):
 
                 row.label(text=vector_names[extended_name])
                 row.prop(scene, extended_name, index=0, text="X")
-                row.prop(scene, extended_name, index=1, text="Y")
-                if num_dims == 3:
+                if num_dims >= 2:
+                    row.prop(scene, extended_name, index=1, text="Y")
+                if num_dims >= 3:
                     row.prop(scene, extended_name, index=2, text="Z")
             else:
                 box.prop(context.scene, extended_name)
@@ -483,10 +474,6 @@ class PositionListSelector(EditorWidget):
         pass
 
     @staticmethod
-    def data_keys() -> frozenset:
-        pass
-
-    @staticmethod
     def draw(layout, context):
         scene = context.scene
 
@@ -502,9 +489,9 @@ class PositionListSelector(EditorWidget):
 
         # Add/Remove buttons
         col = row.column()
-        col.operator("randomizer.add_position", icon='ADD', text='')
-        col.operator("randomizer.remove_position", icon='REMOVE', text='')
-        col.operator("randomizer.capture_obj_position", icon='EYEDROPPER', text='')
+        col.operator(Labels.ADD_POSITION_POOL.value, icon='ADD', text='')
+        col.operator(Labels.REMOVE_POSITION_POOL.value, icon='REMOVE', text='')
+        col.operator(Labels.CAPTURE_OBJ_POSITION.value, icon='EYEDROPPER', text='')
 
 #
 
@@ -515,16 +502,12 @@ class MaterialSelector(EditorWidget):
         pass
 
     @staticmethod
-    def data_keys() -> frozenset:
-        pass
-
-    @staticmethod
     def draw(layout, context):
         scene = context.scene
 
         # List
+        layout.label(text="Select target materials:")
         row = layout.row()
-        row.label(text="Select target materials:")
         row.template_list(
             MaterialUIList.__name__,
             "material_list",
@@ -546,10 +529,6 @@ class PropertyTargeter(EditorWidget):
         pass
 
     @staticmethod
-    def data_keys() -> frozenset:
-        pass
-
-    @staticmethod
     def draw(layout, context):
         scene = context.scene
         box = layout.box().row()
@@ -563,9 +542,6 @@ class PropertyTargeter(EditorWidget):
 
 class ValueTargeter(EditorWidget):
 
-    @staticmethod
-    def data_keys() -> frozenset:
-        pass
 
     @staticmethod
     def draw(layout, context):

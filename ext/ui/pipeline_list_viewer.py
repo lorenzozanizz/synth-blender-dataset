@@ -1,5 +1,6 @@
 from .pipe_editor import OperationDrawerRegistry
 
+from ..operators.names import Labels
 from ..constants import PipeNames
 from ..constants import PANEL_CATEGORY, panel_conflict_rename
 from ..utils.logger import UniqueLogger
@@ -46,7 +47,7 @@ class RegistrationPanel(Panel):
         active = context.window_manager.get('pipeline_tab', 'ops')
 
         for tab_id, tab_label in [('ops', 'View Pipeline'), ('config', 'Edit Current')]:
-            row.operator('randomizer.set_pipeline_tab',
+            row.operator(Labels.CHANGE_VIEW_TAB_BUTTON_.value,
                          text=tab_label,
                          depress=(tab_id == active),
                          emboss=True).tab = tab_id
@@ -101,12 +102,12 @@ class RegistrationPanel(Panel):
         )
 
         col = row.column(align=True)
-        col.operator('randomizer.add_operation_menu', icon='ADD', text='')
-        col.operator('randomizer.remove_operation', icon='REMOVE', text='')
+        col.operator(Labels.ADD_MENU_LIST_.value, icon='ADD', text='')
+        col.operator(Labels.REMOVE_PIPE.value, icon='REMOVE', text='')
         col.separator()
 
-        col.operator('randomizer.up_operation', icon='BACK', text='')
-        col.operator('randomizer.down_operation', icon='FORWARD', text='')
+        col.operator(Labels.PIPE_UP_OPERATION_.value, icon='BACK', text='')
+        col.operator(Labels.PIPE_DOWN_OPERATION_.value, icon='FORWARD', text='')
 
         layout.separator()
 
@@ -120,12 +121,12 @@ class RegistrationPanel(Panel):
         box = row.box()
         box.label(text="Load pipeline", icon="WORDWRAP_OFF")
         box.prop(scene, "randomizer_config_path")
-        box.operator("randomizer.load_pipeline", text="Load", icon="FILE")
+        box.operator(Labels.LOAD_PIPELINE_JSON.value, text="Load", icon="FILE")
 
         box = row.box()
         box.label(text='Save Pipeline', icon='FILE_TICK')
         box.prop(scene, "randomizer_pipeline_save_path")
-        box.operator('randomizer.save_pipeline', text='Save', icon="FILE_TICK")
+        box.operator(Labels.SAVE_PIPELINE_JSON.value, text='Save', icon="FILE_TICK")
 
 
     def draw_edit_view(self, context, pipeline):
@@ -152,7 +153,7 @@ class RegistrationPanel(Panel):
             reg_op.draw_editor(layout, context)
 
         layout.separator()
-        layout.operator('randomizer.set_pipeline_tab', text="Save", emboss=True).tab = 'ops'
+        layout.operator(Labels.CHANGE_VIEW_TAB_BUTTON_.value, text="Save", emboss=True).tab = 'ops'
 
 
     def draw_filter(self, _context, layout):
@@ -213,7 +214,7 @@ class PipelineOperationsList(UIList):
         row.prop(item, "name", text="", emboss=False)
         row.prop(operation, 'enabled', text='')
         # Right side: edit button
-        row.operator('randomizer.edit_operation', text='', icon='GREASEPENCIL').op_index = index
+        row.operator(Labels.EDIT_PIPE.value, text='', icon='GREASEPENCIL').op_index = index
 
 
 # Submenu for lighting operations
@@ -248,7 +249,7 @@ class AddObjectCategoryPipeMenu(Menu):
         for name in (
             PipeNames.ROTATION, PipeNames.MOVE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY
         ):
-            layout.operator("randomizer.add_operation", text=name.value,
+            layout.operator(Labels.ADD_PIPE.value, text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value
 
 # Submenu for camera operations
@@ -271,7 +272,7 @@ class AddMaterialCategoryPipeMenu(Menu):
         for name in (
             PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.METALLIC, PipeNames.ROUGHNESS, PipeNames.INTENSITY, PipeNames.NODE_PROP
         ):
-            layout.operator("randomizer.add_operation", text=name.value,
+            layout.operator(Labels.ADD_PIPE.value, text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value
 
 class AddExperimentalCategoryPipeMenu(Menu):

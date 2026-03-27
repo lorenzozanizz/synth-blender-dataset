@@ -5,12 +5,16 @@
 
 """
 
-import bpy
+from .names import Labels
+
 from bpy.types import Operator
 from bpy.props import StringProperty, IntProperty
 
+import bpy
+
 class OpenDistributionOperator(Operator):
-    bl_idname = 'randomizer.open_distribution_editor'
+
+    bl_idname = Labels.OPEN_DISTRI_EDITOR.value
     bl_label = 'Edit Distribution'
 
     op_index: IntProperty()             # type: ignore
@@ -65,7 +69,7 @@ class OpenDistributionOperator(Operator):
 
 class PipeUpOperator(Operator):
 
-    bl_idname = "randomizer.up_operation"
+    bl_idname = Labels.PIPE_UP_OPERATION_.value
     bl_label = "Select Node"
 
     def execute(self, context):
@@ -85,7 +89,8 @@ class PipeUpOperator(Operator):
 
 
 class PipeDownOperator(Operator):
-    bl_idname = "randomizer.down_operation"
+
+    bl_idname = Labels.PIPE_DOWN_OPERATION_.value
     bl_label = "Select Node"
 
     def execute(self, context):
@@ -104,7 +109,8 @@ class PipeDownOperator(Operator):
 
 
 class ChangePipelineViewerTabOperator(Operator):
-    bl_idname = 'randomizer.set_pipeline_tab'
+
+    bl_idname = Labels.CHANGE_VIEW_TAB_BUTTON_.value
     bl_label = 'Set Tab'
     tab: StringProperty()                               # type: ignore
 
@@ -118,7 +124,7 @@ class AddFolderOperator(Operator):
 
     """
 
-    bl_idname = 'randomizer.add_folder'
+    bl_idname = Labels.ADD_FOLDER_MENU.value
     bl_label = "Add folder"
 
     def execute(self, context):

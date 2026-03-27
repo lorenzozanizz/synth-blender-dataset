@@ -1,10 +1,13 @@
+from .names import Labels
+
 from bpy.types import Operator
 from bpy.props import StringProperty
 import bpy
 
 class AddDistributionOperator(Operator):
     """Create new distribution tree."""
-    bl_idname = "randomizer.add_distribution"
+
+    bl_idname = Labels.ADD_DISTRIBUTION.value
     bl_label = "Add Distribution"
 
     def execute(self, _context):
@@ -18,7 +21,8 @@ class AddDistributionOperator(Operator):
 
 class RemoveDistributionOperator(Operator):
     """Remove selected distribution tree."""
-    bl_idname = "randomizer.remove_distribution"
+
+    bl_idname = Labels.REMOVE_DISTRIBUTION.value
     bl_label = "Remove Distribution"
 
     def execute(self, context):
@@ -39,7 +43,8 @@ class RemoveDistributionOperator(Operator):
 
 class AddImagePathOperator(Operator):
     """Add image file to list"""
-    bl_idname = "randomizer.add_image_path"
+
+    bl_idname = Labels.ADD_IMAGE_PATH_POOL.value
     bl_label = "Add Image"
 
     filepath: StringProperty(subtype='FILE_PATH')           # type: ignore
@@ -56,7 +61,8 @@ class AddImagePathOperator(Operator):
 
 class RemoveImagePathOperator(Operator):
     """Remove image path from list"""
-    bl_idname = "randomizer.remove_image_path"
+
+    bl_idname = Labels.REMOVE_IMAGE_PATH_POOL.value
     bl_label = "Remove Image"
 
     def execute(self, context):

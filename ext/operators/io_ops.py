@@ -1,3 +1,6 @@
+from .names import Labels
+from ..utils.logger import UniqueLogger
+
 import os
 import json
 import platform
@@ -8,13 +11,11 @@ from contextlib import redirect_stdout
 from bpy.types import Operator
 from bpy.props import StringProperty
 
-from ..utils.logger import UniqueLogger
-
 import bpy
 
 class LoadPipelineOperator(Operator):
 
-    bl_idname = "randomizer.load_pipeline"
+    bl_idname = Labels.LOAD_PIPELINE_JSON.value
     bl_label = "Load Pipeline"
 
     def execute(self, context):
@@ -30,7 +31,7 @@ class LoadPipelineOperator(Operator):
 
 class SavePipelineAsOperator(Operator):
 
-    bl_idname = "randomizer.save_pipeline"
+    bl_idname = Labels.SAVE_PIPELINE_JSON.value
     bl_label = "Write back the pipeline"
 
     filepath: StringProperty(subtype='FILE_PATH', default='pipeline.json')          # type: ignore
@@ -78,7 +79,7 @@ class SavePipelineAsOperator(Operator):
 
 class OpenLogsOperator(Operator):
     """Open the log file in default editor"""
-    bl_idname = "randomizer.open_log_file"
+    bl_idname = Labels.OPEN_LOG_DIRECTORY.value
     bl_label = "Open Log File"
 
     def execute(self, _context):
@@ -128,7 +129,8 @@ def setup_logger_from_scene(context) -> bool:
 
 
 class ApplyLogPathOperator(Operator):
-    bl_idname = "randomizer.setup_log"
+
+    bl_idname = Labels.SETUP_LOGGER_DIR.value
     bl_label = "Apply Log Path"
 
     def execute(self, context):

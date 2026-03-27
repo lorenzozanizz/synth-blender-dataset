@@ -1,3 +1,6 @@
+
+from ..operators.names import Labels
+from ..core.names import CoreLabels
 from ..constants import *
 
 from bpy.types import Panel
@@ -39,7 +42,7 @@ class RandomizerPanel(Panel):
         layout.prop(scene, "randomizer_append_checkbox")
 
         layout.separator()  # Adds vertical space
-        layout.operator("object.randomizer_generate", text="Generate", icon="TRIA_RIGHT")
+        layout.operator(CoreLabels.GENERATE.value, text="Generate", icon="TRIA_RIGHT")
 
     def extract_data(self, context) -> dict:
         return { }
@@ -72,9 +75,9 @@ class SettingsPanel(Panel):
         box.enabled = scene.randomizer_enable_logging
         box.prop(scene, "randomizer_logging_path")
         row = box.row(align=True)
-        row.operator("randomizer.open_log_file", text="Open logs", icon="KEY_MENU")
 
-        row.operator("randomizer.setup_log", text="Save path", icon="FILE_TICK")
+        row.operator(Labels.OPEN_LOG_DIRECTORY.value, text="Open logs", icon="KEY_MENU")
+        row.operator(Labels.SETUP_LOGGER_DIR.value, text="Save path", icon="FILE_TICK")
         layout.separator()
 
 
@@ -110,9 +113,9 @@ class InfoPanel(Panel):
         col.label(text="Links:")
 
         row = col.row()
-        op = row.operator("wm.url_open", text="GitHub", icon='URL')
+        op = row.operator(Labels.OPEN_URL.value, text="GitHub", icon='URL')
         op.url = REPO_URL
-        op = row.operator("wm.url_open", text="Documentation", icon='FILE_FOLDER')
+        op = row.operator(Labels.OPEN_URL.value, text="Documentation", icon='FILE_FOLDER')
         op.url = DOCU_URL
 
 
