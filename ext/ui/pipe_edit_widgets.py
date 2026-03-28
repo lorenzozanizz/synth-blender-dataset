@@ -88,7 +88,11 @@ class DistributionTreeList(UIList):
             row.label(text="Broken Tree Link", icon='ERROR')
 
 
+
 class EditorWidget(ABC):
+    """
+
+    """
 
     @staticmethod
     @abstractmethod
@@ -110,6 +114,11 @@ class EditorWidget(ABC):
         """
         pass
 
+    @staticmethod
+    @abstractmethod
+    def setup_from_config(config: dict) -> None:
+        pass
+
 #
 
 class AxisTarget(EditorWidget):
@@ -119,12 +128,13 @@ class AxisTarget(EditorWidget):
         layout = layout
         scene = context.scene
 
-        # 3 checkboxes in a row
+        # 3 checkboxes in a row, one for each dimension
         row = layout.row(align=True)
         row.label(text="Axis:")
 
         sub = row.row(align=True)
-        sub.scale_x = 0.7  # Shrink to 30% width
+        # Shrink to 30% width to avoid cluttering the GUI
+        sub.scale_x = 0.7
         sub.prop(scene, "randomize_x", text="X", toggle=True)
         sub.prop(scene, "randomize_y", text="Y", toggle=True)
         sub.prop(scene, "randomize_z", text="Z", toggle=True)
@@ -135,9 +145,9 @@ class AxisTarget(EditorWidget):
     def extract_data(context) -> dict:
         scene = context.scene
         return {
-            "do_x": scene.randomize_x,
-            "do_y": scene.randomize_y,
-            "do_z": scene.randomize_z,
+            "randomize_x": scene.randomize_x,
+            "randomize_y": scene.randomize_y,
+            "randomize_z": scene.randomize_z,
             "dims": AxisTarget.get_selected_axis_dimension(context.scene),
         }
 
@@ -232,47 +242,7 @@ class PathListSelector(EditorWidget):
             col.operator(Labels.ADD_IMAGE_PATH_POOL.value, icon='ADD', text='')
             col.operator(Labels.REMOVE_IMAGE_PATH_POOL.value, icon='REMOVE', text='')
 
-
-def sync_distribution_handler(scene):
-    """Synchronizes scene.available_distributions with actual bpy.data.node_groups."""
-
-    # Get all actual DistributionNodeTree instances
-    actual_trees = [
-        tree for tree in bpy.data.node_groups
-        if tree.bl_idname == "DistributionNodeTree"
-    ]
-    UniqueLogger.quick_log(str(actual_trees))
-
-    # Get names of existing items
-    existing_names = {item.name for item in scene.available_distributions}
-    actual_names = {tree.name for tree in actual_trees}
-
-    # Remove items that no longer exist
-    items_to_remove = []
-    for idx, item in enumerate(scene.available_distributions):
-        if item.name not in actual_names:
-            items_to_remove.append(idx)
-
-    for idx in reversed(items_to_remove):
-        scene.available_distributions.remove(idx)
-
-    # Add new items and update pointers
-    for tree in actual_trees:
-        if tree.name not in existing_names:
-            item = scene.available_distributions.add()
-            item.name = tree.name
-            item.node_tree = tree
-        else:
-            for item in scene.available_distributions:
-                if item.name == tree.name:
-                    # Reconcile possible missing links
-                    item.node_tree = tree
-                    break
-    if scene.selected_distribution_index >= len(scene.available_distributions):
-        scene.selected_distribution_index = max(0, len(scene.available_distributions) - 1)
-
 #
-
 class NodeDistributionSelector(EditorWidget):
 
     @staticmethod
@@ -516,7 +486,6 @@ class PropertyTargeter(EditorWidget):
             pass
 
 class ValueTargeter(EditorWidget):
-
 
     @staticmethod
     def draw(layout, context):

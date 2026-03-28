@@ -3,8 +3,10 @@ from .pipeline_list_viewer import (RegistrationPanel, AddCameraCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
                                    PipelineOperationsList, AddExperimentalCategoryPipeMenu)
 from .properties import ext_ui_properties, distribution_settings, operation_properties
-from .pipe_editor import (DistributionTreeList, sync_distribution_handler, PathsUIList, ImagePath, PositionsUIList,
+from .pipe_editor import (DistributionTreeList, PathsUIList, ImagePath, PositionsUIList,
                           ObjectPosition, MaterialListItem, MaterialUIList)
+
+from .handlers import sync_distribution_handler
 
 import bpy
 

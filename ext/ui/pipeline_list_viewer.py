@@ -116,17 +116,19 @@ class RegistrationPanel(Panel):
         layout.operator("object.randomizer_node_selector", text="Pick node", icon="LINE_DATA")
         scene = context.scene
 
-        row = layout.row(align=True)
+        main_row = layout.row(align=True)
 
-        box = row.box()
+        box = main_row.box()
         box.label(text="Load pipeline", icon="WORDWRAP_OFF")
-        box.prop(scene, "randomizer_config_path")
-        box.operator(Labels.LOAD_PIPELINE_JSON.value, text="Load", icon="FILE")
+        row = box.row(align=True)
+        row.prop(scene, "randomizer_config_path", text="")
+        row.operator(Labels.LOAD_PIPELINE_JSON.value, text="Load", icon="FILE")
 
-        box = row.box()
+        box = main_row.box()
         box.label(text='Save Pipeline', icon='FILE_TICK')
-        box.prop(scene, "randomizer_pipeline_save_path")
-        box.operator(Labels.SAVE_PIPELINE_JSON.value, text='Save', icon="FILE_TICK")
+        row = box.row(align=True)
+        row.prop(scene, "randomizer_pipeline_save_path", text="")
+        row.operator(Labels.SAVE_PIPELINE_JSON.value, text="Save", icon="FILE_TICK")
 
 
     def draw_edit_view(self, context, pipeline):
@@ -197,7 +199,6 @@ class RegistrationPanel(Panel):
 class PipelineOperationsList(UIList):
 
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_propname, index):
-        # item = the current PipelineOperation
 
         operation = item
 
@@ -207,14 +208,18 @@ class PipelineOperationsList(UIList):
         sub.scale_x = 0.3  # Make it tiny
         sub.label(text=f"{index + 1}")
 
-        type_enum = next(en for en in PipeNames if en.value == operation.operation_type)
-        row.label(text=operation.operation_type, icon=pipe_to_ico_mapping[type_enum])
+        op_type = operation.operation_type
+        type_enum = next(en for en in PipeNames if en.value == op_type)
+        row.label(text=op_type, icon=pipe_to_ico_mapping[type_enum])
 
         # Middle: show some property
         row.prop(item, "name", text="", emboss=False)
         row.prop(operation, 'enabled', text='')
         # Right side: edit button
-        row.operator(Labels.EDIT_PIPE.value, text='', icon='GREASEPENCIL').op_index = index
+        # (NOTE: This should not be here for a folder special pipe, instead there should be a special
+        # "open" button)
+        if op_type.lower() != "folder":
+            row.operator(Labels.EDIT_PIPE.value, text='', icon='GREASEPENCIL').op_index = index
 
 
 # Submenu for lighting operations

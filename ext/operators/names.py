@@ -52,42 +52,40 @@ class Labels(Enum):
 
     # ------------- Names inside io_ops.py ---------------
     # |
-    # (  )
+    # ( Setup the logger directory and create the log file )
     SETUP_LOGGER_DIR        = "randomizer.setup_log"
-    # (  )
+    # ( Save a pipeline inside a JSON file as a human-readable dictionary )
     SAVE_PIPELINE_JSON      = "randomizer.save_pipeline"
-    # (  )
+    # ( Load a pipeline from a JSON file as inner pipe representation )
     LOAD_PIPELINE_JSON      = "randomizer.load_pipeline"
-    # (  )
+    # ( Open the log file directory using operative system utils. A bit messy on w11 noteblock )
     OPEN_LOG_DIRECTORY      = "randomizer.open_log_file"
 
     # ------------- Names inside graphical_ops.py ---------------
     # |
-    # (  )
+    # ( Add a special folder pipe which acts as a container of sub-pipes for neatness )
     ADD_FOLDER_MENU         = "randomizer.add_folder"
-    # (  )
+    # ( Set the current tab for the pipeline editor, e.g. list vs. edit pipe )
     CHANGE_VIEW_TAB_BUTTON_ = "randomizer.set_pipeline_tab"
-    # (  )
+    # ( Move a pipe down in the pipeline )
     PIPE_DOWN_OPERATION_    = "randomizer.down_operation"
-    # (  )
+    # ( Move the pipe up in the pipeline )
     PIPE_UP_OPERATION_      = "randomizer.up_operation"
-    # (  )
-    EDIT_PIPE_MENU_         = "randomizer.open_distribution_editor"
-    # (  )
+    # ( Open the editor for the selected distribution in another workflow sidebar)
     OPEN_DISTRI_EDITOR      = "randomizer.open_distribution_editor"
 
     # ------------- Names inside distribution_ops.py ---------------
     # |
-    # (  )
+    # ( Remove a target image path from the randomization pool )
     REMOVE_IMAGE_PATH_POOL  = "randomizer.remove_image_path"
-    # (  )
+    # ( Add a target image path to the randomization pool )
     ADD_IMAGE_PATH_POOL     = "randomizer.add_image_path"
-    # (  )
+    # ( Remove a distribution from the distribution selector list )
     REMOVE_DISTRIBUTION     = "randomizer.remove_distribution"
-    # (  )
+    # ( Add a distribution to the distribution selector list )
     ADD_DISTRIBUTION        = "randomizer.add_distribution"
 
     # ------------- Default namespace names ---------------
     # |
-    # (  )
+    # ( Default operator to open a URL.  )
     OPEN_URL                = "wm.url_open"
