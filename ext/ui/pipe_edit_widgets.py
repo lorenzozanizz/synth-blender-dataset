@@ -1,13 +1,12 @@
 from ..operators.names import Labels
-from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS, Distribution
+from ..distribution.computation import Distribution
 from ..distribution.nodes import get_tree_dimensionality
 from ..utils.logger import UniqueLogger
 
 from abc import ABC, abstractmethod
-from typing import Tuple
 
 import bpy
-from bpy.props import StringProperty, FloatVectorProperty, PointerProperty, BoolProperty
+from bpy.props import StringProperty, FloatVectorProperty, PointerProperty
 from bpy.types import UIList, PropertyGroup, Material
 
 
@@ -67,37 +66,6 @@ class MaterialUIList(UIList):
         else:
             row = layout.row()
             row.label(text="(Empty)")
-
-
-def get_selected_axis_dimension(scene):
-    """
-
-    :param scene:
-    :return:
-    """
-    is_x = 1 if scene.randomize_x else 0
-    is_y = 1 if scene.randomize_y else 0
-    is_z = 1 if scene.randomize_z else 0
-    return is_x + is_y + is_z
-
-def force_axis_dimension(scene, dim):
-    if dim == 0:
-        scene.randomize_x = False
-        scene.randomize_y = False
-        scene.randomize_z = False
-    elif dim == 1:
-        scene.randomize_x = True
-        scene.randomize_y = False
-        scene.randomize_z = False
-    elif dim == 2:
-        scene.randomize_x = True
-        scene.randomize_y = True
-        scene.randomize_z = False
-    else:
-        scene.randomize_x = True
-        scene.randomize_y = True
-        scene.randomize_z = True
-
 
 class DistributionTreeList(UIList):
 
@@ -161,7 +129,7 @@ class AxisTarget(EditorWidget):
         sub.prop(scene, "randomize_y", text="Y", toggle=True)
         sub.prop(scene, "randomize_z", text="Z", toggle=True)
         row.separator()
-        row.label(text=f"({get_selected_axis_dimension(scene)} Dims.)")
+        row.label(text=f"({AxisTarget.get_selected_axis_dimension(scene)} Dims.)")
 
     @staticmethod
     def extract_data(context) -> dict:
@@ -170,23 +138,20 @@ class AxisTarget(EditorWidget):
             "do_x": scene.randomize_x,
             "do_y": scene.randomize_y,
             "do_z": scene.randomize_z,
-            "dims": get_selected_axis_dimension(context.scene),
+            "dims": AxisTarget.get_selected_axis_dimension(context.scene),
         }
 
-#
+    @staticmethod
+    def get_selected_axis_dimension(scene):
+        """
 
-def get_distribution_by_dims(scene, _context) -> list[Tuple]:
-    """Get distributions matching selected axes"""
-
-    num_dims = get_selected_axis_dimension(scene)
-
-    if num_dims == 1:
-        return [(dist.name, dist.value.title(), "") for dist in ONE_D_DISTRIBUTIONS]
-    elif num_dims >= 2:
-        return [(dist.name, dist.value.title(), "") for dist in UPPER_D_DISTRIBUTIONS]
-    else:
-        return [('NONE', "None", "")]
-
+        :param scene:
+        :return:
+        """
+        is_x = 1 if scene.randomize_x else 0
+        is_y = 1 if scene.randomize_y else 0
+        is_z = 1 if scene.randomize_z else 0
+        return is_x + is_y + is_z
 #
 
 class ObjectTargeter(EditorWidget):
@@ -315,7 +280,7 @@ class NodeDistributionSelector(EditorWidget):
         pass
 
     @staticmethod
-    def draw(layout, context, dim = None):
+    def draw(layout, context, dim: int = 0):
         """
 
         :param dim:
@@ -326,9 +291,7 @@ class NodeDistributionSelector(EditorWidget):
         scene = context.scene
         layout.prop(scene, "use_distribution_tree")
 
-        if dim is not None:
-            force_axis_dimension(layout, dim)
-        dimension = dim if dim is not None else get_selected_axis_dimension(scene)
+        UniqueLogger.quick_log(f"USING DIM {dim}")
         if scene.use_distribution_tree:
             box = layout.box()
             box.label(text="Saved Distributions")
@@ -354,7 +317,7 @@ class NodeDistributionSelector(EditorWidget):
             else:
                 box.label(text="Valid distribution", icon='CHECKMARK')
         else:
-            SimplifiedDistributionSelector.draw(layout, context, dim=dimension)
+            SimplifiedDistributionSelector.draw(layout, context, dim=dim)
 
 #
 
@@ -380,7 +343,16 @@ class SimplifiedDistributionSelector(EditorWidget):
     _name_prefix = "dist_"
 
     @staticmethod
-    def draw(layout, context, dim=None):
+    def enum_name_from_dim(dim: int) -> str:
+        if dim == 1:
+            return "simple_distribution_enum_1d"
+        elif dim == 2:
+            return "simple_distribution_enum_2d"
+        else:
+            return "simple_distribution_enum_3d"
+
+    @staticmethod
+    def draw(layout, context, dim: int = 0):
         """
 
         :param dim:
@@ -391,12 +363,14 @@ class SimplifiedDistributionSelector(EditorWidget):
         scene = context.scene
         box = layout.box()
         box.label(text="Preset Distributions")
-        box.prop(scene, "simple_distribution_enum")
+
+        p_name = SimplifiedDistributionSelector.enum_name_from_dim(dim)
+        box.prop(scene, p_name)
 
         SimplifiedDistributionSelector.draw_for(
             box, context,
-            dist_name=(scene.simple_distribution_enum or "").upper(),
-            num_dims= dim if dim is not None else get_selected_axis_dimension(scene),
+            dist_name=(getattr(scene, p_name, "") or "").upper(),
+            num_dims=dim,
             show_cmds=True
         )
 
@@ -424,6 +398,7 @@ class SimplifiedDistributionSelector(EditorWidget):
             box.label(text=label)
 
         interested_properties = SimplifiedDistributionSelector._distribution_map[dist_name]
+        UniqueLogger.quick_log(f"DRAWING DIM {num_dims}")
 
         # Vector properties need to change with dimension.
         for property_name in interested_properties:

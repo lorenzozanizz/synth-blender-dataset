@@ -1,8 +1,7 @@
 import os
 
-from .pipe_editor import get_distribution_by_dims
 from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem
-
+from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS
 from bpy.props import (
     StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty
 )
@@ -95,10 +94,21 @@ operation_properties = {
         default=False,
         description="Consider the extracted values as offset to the current value."
     ),
-    "simple_distribution_enum": EnumProperty(
-        items=get_distribution_by_dims,                     # type: ignore
-        name="Type"
+
+    # A small comment on this:
+    "simple_distribution_enum_1d": EnumProperty(
+        name="Distribution",
+        items= [(dist.name, dist.value.title(), "") for dist in ONE_D_DISTRIBUTIONS]
     ),
+    "simple_distribution_enum_2d": EnumProperty(
+        name="Distribution",
+        items = [(dist.name, dist.value.title(), "") for dist in UPPER_D_DISTRIBUTIONS]
+    ),
+    "simple_distribution_enum_3d": EnumProperty(
+        name="Distribution",
+        items= [(dist.name, dist.value.title(), "") for dist in UPPER_D_DISTRIBUTIONS]
+    ),
+
     "targeted_objects_display": StringProperty(
         name="Targeted Objects",
         default="None"

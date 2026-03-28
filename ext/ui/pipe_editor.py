@@ -8,6 +8,7 @@ from .pipe_edit_widgets import *
 
 from ..constants import PipeNames
 from ..distribution.computation import Distribution
+from ..utils.logger import UniqueLogger
 
 from abc import ABC
 
@@ -55,7 +56,9 @@ class ScalarPropertyDrawer(PipeDrawer):
         layout.separator()
         AxisTarget.draw(layout, context)
         layout.separator()
-        NodeDistributionSelector.draw(layout, context)
+        #
+        NodeDistributionSelector.draw(layout, context,
+                                      dim=AxisTarget.get_selected_axis_dimension(context.scene))
 
 
 # The following operations all use the same format defined just above as they
@@ -156,7 +159,7 @@ class RandomizeMetallicOperation(PipeDrawer):
         :return:
         """
         MaterialSelector.draw(layout, context)
-        NodeDistributionSelector.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.ROUGHNESS.value)
 class RandomizeRoughnessOperation(PipeDrawer):
@@ -170,7 +173,6 @@ class RandomizeRoughnessOperation(PipeDrawer):
         :return:
         """
         MaterialSelector.draw(layout, context)
-        force_axis_dimension(context.scene, dim=1)
         NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.INTENSITY.value)
@@ -185,7 +187,6 @@ class RandomizeNodeIntensityOperation(PipeDrawer):
         :return:
         """
         ValueTargeter.draw(layout, context)
-        # force_axis_dimension(context.scene, dim=1)
         NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.NODE_PROP.value)
@@ -200,4 +201,4 @@ class RandomizeNodePropOperation(PipeDrawer):
         :return:
         """
         PropertyTargeter.draw(layout, context)
-        NodeDistributionSelector.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context, dim = 1)
