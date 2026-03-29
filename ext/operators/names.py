@@ -47,6 +47,8 @@ class Labels(Enum):
     REMOVE_PIPE             = "randomizer.remove_operation"
     # ( Add a new pipe (operation) to the pipeline )
     ADD_PIPE                = "randomizer.add_operation"
+    # ( Save the pipe currently being edited )
+    SAVE_PIPE               = "randomizer.save_pipe"
     # ( An auxiliary operation used to draw the add menus (which represent possible pipes)  )
     ADD_MENU_LIST_          = "randomizer.add_operation_menu"
 

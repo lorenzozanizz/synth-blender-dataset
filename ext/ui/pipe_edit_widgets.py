@@ -116,7 +116,7 @@ class EditorWidget(ABC):
 
     @staticmethod
     @abstractmethod
-    def setup_from_config(config: dict) -> None:
+    def setup_from_config(config: dict, context) -> None:
         pass
 
 #
@@ -150,6 +150,13 @@ class AxisTarget(EditorWidget):
             "randomize_z": scene.randomize_z,
             "dims": AxisTarget.get_selected_axis_dimension(context.scene),
         }
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.randomize_x = config["randomize_x"]
+        scene.randomize_y = config["randomize_y"]
+        scene.randomize_z = config["randomize_z"]
 
     @staticmethod
     def get_selected_axis_dimension(scene):
@@ -290,27 +297,42 @@ class NodeDistributionSelector(EditorWidget):
             SimplifiedDistributionSelector.draw(layout, context, dim=dim)
 
 #
-
 class SimplifiedDistributionSelector(EditorWidget):
 
-    @staticmethod
-    def extract_data(context) -> dict:
-        pass
+    # Keep this shorter!
+    d_e = Distribution
 
+    #
     _distribution_map = {
-        Distribution.UNIFORM.name: ['min', 'max'],
-        Distribution.MULTIVARIATE_UNIFORM.name: ['min_vec', 'max_vec'],
-        Distribution.BETA.name: ['alpha', 'beta', 'min', 'max'],
-        Distribution.GEOMETRIC.name: ['p'],
-        Distribution.BERNOULLI.name: ['p'],
-        Distribution.BINOMIAL.name: ['n', 'p'],
-        Distribution.GAUSSIAN.name: ['mean', 'std'],
-        Distribution.MULTIVARIATE_GAUSSIAN.name: ['mean_vec', 'cov_matrix'],
-        Distribution.MULTIVARIATE_ISOTROPIC_GAUSSIAN.name: ['mean_vec', 'variance'],
+        d_e.UNIFORM.name: ['min', 'max'],
+        d_e.MULTIVARIATE_UNIFORM.name: ['min_vec', 'max_vec'],
+        d_e.BETA.name: ['alpha', 'beta', 'min', 'max'],
+        d_e.GEOMETRIC.name: ['p'],
+        d_e.BERNOULLI.name: ['p'],
+        d_e.BINOMIAL.name: ['n', 'p'],
+        d_e.GAUSSIAN.name: ['mean', 'std'],
+        d_e.MULTIVARIATE_GAUSSIAN.name: ['mean_vec', 'cov_matrix'],
+        d_e.MULTIVARIATE_ISOTROPIC_GAUSSIAN.name: ['mean_vec', 'variance'],
     }
 
     # This prefix is applied to all property names, used for clarity
     _name_prefix = "dist_"
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        pass
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            "type": "default",
+            "distribution": "none",
+            "do_offset": scene.do_offset,
+            "do_discretize": scene.do_discretize,
+            "do_clamp": scene.do_clamp,
+            "clamping_factors": [ ]
+        }
 
     @staticmethod
     def enum_name_from_dim(dim: int) -> str:

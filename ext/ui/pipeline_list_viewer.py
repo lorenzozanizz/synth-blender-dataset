@@ -90,10 +90,9 @@ class RegistrationPanel(Panel):
         cols = head.column_flow(columns=5)  # ensure same number of columns
         sub = cols.row(align=True)
         sub.scale_x = 0.3
-        sub.label(text="#")
-        cols.label(text="Operation")
-        cols.label(text="Name")
-        cols.label(text="Enabled")
+        # This acts as a sort of cheap legend to the table for clarity
+        for lab in ("#", "Operation", "Name", "Enabled"):
+            sub.label(text=lab)
         table.enabled = False
 
         row = layout.row()
@@ -160,7 +159,7 @@ class RegistrationPanel(Panel):
             reg_op.draw_editor(layout, context)
 
         layout.separator()
-        layout.operator(Labels.CHANGE_VIEW_TAB_BUTTON_.value, text="Save", emboss=True).tab = 'ops'
+        layout.operator(Labels.SAVE_PIPE.value, text="Save", emboss=True).tab = 'ops'
 
 
     def draw_filter(self, _context, layout):

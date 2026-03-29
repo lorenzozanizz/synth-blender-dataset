@@ -229,10 +229,10 @@ class AddMaterialToListOperator(Operator):
     bl_label = "Add Material"
 
     # Dropdown property with all materials
-    material: bpy.props.EnumProperty(                           # type: ignore
+    material: bpy.props.EnumProperty(                               # type: ignore
         name="Material",
         description="Select material to add",
-        items= lambda self, context: [                           # type: ignore
+        items= lambda self, context: [                              # type: ignore
             (mat.name, mat.name, "")
             for mat in bpy.data.materials
         ] or [("NONE", "No materials", "")]
@@ -325,3 +325,16 @@ class CaptureAndModifyNodeProperties(Operator):
 
         self.report({'INFO'}, f"Captured: {mat_name} > {lab}")
         return {'FINISHED'}
+
+
+class SavePipeOperator(Operator):
+
+    bl_idname = Labels.SAVE_PIPE.value
+    bl_label = "randomizer.save_pipe"
+
+    def execute(self, context):
+
+
+        # Change back to pipeline view
+        context.window_manager['pipeline_tab'] = 'ops'
+        return { 'FINISHED' }
