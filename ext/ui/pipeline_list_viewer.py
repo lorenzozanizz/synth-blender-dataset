@@ -9,7 +9,11 @@ from bpy.types import Panel, UIList, Menu
 from bpy.props import StringProperty, EnumProperty
 
 
+# Reference to the blender default icons:
+# Attempt to use each icon only once to avoid inconsistency in the list
+# visuals.
 pipe_to_ico_mapping = {
+
     PipeNames.SCALE: "CON_SIZELIKE",
     PipeNames.ROTATION: "CON_ROTLIKE",
     PipeNames.POSITION: "EMPTY_ARROWS",
@@ -23,6 +27,7 @@ pipe_to_ico_mapping = {
     PipeNames.NODE_PROP: "CURSOR",
 
     PipeNames.INTENSITY: "FORCE_TURBULENCE",
+
 }
 
 class RegistrationPanel(Panel):
@@ -287,3 +292,4 @@ class AddExperimentalCategoryPipeMenu(Menu):
 
     def draw(self, context):
         layout = self.layout
+

@@ -35,3 +35,46 @@ class RandomizeScaleOperation(PipelineOperation):
         # Your logic
         pass
 
+
+@OperationRegistry.register(PipeNames.POSITION.value)
+class RandomizePositionOperation(PipelineOperation):
+
+    def from_config(self) -> dict:
+        pass
+
+    def execute(self, scene, objects):
+        # Your logic
+        pass
+
+
+@OperationRegistry.register(PipeNames.MOVE.value)
+class RandomizeMoveOperation(PipelineOperation):
+
+    def from_config(self) -> dict:
+        pass
+
+    def execute(self, scene, objects):
+        # Your logic
+        pass
+
+
+@OperationRegistry.register(PipeNames.ROTATION.value)
+class RandomizeRotationOperation(PipelineOperation):
+
+    def from_config(self) -> dict:
+        pass
+
+    def execute(self, scene, objects):
+        # Your logic
+        pass
+
+
+@OperationRegistry.register(PipeNames.VISIBILITY.value)
+class RandomizeVisibilityOperation(PipelineOperation):
+
+    def from_config(self) -> dict:
+        pass
+
+    def execute(self, scene, objects):
+        # Your logic
+        pass
