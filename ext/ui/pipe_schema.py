@@ -48,7 +48,7 @@ class PipeSchema(ABC):
 
     @staticmethod
     @abstractmethod
-    def extract_config_from_ui(context, operation):
+    def extract_config_from_ui(context, operation) -> dict:
         """
 
         :param context:
@@ -59,7 +59,7 @@ class PipeSchema(ABC):
 
     @staticmethod
     @abstractmethod
-    def apply_config_to_ui(context, operation, config):
+    def apply_config_to_ui(context, operation, config) -> None:
         """
 
         :param context:

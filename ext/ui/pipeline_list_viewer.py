@@ -1,4 +1,7 @@
+from jupyter_events.schema_registry import SchemaRegistry
+
 from .pipe_editor import OperationDrawerRegistry
+from .pipe_schema import PipeSchemaRegistry
 
 from ..operators.names import Labels
 from ..constants import PipeNames
@@ -154,7 +157,11 @@ class RegistrationPanel(Panel):
         UniqueLogger.quick_log(str(operation.operation_type))
         reg_op = OperationDrawerRegistry.get(operation.operation_type)
 
-        # Draw its editor - just one line!
+        # setup_schema = PipeSchemaRegistry.get(str(operation.operation_type))
+        # setup_schema.apply_config_to_ui(context, operation, { })
+
+        # Draw the editor, having first set up the correct UI value with the schema and the
+        # currently serialized data.
         if reg_op:
             reg_op.draw_editor(layout, context)
 

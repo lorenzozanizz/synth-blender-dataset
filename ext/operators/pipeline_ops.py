@@ -8,6 +8,7 @@ from bpy.props import IntProperty, StringProperty
 import bpy
 
 from typing import Union
+from json import dumps
 
 class PipeAddOperator(Operator):
 
@@ -222,7 +223,6 @@ class PositionRemoveOperator(Operator):
         return { 'FINISHED' }
 
 
-
 class AddMaterialToListOperator(Operator):
     """Add selected material to list"""
     bl_idname = Labels.ADD_MATERIAL_POOL.value
@@ -334,7 +334,20 @@ class SavePipeOperator(Operator):
 
     def execute(self, context):
 
+        scene = context.scene
+        # Take the name of the current pipe and extract the required PipeSchema,
+        # which is an auxiliary class used to serialize the UI into a json.
+        pipeline = scene.pipeline_data
+        op_index = pipeline.active_operation_index
+        operation = pipeline.operations[op_index]
+
+        op_name = str(operation.operation_type)
+        # Interrogate the registry
+        schema = PipeSchemaRegistry.get(op_name)
+        config = schema.extract_config_from_ui(context, operation)
+        serialized = dumps(config)
 
         # Change back to pipeline view
         context.window_manager['pipeline_tab'] = 'ops'
         return { 'FINISHED' }
+

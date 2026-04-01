@@ -20,4 +20,7 @@ class GenerateOperator(Operator):
 
     def execute(self, context):
         """Get all selected nodes"""
+
+        # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
+        interpreted_pipes = {}
         return { 'FINISHED' }

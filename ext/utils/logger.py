@@ -6,29 +6,14 @@ import time
 
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Union
+from typing import Union
 from contextlib import contextmanager
 
-class ExecutionContext:
-    """Track metrics and timing for operations."""
-
-    def __init__(self):
-        self.metrics = {}
-        self.errors = []
-
-    def add_metric(self, key: str, value: Any):
-        self.metrics[key] = value
-
-    def add_error(self, op_name: str, error: str):
-        self.errors.append({
-            'operation': op_name,
-            'error': error,
-            'timestamp': datetime.now().isoformat()
-        })
-
 class UniqueLogger:
-    """
-
+    """ A utility class to allow logging in the extension, internally uses the
+    default python logger taking track of the time of operations. The generated
+    Log file can be consulted when one wishes to see exactly the data sampled from
+    the distributions or to check for errors.
     """
 
     # A cache of the available logs for the files, each file requests
@@ -37,7 +22,6 @@ class UniqueLogger:
     _file_handler = None
     _output_path = None
     _console_handler = None
-    _execution_ctx = ExecutionContext()
 
     # True if there is a valid log file, meaning that log can indeed happen.
     _initialized: bool = False
@@ -73,6 +57,7 @@ class UniqueLogger:
 
     @staticmethod
     def available() -> bool:
+        """ Returns whether there is a logger available e.g. initialize has been called before """
         return UniqueLogger._initialized
 
     @staticmethod
@@ -98,10 +83,6 @@ class UniqueLogger:
         return UniqueLogger._logger_cache[name]
 
     @staticmethod
-    def get_execution_context() -> ExecutionContext:
-        return UniqueLogger._execution_ctx
-
-    @staticmethod
     @contextmanager
     def log_operation(name: str, category: str = None, logger: logging.Logger = None):
         """Context manager for operation tracking with timing."""
@@ -114,7 +95,6 @@ class UniqueLogger:
             yield
         except Exception as e:
             logger.error(f"Failed: {name} - {e}", exc_info=True)
-            UniqueLogger._execution_ctx.add_error(name, str(e))
             raise
         finally:
             duration = time.time() - start

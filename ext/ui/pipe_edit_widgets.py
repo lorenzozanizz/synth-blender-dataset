@@ -76,7 +76,6 @@ class DistributionTreeList(UIList):
 
         row = layout.row(align=True)
         # Middle: Tree name with icon
-
         row.label(text=distribution_item.name, icon='NODETREE')
 
         # Right: Dimensionality
