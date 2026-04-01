@@ -6,7 +6,7 @@ class PipelineOperation(PropertyGroup):
     operation_type: StringProperty(name='Type', default='randomize_pose')   # type: ignore
     enabled: BoolProperty(name='Enabled', default=True)                     # type: ignore
     name: StringProperty(name='Name', default="Unnamed")                    # type: ignore
-    config: StringProperty(name='Config', default='{ }')                 # type: ignore
+    config: StringProperty(name='Config', default='{}')                 # type: ignore
 
 
 class PipelineData(PropertyGroup):

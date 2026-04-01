@@ -4,11 +4,11 @@ from ..utils.logger import UniqueLogger
 from ..ui.pipe_schema import PipeSchemaRegistry, PipeSchema
 
 from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty
+from bpy.props import IntProperty, StringProperty, BoolProperty, CollectionProperty
 import bpy
 
 from typing import Union
-from json import dumps
+from json import dumps, loads
 
 class PipeAddOperator(Operator):
 
@@ -21,8 +21,6 @@ class PipeAddOperator(Operator):
         pipeline = context.scene.pipeline_data
         new_op = pipeline.operations.add()
         new_op.operation_type = self.op_name
-        new_op.seed = 0
-        new_op.config = '0.5'
         new_op.enabled = True
         return { 'FINISHED' }
 
@@ -92,7 +90,10 @@ class EditPipeOperator(Operator):
         op_name = operation.operation_type
         config_setup: PipeSchema = PipeSchemaRegistry.get(op_name)
         if config_setup:
-            config_setup.apply_config_to_ui(context, operation=operation, config = operation.config)
+            config = loads(operation.config)
+            UniqueLogger.quick_log(operation.config)
+            UniqueLogger.quick_log(str(operation.config))
+            config_setup.apply_config_to_ui(context, operation=operation, config=config)
         # Switch to edit tab
         context.window_manager['pipeline_tab'] = 'config'
 
@@ -106,6 +107,7 @@ class CaptureObjectsOperator(Operator):
     bl_label = "Capture Objects"
 
     def execute(self, context):
+        scene = context.scene
         selected = context.selected_objects
 
         if not selected:
@@ -113,8 +115,11 @@ class CaptureObjectsOperator(Operator):
             return { 'CANCELLED' }
 
         # Store names
-        names = ", ".join([obj.name for obj in selected])
-        context.scene.targeted_objects_display = names
+        name_list = scene.targeted_objects_display
+        name_list.clear()
+        for obj in selected:
+            nm = name_list.add()
+            nm.obj_name = obj.name
 
         self.report({ 'INFO' }, f"Captured {len(selected)} objects")
         return { 'FINISHED' }
@@ -157,6 +162,7 @@ class CaptureTextureOperator(Operator):
     bl_label = "Capture Texture"
 
     def execute(self, context):
+        scene = context.scene
         selected, mat_name = get_selected_node_and_material(self, context, 'ShaderNodeTexImage')
 
         if not selected:
@@ -164,7 +170,9 @@ class CaptureTextureOperator(Operator):
 
         # Store name
         lab = selected.label
-        context.scene.targeted_material_display = f"{mat_name} > {lab}"
+        mat_prop = scene.targeted_material_display
+        mat_prop.node_label = lab
+        mat_prop.mat_name = mat_name
 
         self.report({ 'INFO' }, f"Captured: {mat_name} > {lab}")
         return { 'FINISHED' }
@@ -209,7 +217,7 @@ class PositionRemoveOperator(Operator):
     def execute(self, context):
         scene = context.scene
         positions = context.scene.position_collection
-        index = positions.selected_position_index
+        index = scene.selected_position_index
 
         if not positions:
             self.report({'WARNING'}, 'No Position to remove')
@@ -276,12 +284,13 @@ class RemoveMaterialFromListOperator(Operator):
 
         return {'FINISHED'}
 
-class CaptureDistributionValueNode(Operator):
+class CaptureValueNode(Operator):
 
     bl_idname = Labels.CAPTURE_VALUE_NODE.value
     bl_label = "Capture Value Node"
 
     def execute(self, context):
+        scene = context.scene
         selected, mat_name = get_selected_node_and_material(self, context, 'ShaderNodeValue')
 
         if not selected:
@@ -289,7 +298,9 @@ class CaptureDistributionValueNode(Operator):
 
         # Store name
         lab = selected.label
-        # context.scene.targeted_material_display = f"{mat_name} > {lab}"
+        mat_prop = scene.targeted_value_node
+        mat_prop.node_label = lab
+        mat_prop.mat_name = mat_name
 
         self.report({ 'INFO' }, f"Captured: {mat_name} > {lab}")
         return { 'FINISHED' }
@@ -332,6 +343,8 @@ class SavePipeOperator(Operator):
     bl_idname = Labels.SAVE_PIPE.value
     bl_label = "randomizer.save_pipe"
 
+    on_save_return: StringProperty(default="")     # type: ignore
+
     def execute(self, context):
 
         scene = context.scene
@@ -347,7 +360,13 @@ class SavePipeOperator(Operator):
         config = schema.extract_config_from_ui(context, operation)
         serialized = dumps(config)
 
-        # Change back to pipeline view
-        context.window_manager['pipeline_tab'] = 'ops'
+        # Now we write back the serialized dictionary in a blender property associated with the pipe.
+        # The overhead of saving strings and deserializing is minimal because the heavy task (generation)
+        # initially deserializes all the pipeline into dictionaries.
+        operation.config = serialized
+
+        if self.on_save_return:
+            # Change back to tab
+            context.window_manager['pipeline_tab'] = self.on_save_return
         return { 'FINISHED' }
 

@@ -10,9 +10,23 @@ from bpy.props import StringProperty, FloatVectorProperty, PointerProperty
 from bpy.types import UIList, PropertyGroup, Material
 
 
+class TextureNodeProperty(PropertyGroup):
+    """ A property to contain the name of a material and a texture. """
+    mat_name: StringProperty(name="Material")                   # type: ignore
+    node_label: StringProperty(name="Label")                    # type: ignore
+
+class ValueNodeProperty(PropertyGroup):
+    """ A property to contain the name of a material and a value node. """
+    mat_name: StringProperty(name="Material")                   # type: ignore
+    node_label: StringProperty(name="Label")                    # type: ignore
+
+class ObjectName(PropertyGroup):
+    """ Single object name. """
+    obj_name: StringProperty(name="Name")                       # type: ignore
+
 class ImagePath(PropertyGroup):
     """Single image file path"""
-    path: StringProperty(name="Path", subtype='FILE_PATH')  # type: ignore
+    path: StringProperty(name="Path", subtype='FILE_PATH')      # type: ignore
 
 
 class PathsUIList(UIList):
@@ -75,8 +89,8 @@ class DistributionTreeList(UIList):
         distribution_item = item
 
         row = layout.row(align=True)
-        # Middle: Tree name with icon
-        row.label(text=distribution_item.name, icon='NODETREE')
+        # Middle: Tree name with icon, also allows the user to change the name from the item
+        row.label(text=distribution_item.name, icon='NODETREE', emboss=True)
 
         # Right: Dimensionality
         if distribution_item.node_tree:
@@ -118,9 +132,21 @@ class EditorWidget(ABC):
     def setup_from_config(config: dict, context) -> None:
         pass
 
+
+    @staticmethod
+    @abstractmethod
+    def reset(context) -> None:
+        pass
 #
 
 class AxisTarget(EditorWidget):
+
+    @staticmethod
+    def reset(context) -> None:
+        scene = context.scene
+        scene.randomize_x = False
+        scene.randomize_y = False
+        scene.randomize_z = False
 
     @staticmethod
     def draw(layout, context):
@@ -173,6 +199,18 @@ class AxisTarget(EditorWidget):
 class ObjectTargeter(EditorWidget):
 
     @staticmethod
+    def reset(context) -> None:
+        pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.targeted_objects_display.clear()
+        for name in config["names"]:
+            nm = scene.targeted_objects_display.add()
+            nm.obj_name = name
+
+    @staticmethod
     def draw(layout, context):
         """
 
@@ -182,21 +220,43 @@ class ObjectTargeter(EditorWidget):
         """
         scene = context.scene
         box = layout.box().row()
-        box.label(text="Target:")
-        box.label(text=scene.targeted_objects_display, icon='OBJECT_DATA')
+        sub = box.row(align=True)
+        sub.scale_x = 0.5
+        sub.label(text="Target(s):")
+
+        # Concatenate the captured names together to get a string representation of the capture objects.
+        text_label = str([n_prop.obj_name for n_prop in scene.targeted_objects_display]) \
+             if len(scene.targeted_objects_display) != 0 else "None"
+        box.label(text=text_label, icon='OBJECT_DATA')
         box.operator(Labels.CAPTURE_OBJECTS.value, text="Capture Selected", icon='EYEDROPPER')
 
     @staticmethod
     def extract_data(context) -> dict:
-        pass
+        scene = context.scene
+        return {
+            "names": [name.obj_name for name in scene.targeted_objects_display]
+        }
 
 #
-
 class ImageTextureTargeter(EditorWidget):
 
     @staticmethod
-    def extract_data(context) -> dict:
+    def reset(context) -> None:
         pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.targeted_texture_node.mat_name = config["material"]
+        scene.targeted_texture_node.node_label = config["label"]
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            "material": scene.targeted_texture_node.mat_name,
+            "label": scene.targeted_texture_node.node_label,
+        }
 
     @staticmethod
     def draw(layout, context):
@@ -208,17 +268,44 @@ class ImageTextureTargeter(EditorWidget):
         """
         scene = context.scene
         box = layout.box().row()
-        box.label(text="Material:")
-        box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
+        box.label(text="Texture:")
+
+        mat_prop = scene.targeted_texture_node
+        text_label = f"{mat_prop.mat_name} > {mat_prop.node_label}" if (mat_prop.mat_name and mat_prop.node_label) else "None"
+        box.label(text=text_label, icon='OBJECT_DATA')
         box.operator(Labels.CAPTURE_TEXTURE_NODE.value, text="Capture Selected", icon='EYEDROPPER')
 
 #
-
 class PathListSelector(EditorWidget):
 
     @staticmethod
-    def extract_data(context) -> dict:
+    def reset(context) -> None:
         pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.use_folder_mode = config["use_folder"]
+        if scene.use_folder_mode:
+            scene.image_folder = config["folder"]
+        else:
+            ls = scene.image_paths_list
+            ls.clear()
+            for file in config["files"]:
+                fl = ls.add()
+                fl.path = file
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        ret = { "use_folder": scene.use_folder_mode }
+        if scene.use_folder_mode:
+            ret["folder"] = scene.image_folder
+        else:
+            ret["files"] = [
+                file.path for file in scene.image_paths_list
+            ]
+        return ret
 
     @staticmethod
     def draw(layout, context):
@@ -252,8 +339,27 @@ class PathListSelector(EditorWidget):
 class NodeDistributionSelector(EditorWidget):
 
     @staticmethod
-    def extract_data(context) -> dict:
+    def reset(context) -> None:
         pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        default = config["use_default"]
+        if default:
+            pass
+        else:
+            scene = context.scene
+
+    @staticmethod
+    def extract_data(context, dim: int = 0) -> dict:
+        scene = context.scene
+        ret = { "use_default": scene.use_distribution_tree }
+        if scene.use_distribution_tree:
+            ret["distribution"] = "None"
+        else:
+            data = SimplifiedDistributionSelector.extract_data(context, dim=dim)
+            ret.update(data)
+        return ret
 
     @staticmethod
     def draw(layout, context, dim: int = 0):
@@ -298,10 +404,16 @@ class NodeDistributionSelector(EditorWidget):
 #
 class SimplifiedDistributionSelector(EditorWidget):
 
+    @staticmethod
+    def reset(context) -> None:
+        pass
+
     # Keep this shorter!
     d_e = Distribution
 
-    #
+    # A map which assigns the correct properties to each distribution. This
+    # may reuse multiple times the same properties (e.g. probability 'p') and is to be used both for
+    # serializing and drawing.
     _distribution_map = {
         d_e.UNIFORM.name: ['min', 'max'],
         d_e.MULTIVARIATE_UNIFORM.name: ['min_vec', 'max_vec'],
@@ -322,15 +434,23 @@ class SimplifiedDistributionSelector(EditorWidget):
         pass
 
     @staticmethod
-    def extract_data(context) -> dict:
+    def extract_data(context, dim: int = 0) -> dict:
+        # If the user is calling Simplified... . extract_data, he is using the default.
+        ret = { "use_default": True }
+        ret.update( SimplifiedDistributionSelector.distribution_data(context, dim=dim))
+        return ret
+
+    @staticmethod
+    def distribution_data(context, dim = 0) -> dict:
         scene = context.scene
+        p_name = SimplifiedDistributionSelector.enum_name_from_dim(dim)
+        dist = (getattr(scene, p_name, "") or "").upper()
         return {
-            "type": "default",
-            "distribution": "none",
+            "preset": dist,
             "do_offset": scene.do_offset,
             "do_discretize": scene.do_discretize,
             "do_clamp": scene.do_clamp,
-            "clamping_factors": [ ]
+            "clamping_factors": tuple(scene.clamping_factors)
         }
 
     @staticmethod
@@ -436,8 +556,26 @@ class SimplifiedDistributionSelector(EditorWidget):
 class PositionListSelector(EditorWidget):
 
     @staticmethod
-    def extract_data(context) -> dict:
+    def reset(context) -> None:
         pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        # We have to clear the current positions list and repopulate it with the
+        # correct values.
+        scene.position_collection.clea()
+        for item in config["positions"]:
+            new_pos = scene.position_collection.add()
+            new_pos.pos = item
+        scene.selected_position_index = 0
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            "positions": [ tuple(item) for item in scene.position_collection ]
+        }
 
     @staticmethod
     def draw(layout, context):
@@ -460,12 +598,33 @@ class PositionListSelector(EditorWidget):
         col.operator(Labels.CAPTURE_OBJ_POSITION.value, icon='EYEDROPPER', text='')
 
 #
-
 class MaterialSelector(EditorWidget):
 
     @staticmethod
-    def extract_data(context) -> dict:
+    def reset(context) -> None:
         pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        # We have to search in the list of materials for the one with the given name to
+        # repopulate the material list editor.
+        scene = context.scene
+        names = config["names"]
+        for name in names:
+            mat = bpy.data.materials.get(name)
+            if not mat:
+                continue
+            new_item = scene.material_list.add()
+            new_item.material = mat
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            "materials": [
+                mat.material.name for mat in scene.material_list
+            ]
+        }
 
     @staticmethod
     def draw(layout, context):
@@ -487,8 +646,11 @@ class MaterialSelector(EditorWidget):
         col.operator(Labels.REMOVE_MATERIAL_POOL.value, icon='REMOVE', text='')
 
 #
-
 class PropertyTargeter(EditorWidget):
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        pass
 
     @staticmethod
     def extract_data(context) -> dict:
@@ -509,13 +671,27 @@ class PropertyTargeter(EditorWidget):
 class ValueTargeter(EditorWidget):
 
     @staticmethod
+    def reset(context) -> None:
+        pass
+
+    @staticmethod
     def draw(layout, context):
         scene = context.scene
         box = layout.box().row()
         box.label(text="Value Node:")
-        box.label(text=scene.targeted_material_display, icon='OBJECT_DATA')
+        box.label(text=scene.targeted_value_node, icon='OBJECT_DATA')
         box.operator(Labels.CAPTURE_VALUE_NODE, text="Capture Selected", icon='EYEDROPPER')
 
     @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.targeted_value_node.mat_name = config["material"]
+        scene.targeted_value_node.node_label = config["label"]
+
+    @staticmethod
     def extract_data(context) -> dict:
-        return { }
+        scene = context.scene
+        return {
+            "material": scene.targeted_value_node.mat_name,
+            "label": scene.targeted_value_node.node_label,
+        }

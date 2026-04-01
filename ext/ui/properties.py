@@ -1,9 +1,9 @@
 import os
 
-from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem
+from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TextureNodeProperty
 from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS
 from bpy.props import (
-    StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty
+    StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty, PointerProperty
 )
 
 ext_ui_properties = {
@@ -109,13 +109,17 @@ operation_properties = {
         items= [(dist.name, dist.value.title(), "") for dist in UPPER_D_DISTRIBUTIONS]
     ),
 
-    "targeted_objects_display": StringProperty(
+    "targeted_objects_display": CollectionProperty(
         name="Targeted Objects",
-        default="None"
+        type=ObjectName
     ),
-    "targeted_material_display": StringProperty(
+    "targeted_texture_node": PointerProperty(
         name="Targeted Objects",
-        default="None"
+        type=TextureNodeProperty
+    ),
+    "targeted_value_node": PointerProperty(
+        name="Targeted Objects",
+        type=TextureNodeProperty
     ),
     "use_folder_mode": BoolProperty(
         name="Use Folder",

@@ -1,7 +1,4 @@
-from jupyter_events.schema_registry import SchemaRegistry
-
 from .pipe_editor import OperationDrawerRegistry
-from .pipe_schema import PipeSchemaRegistry
 
 from ..operators.names import Labels
 from ..constants import PipeNames
@@ -85,21 +82,16 @@ class RegistrationPanel(Panel):
                           f"{'' if len(pipeline.operations) == 1 else 's'}")
 
         layout.separator()
-
-        table = layout.column(align=True)
         # Create column header row.
-        head = table.box()
-        head.scale_y = 0.6  # shrink in height
-        cols = head.column_flow(columns=5)  # ensure same number of columns
-        sub = cols.row(align=True)
-        sub.scale_x = 0.3
-        # This acts as a sort of cheap legend to the table for clarity
-        for lab in ("#", "Operation", "Name", "Enabled"):
-            sub.label(text=lab)
-        table.enabled = False
-
         row = layout.row()
-        row.template_list(
+        list_col = row.column(align=True)
+
+        legend = list_col.row(align=True)  # ensure same number of columns
+        for lab in ("#", "Operation", "Name", "Enabled"):
+            legend.label(text=lab)
+        legend.enabled = False
+
+        list_col.template_list(
             'PipelineOperationsList',  # UIList class name
             'pipeline_operations',  # Unique ID
             pipeline,  # Data object
@@ -166,7 +158,8 @@ class RegistrationPanel(Panel):
             reg_op.draw_editor(layout, context)
 
         layout.separator()
-        layout.operator(Labels.SAVE_PIPE.value, text="Save", emboss=True).tab = 'ops'
+        # The save operator for a single pipe will return to the list view menu.
+        layout.operator(Labels.SAVE_PIPE.value, text="Save").on_save_return = 'ops'
 
 
     def draw_filter(self, _context, layout):

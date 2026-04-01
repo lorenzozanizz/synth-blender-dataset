@@ -16,7 +16,7 @@ class PipelineOperation(ABC):
     operation_type: str  # "randomize_position", "randomize_rotation", etc.
 
     @abstractmethod
-    def from_config(self) -> dict:
+    def compile(self) -> dict:
         pass
 
     @abstractmethod
@@ -28,7 +28,7 @@ class PipelineOperation(ABC):
 @OperationRegistry.register(PipeNames.SCALE.value)
 class RandomizeScaleOperation(PipelineOperation):
 
-    def from_config(self) -> dict:
+    def compile(self) -> dict:
         pass
 
     def execute(self, scene, objects):
@@ -39,7 +39,7 @@ class RandomizeScaleOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.POSITION.value)
 class RandomizePositionOperation(PipelineOperation):
 
-    def from_config(self) -> dict:
+    def compile(self) -> dict:
         pass
 
     def execute(self, scene, objects):
@@ -50,7 +50,7 @@ class RandomizePositionOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.MOVE.value)
 class RandomizeMoveOperation(PipelineOperation):
 
-    def from_config(self) -> dict:
+    def compile(self) -> dict:
         pass
 
     def execute(self, scene, objects):
@@ -61,7 +61,7 @@ class RandomizeMoveOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.ROTATION.value)
 class RandomizeRotationOperation(PipelineOperation):
 
-    def from_config(self) -> dict:
+    def compile(self) -> dict:
         pass
 
     def execute(self, scene, objects):
@@ -72,7 +72,7 @@ class RandomizeRotationOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.VISIBILITY.value)
 class RandomizeVisibilityOperation(PipelineOperation):
 
-    def from_config(self) -> dict:
+    def compile(self) -> dict:
         pass
 
     def execute(self, scene, objects):

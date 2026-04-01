@@ -1,6 +1,8 @@
 """
 
 """
+from .pipe_edit_widgets import *
+
 from ..constants import PipeNames
 
 from abc import ABC, abstractmethod
@@ -74,9 +76,17 @@ class PipeSchema(ABC):
 class VisibilitySchema(PipeSchema):
 
     @staticmethod
-    def extract_config_from_ui(context, operation):
-        pass
+    def extract_config_from_ui(context, operation) -> dict:
+        ret = dict()
+        for widget in (ObjectTargeter, SimplifiedDistributionSelector):
+            ret.update(widget.extract_data(context))
+        return ret
 
     @staticmethod
-    def apply_config_to_ui(context, operation, config):
-        pass
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            for widget in (ObjectTargeter, SimplifiedDistributionSelector):
+                widget.reset(context)
+            return
+        for widget in (ObjectTargeter, SimplifiedDistributionSelector):
+            widget.setup_from_config(config, context)
