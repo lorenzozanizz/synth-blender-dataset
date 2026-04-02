@@ -94,9 +94,9 @@ class EditPipeOperator(Operator):
             UniqueLogger.quick_log(operation.config)
             UniqueLogger.quick_log(str(operation.config))
             config_setup.apply_config_to_ui(context, operation=operation, config=config)
+
         # Switch to edit tab
         context.window_manager['pipeline_tab'] = 'config'
-
         return { 'FINISHED' }
 
 

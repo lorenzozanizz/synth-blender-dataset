@@ -77,16 +77,62 @@ class VisibilitySchema(PipeSchema):
 
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
-        ret = dict()
-        for widget in (ObjectTargeter, SimplifiedDistributionSelector):
-            ret.update(widget.extract_data(context))
-        return ret
+        dic =  {
+            "dimension": 1,
+            "target": ObjectTargeter.extract_data(context),
+            "distribution": SimplifiedDistributionSelector.extract_data(context, dim=1)
+        }
+        UniqueLogger.quick_log(str(dic))
+        return dic
 
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:
         if not config:
-            for widget in (ObjectTargeter, SimplifiedDistributionSelector):
-                widget.reset(context)
+            ObjectTargeter.reset(context)
+            SimplifiedDistributionSelector.reset(context, dim=1, name=Distribution.BERNOULLI.name)
             return
-        for widget in (ObjectTargeter, SimplifiedDistributionSelector):
-            widget.setup_from_config(config, context)
+
+        ObjectTargeter.setup_from_config(config["target"], context)
+        SimplifiedDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
+
+class ScalarPropertyDrawer(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dim = AxisTarget.get_selected_axis_dimension(context.scene)
+        dic = {
+            "dimension": dim,
+            "axis": AxisTarget.extract_data(context),
+            "target": ObjectTargeter.extract_data(context),
+            "distribution": NodeDistributionSelector.extract_data(context, dim=dim)
+        }
+        UniqueLogger.quick_log(str(dic))
+        return dic
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            ObjectTargeter.reset(context)
+            NodeDistributionSelector.reset(context)
+            AxisTarget.reset(context)
+            return
+
+        dimension = config["dimension"]
+        AxisTarget.setup_from_config(config["axis"], context)
+        ObjectTargeter.setup_from_config(config["target"], context)
+        NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=dimension)
+
+
+@PipeSchemaRegistry.register(PipeNames.SCALE.value)
+class ScaleSchema(ScalarPropertyDrawer):
+    pass
+
+
+@PipeSchemaRegistry.register(PipeNames.ROTATION.value)
+class RotationSchema(ScalarPropertyDrawer):
+    pass
+
+
+@PipeSchemaRegistry.register(PipeNames.POSITION.value)
+class PositionSchema(ScalarPropertyDrawer):
+    pass

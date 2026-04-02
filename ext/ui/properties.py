@@ -96,6 +96,10 @@ operation_properties = {
     ),
 
     # A small comment on this:
+    "simple_distribution_enum_0d": EnumProperty(
+        name="Distribution",
+        items=[("NONE", "None", "")]
+    ),
     "simple_distribution_enum_1d": EnumProperty(
         name="Distribution",
         items= [(dist.name, dist.value.title(), "") for dist in ONE_D_DISTRIBUTIONS]

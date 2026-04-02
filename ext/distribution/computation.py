@@ -21,7 +21,8 @@ ONE_D_DISTRIBUTIONS = (
     Distribution.GEOMETRIC,
     Distribution.GAUSSIAN,
     Distribution.BETA,
-    Distribution.BINOMIAL
+    Distribution.BINOMIAL,
+    Distribution.BERNOULLI
 )
 
 UPPER_D_DISTRIBUTIONS = (

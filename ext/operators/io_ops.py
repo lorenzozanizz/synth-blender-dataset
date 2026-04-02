@@ -118,7 +118,7 @@ def setup_logger_from_scene(context) -> bool:
         # Clean up the previous logger, e.g. generate a new writing path
         UniqueLogger.cleanup()
         # Now set up the new logger which sets multiple logger variables (the path,
-        # the availability of the logger with UniqueLogger.available()
+        # the availability of the logger with UniqueLogger.available())
         directory = context.scene.randomizer_logging_path
         UniqueLogger.initialize_logging(directory)
         return True

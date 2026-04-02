@@ -90,7 +90,7 @@ class DistributionTreeList(UIList):
 
         row = layout.row(align=True)
         # Middle: Tree name with icon, also allows the user to change the name from the item
-        row.label(text=distribution_item.name, icon='NODETREE', emboss=True)
+        row.prop(distribution_item, "Name", icon='NODETREE', emboss=False)
 
         # Right: Dimensionality
         if distribution_item.node_tree:
@@ -280,7 +280,9 @@ class PathListSelector(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.image_paths_list.clear()
+        scene.selected_image_path_index = 0
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
@@ -340,24 +342,35 @@ class NodeDistributionSelector(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+
+        # Initially, target the X axis. there is no need for this to have any preference.
+        SimplifiedDistributionSelector.reset(context, dim=1, name=Distribution.UNIFORM.name)
+        context.scene.selected_image_path_index = 0
 
     @staticmethod
-    def setup_from_config(config: dict, context) -> None:
-        default = config["use_default"]
-        if default:
-            pass
+    def setup_from_config(config: dict, context, dim: int = 0) -> None:
+        scene = context.scene
+        scene.use_distribution_tree = config["use_tree"]
+        if scene.use_distribution_tree:
+            # Load the selected user defined distribution
+            distributions = scene.available_distributions
+            index = next(idx for idx in range(len(distributions)) if
+                         scene.available_distributions[idx].name == config["distribution"])
+            scene.selected_distribution_index = index
         else:
-            scene = context.scene
+            # Otherwise load the preset distribution
+            SimplifiedDistributionSelector.setup_from_config(config, context, dim=dim)
 
     @staticmethod
     def extract_data(context, dim: int = 0) -> dict:
         scene = context.scene
-        ret = { "use_default": scene.use_distribution_tree }
+        ret = { "use_tree": scene.use_distribution_tree }
         if scene.use_distribution_tree:
-            ret["distribution"] = "None"
+            distributions = scene.available_distributions
+            selected = distributions[scene.selected_distribution_index]
+            ret["distribution"] = selected.name
         else:
-            data = SimplifiedDistributionSelector.extract_data(context, dim=dim)
+            data = SimplifiedDistributionSelector.distribution_data(context, dim=dim)
             ret.update(data)
         return ret
 
@@ -404,10 +417,6 @@ class NodeDistributionSelector(EditorWidget):
 #
 class SimplifiedDistributionSelector(EditorWidget):
 
-    @staticmethod
-    def reset(context) -> None:
-        pass
-
     # Keep this shorter!
     d_e = Distribution
 
@@ -426,18 +435,49 @@ class SimplifiedDistributionSelector(EditorWidget):
         d_e.MULTIVARIATE_ISOTROPIC_GAUSSIAN.name: ['mean_vec', 'variance'],
     }
 
+    _vectors = frozenset({"mean_vec", "min_vec", "max_vec"})
+    _value = frozenset({"p", "min", "max", "alpha", "beta", "n", "mean", "std"})
+
     # This prefix is applied to all property names, used for clarity
     _name_prefix = "dist_"
 
     @staticmethod
-    def setup_from_config(config: dict, context) -> None:
-        pass
+    def reset(context, dim: int = 0, name="") -> None:
+        scene = context.scene
+        if name:
+            p_name = SimplifiedDistributionSelector.enum_name_from_dim(dim)
+            setattr(scene, p_name, name.upper())
+        for prop in SimplifiedDistributionSelector._vectors:
+            name = SimplifiedDistributionSelector._name_prefix + prop
+            setattr(scene, name, (0, 0, 0))
+        for prop in SimplifiedDistributionSelector._value:
+            name = SimplifiedDistributionSelector._name_prefix + prop
+            setattr(scene, name, 0)
+        for attr in ("do_offset", "do_discretize", "do_clamp"):
+            setattr(scene, attr, False)
+        scene.clamping_factors = (0, 0)
+
+    @staticmethod
+    def setup_from_config(config: dict, context, dim: int = 0) -> None:
+        scene = context.scene
+        for attr in ("do_offset", "do_discretize", "do_clamp", "clamping_factors"):
+            setattr(scene, attr, config[attr])
+        preset_name = config["preset"]
+        params = config["parameters"]
+
+        p_name = SimplifiedDistributionSelector.enum_name_from_dim(dim)
+        setattr(scene, p_name, preset_name)
+
+        properties = SimplifiedDistributionSelector._get_properties(dim, scene)
+        for property_name in properties:
+            extended_name = SimplifiedDistributionSelector._name_prefix + property_name
+            setattr(scene, extended_name, params[property_name])
 
     @staticmethod
     def extract_data(context, dim: int = 0) -> dict:
         # If the user is calling Simplified... . extract_data, he is using the default.
-        ret = { "use_default": True }
-        ret.update( SimplifiedDistributionSelector.distribution_data(context, dim=dim))
+        ret = { "use_tree": False }
+        ret.update(SimplifiedDistributionSelector.distribution_data(context, dim=dim))
         return ret
 
     @staticmethod
@@ -450,12 +490,34 @@ class SimplifiedDistributionSelector(EditorWidget):
             "do_offset": scene.do_offset,
             "do_discretize": scene.do_discretize,
             "do_clamp": scene.do_clamp,
-            "clamping_factors": tuple(scene.clamping_factors)
+            "clamping_factors": tuple(scene.clamping_factors),
+            "parameters": SimplifiedDistributionSelector.extract_parameters(context, dim)
         }
 
     @staticmethod
+    def extract_parameters(context, dim: int = 0) -> dict:
+
+        # We extract the correct name for the enum property, then select all the interested
+        # subproperties (e.g. those in the _distribution_map associated with the name.
+        # Those properties are then serialized.
+        scene = context.scene
+        interested_properties = SimplifiedDistributionSelector._get_properties(dim, scene)
+
+        ret = {}
+        # Vector properties need to change with dimension.
+        for property_name in interested_properties:
+            extended_name = SimplifiedDistributionSelector._name_prefix + property_name
+            if 'vec' in property_name:
+                ret[property_name] = tuple(getattr(scene, extended_name))
+            else:
+                ret[property_name] = getattr(scene, extended_name)
+        return ret
+
+    @staticmethod
     def enum_name_from_dim(dim: int) -> str:
-        if dim == 1:
+        if dim == 0:
+            return "simple_distribution_enum_0d"
+        elif dim == 1:
             return "simple_distribution_enum_1d"
         elif dim == 2:
             return "simple_distribution_enum_2d"
@@ -551,13 +613,21 @@ class SimplifiedDistributionSelector(EditorWidget):
         row.prop(context.scene, "do_clamp")
         row.prop(context.scene, "clamping_factors")
 
+    @staticmethod
+    def _get_properties(dim, scene) -> list[str]:
+        p_name = SimplifiedDistributionSelector.enum_name_from_dim(dim)
+        dist_name = (getattr(scene, p_name, "") or "").upper()
+        return SimplifiedDistributionSelector._distribution_map[dist_name]
+
+
 #
 
 class PositionListSelector(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.position_collection.clea()
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
@@ -602,7 +672,8 @@ class MaterialSelector(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.material_list.clear()
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
@@ -672,15 +743,20 @@ class ValueTargeter(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.targeted_value_node.mat_name = ""
+        scene.targeted_value_node.node_label = ""
 
     @staticmethod
     def draw(layout, context):
         scene = context.scene
         box = layout.box().row()
+
         box.label(text="Value Node:")
-        box.label(text=scene.targeted_value_node, icon='OBJECT_DATA')
-        box.operator(Labels.CAPTURE_VALUE_NODE, text="Capture Selected", icon='EYEDROPPER')
+        mat_prop = scene.targeted_value_node
+        text_label = f"{mat_prop.mat_name} > {mat_prop.node_label}" if (mat_prop.mat_name and mat_prop.node_label) else "None"
+        box.label(text=text_label, icon='OBJECT_DATA')
+        box.operator(Labels.CAPTURE_VALUE_NODE.value, text="Capture Selected", icon='EYEDROPPER')
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:

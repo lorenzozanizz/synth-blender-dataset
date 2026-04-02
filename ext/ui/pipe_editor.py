@@ -80,7 +80,7 @@ class RandomizeRotationOperation(ScalarPropertyDrawer):
     pass
 
 @OperationDrawerRegistry.register(PipeNames.POSITION.value)
-class RandomizeRotationOperation(ScalarPropertyDrawer):
+class RandomizePositionOperation(ScalarPropertyDrawer):
     """
 
     """
