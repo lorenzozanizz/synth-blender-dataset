@@ -515,14 +515,9 @@ class SimplifiedDistributionSelector(EditorWidget):
 
     @staticmethod
     def enum_name_from_dim(dim: int) -> str:
-        if dim == 0:
-            return "simple_distribution_enum_0d"
-        elif dim == 1:
-            return "simple_distribution_enum_1d"
-        elif dim == 2:
-            return "simple_distribution_enum_2d"
-        else:
-            return "simple_distribution_enum_3d"
+        if 0 <= dim <= 3:
+            return f"simple_distribution_enum_{dim}d"
+        return ""
 
     @staticmethod
     def draw(layout, context, dim: int = 0):

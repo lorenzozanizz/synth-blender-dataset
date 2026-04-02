@@ -82,7 +82,6 @@ class VisibilitySchema(PipeSchema):
             "target": ObjectTargeter.extract_data(context),
             "distribution": SimplifiedDistributionSelector.extract_data(context, dim=1)
         }
-        UniqueLogger.quick_log(str(dic))
         return dic
 
     @staticmethod
@@ -106,7 +105,6 @@ class ScalarPropertyDrawer(PipeSchema):
             "target": ObjectTargeter.extract_data(context),
             "distribution": NodeDistributionSelector.extract_data(context, dim=dim)
         }
-        UniqueLogger.quick_log(str(dic))
         return dic
 
     @staticmethod
@@ -115,12 +113,11 @@ class ScalarPropertyDrawer(PipeSchema):
             ObjectTargeter.reset(context)
             NodeDistributionSelector.reset(context)
             AxisTarget.reset(context)
-            return
-
-        dimension = config["dimension"]
-        AxisTarget.setup_from_config(config["axis"], context)
-        ObjectTargeter.setup_from_config(config["target"], context)
-        NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=dimension)
+        else:
+            dimension = config["dimension"]
+            AxisTarget.setup_from_config(config["axis"], context)
+            ObjectTargeter.setup_from_config(config["target"], context)
+            NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=dimension)
 
 
 @PipeSchemaRegistry.register(PipeNames.SCALE.value)
@@ -136,3 +133,63 @@ class RotationSchema(ScalarPropertyDrawer):
 @PipeSchemaRegistry.register(PipeNames.POSITION.value)
 class PositionSchema(ScalarPropertyDrawer):
     pass
+
+@PipeSchemaRegistry.register(PipeNames.MOVE.value)
+class MoveSchema(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            "target": ObjectTargeter.extract_data(context),
+            "positions": PositionListSelector.extract_data(context)
+        }
+        return dic
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            ObjectTargeter.reset(context)
+            PositionListSelector.reset(context)
+        else:
+            ObjectTargeter.setup_from_config(config["target"], context)
+            PositionListSelector.setup_from_config(config["positions"], context)
+
+@PipeSchemaRegistry.register(PipeNames.TEXTURE.value)
+class TextureSchema(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            "node": ImageTextureTargeter.extract_data(context),
+            "textures": PathListSelector.extract_data(context)
+        }
+        return dic
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            ImageTextureTargeter.reset(context)
+            PathListSelector.reset(context)
+        else:
+            ImageTextureTargeter.setup_from_config(config["node"], context)
+            PathListSelector.setup_from_config(config["textures"], context)
+
+@PipeSchemaRegistry.register(PipeNames.TEXTURE.value)
+class MaterialSchema(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            "target": ObjectTargeter.extract_data(context),
+            "materials": MaterialSelector.extract_data(context)
+        }
+        return dic
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            ObjectTargeter.reset(context)
+            MaterialSelector.reset(context)
+        else:
+            ObjectTargeter.setup_from_config(config["target"], context)
+            MaterialSelector.setup_from_config(config["materials"], context)
