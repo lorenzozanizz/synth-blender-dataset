@@ -205,25 +205,38 @@ class PipelineOperationsList(UIList):
     def draw_item(self, _context, layout, _data, item, _icon, _active_data, _active_propname, index):
 
         operation = item
+        op_type = operation.operation_type
+        if op_type.lower() == "folder":
+            self.draw_folder(_context, layout, _data, item, _icon, _active_data, _active_propname, index)
+        else:
+            self.draw_pipe(_context, layout, _data, item, _icon, _active_data, _active_propname, index)
 
+    def draw_pipe(self, _context, layout, _data, item, _icon, _active_data, _active_propname, index):
+
+        op_type = item.operation_type
         # Left side: icon + operation name
         row = layout.row(align=True)
         sub = row.row(align=True)
         sub.scale_x = 0.3  # Make it tiny
         sub.label(text=f"{index + 1}")
 
-        op_type = operation.operation_type
         type_enum = next(en for en in PipeNames if en.value == op_type)
         row.label(text=op_type, icon=pipe_to_ico_mapping[type_enum])
 
         # Middle: show some property
         row.prop(item, "name", text="", emboss=False)
-        row.prop(operation, 'enabled', text='')
+        row.prop(item, 'enabled', text='')
         # Right side: edit button
         # (NOTE: This should not be here for a folder special pipe, instead there should be a special
         # "open" button)
-        if op_type.lower() != "folder":
-            row.operator(Labels.EDIT_PIPE.value, text='', icon='GREASEPENCIL').op_index = index
+        row.operator(Labels.EDIT_PIPE.value, text='', icon='GREASEPENCIL').op_index = index
+
+
+    def draw_folder(self, _context, layout, data, item, _icon, _active_data, _active_propname, index):
+
+        row = layout.row(align=True)
+        row.operator(Labels.OPEN_FOLDER.value, icon="RIGHTARROW", text='')
+        row.label(text="Folder")
 
 
 # Submenu for lighting operations

@@ -67,6 +67,8 @@ class Labels(Enum):
     # |
     # ( Add a special folder pipe which acts as a container of sub-pipes for neatness )
     ADD_FOLDER_MENU         = "randomizer.add_folder"
+    # ( Open a folder in the pipeline viewer, visualizing the sub pipes )
+    OPEN_FOLDER             = "randomizer.open_folder"
     # ( Set the current tab for the pipeline editor, e.g. list vs. edit pipe )
     CHANGE_VIEW_TAB_BUTTON_ = "randomizer.set_pipeline_tab"
     # ( Move a pipe down in the pipeline )

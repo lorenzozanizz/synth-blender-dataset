@@ -128,5 +128,8 @@ class AddFolderOperator(Operator):
     bl_label = "Add folder"
 
     def execute(self, context):
-
+        pipeline = context.scene.pipeline_data
+        new_op = pipeline.operations.add()
+        new_op.operation_type = "Folder"
+        new_op.enabled = True
         return { 'FINISHED' }

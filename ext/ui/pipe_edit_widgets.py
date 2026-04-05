@@ -200,7 +200,8 @@ class ObjectTargeter(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.targeted_objects_display.clear()
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
@@ -242,7 +243,9 @@ class ImageTextureTargeter(EditorWidget):
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.targeted_texture_node.mat_name = ""
+        scene.targeted_texture_node.node_label = ""
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
@@ -626,14 +629,14 @@ class PositionListSelector(EditorWidget):
     @staticmethod
     def reset(context) -> None:
         scene = context.scene
-        scene.position_collection.clea()
+        scene.position_collection.clear()
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
         scene = context.scene
         # We have to clear the current positions list and repopulate it with the
         # correct values.
-        scene.position_collection.clea()
+        scene.position_collection.clear()
         for item in config["positions"]:
             new_pos = scene.position_collection.add()
             new_pos.pos = item
@@ -643,7 +646,7 @@ class PositionListSelector(EditorWidget):
     def extract_data(context) -> dict:
         scene = context.scene
         return {
-            "positions": [ tuple(item) for item in scene.position_collection ]
+            "positions": [ tuple(item.pos) for item in scene.position_collection ]
         }
 
     @staticmethod

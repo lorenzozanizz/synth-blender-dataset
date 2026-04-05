@@ -202,7 +202,7 @@ class MaterialSimplePropertySchema(PipeSchema):
             MaterialSelector.reset(context)
             NodeDistributionSelector.reset(context)
         else:
-            NodeDistributionSelector.setup_from_config(config["distribution"], context)
+            NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
             MaterialSelector.setup_from_config(config["materials"], context)
 
     @staticmethod

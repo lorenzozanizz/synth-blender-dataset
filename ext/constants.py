@@ -25,6 +25,9 @@ class PipeNames(Enum):
 
     """
 
+    # Special type of pipe which encloses a set of sub pipes.
+    FOLDER      = "Folder"
+
     SCALE       = "Scale"
     ROTATION    = "Rotation"
     MOVE        = "Move"
