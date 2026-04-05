@@ -45,3 +45,6 @@ extraction of data can happen without interrogating the bpy data component every
 
 
 """
+
+class CompiledSampler:
+    pass

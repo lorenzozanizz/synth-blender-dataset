@@ -91,7 +91,7 @@ operation_properties = {
     ),
     "do_offset": BoolProperty(
         name="Offset mode",
-        default=False,
+        default=True,
         description="Consider the extracted values as offset to the current value."
     ),
 

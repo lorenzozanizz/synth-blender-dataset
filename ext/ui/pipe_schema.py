@@ -174,7 +174,7 @@ class TextureSchema(PipeSchema):
             ImageTextureTargeter.setup_from_config(config["node"], context)
             PathListSelector.setup_from_config(config["textures"], context)
 
-@PipeSchemaRegistry.register(PipeNames.TEXTURE.value)
+@PipeSchemaRegistry.register(PipeNames.MATERIAL.value)
 class MaterialSchema(PipeSchema):
 
     @staticmethod
@@ -193,3 +193,31 @@ class MaterialSchema(PipeSchema):
         else:
             ObjectTargeter.setup_from_config(config["target"], context)
             MaterialSelector.setup_from_config(config["materials"], context)
+
+class MaterialSimplePropertySchema(PipeSchema):
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            MaterialSelector.reset(context)
+            NodeDistributionSelector.reset(context)
+        else:
+            NodeDistributionSelector.setup_from_config(config["distribution"], context)
+            MaterialSelector.setup_from_config(config["materials"], context)
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            "distribution": NodeDistributionSelector.extract_data(context, dim=1),
+            "materials": MaterialSelector.extract_data(context)
+        }
+        return dic
+
+
+@PipeSchemaRegistry.register(PipeNames.METALLIC.value)
+class MetallicSchema(MaterialSimplePropertySchema):
+    pass
+
+@PipeSchemaRegistry.register(PipeNames.ROUGHNESS.value)
+class RoughnessSchema(MaterialSimplePropertySchema):
+    pass

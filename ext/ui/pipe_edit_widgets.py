@@ -281,7 +281,7 @@ class PathListSelector(EditorWidget):
     @staticmethod
     def reset(context) -> None:
         scene = context.scene
-        scene.image_paths_list.clear()
+        scene.image_paths.clear()
         scene.selected_image_path_index = 0
 
     @staticmethod
@@ -291,7 +291,7 @@ class PathListSelector(EditorWidget):
         if scene.use_folder_mode:
             scene.image_folder = config["folder"]
         else:
-            ls = scene.image_paths_list
+            ls = scene.image_paths
             ls.clear()
             for file in config["files"]:
                 fl = ls.add()
@@ -305,7 +305,7 @@ class PathListSelector(EditorWidget):
             ret["folder"] = scene.image_folder
         else:
             ret["files"] = [
-                file.path for file in scene.image_paths_list
+                file.path for file in scene.image_paths
             ]
         return ret
 
@@ -354,8 +354,8 @@ class NodeDistributionSelector(EditorWidget):
         if scene.use_distribution_tree:
             # Load the selected user defined distribution
             distributions = scene.available_distributions
-            index = next(idx for idx in range(len(distributions)) if
-                         scene.available_distributions[idx].name == config["distribution"])
+            index = next((idx for idx in range(len(distributions)) if
+                         scene.available_distributions[idx].name == config["distribution"]), 0)
             scene.selected_distribution_index = index
         else:
             # Otherwise load the preset distribution
@@ -368,6 +368,7 @@ class NodeDistributionSelector(EditorWidget):
         if scene.use_distribution_tree:
             distributions = scene.available_distributions
             selected = distributions[scene.selected_distribution_index]
+            # Compile the distribution tree to a string
             ret["distribution"] = selected.name
         else:
             data = SimplifiedDistributionSelector.distribution_data(context, dim=dim)
@@ -612,6 +613,9 @@ class SimplifiedDistributionSelector(EditorWidget):
     def _get_properties(dim, scene) -> list[str]:
         p_name = SimplifiedDistributionSelector.enum_name_from_dim(dim)
         dist_name = (getattr(scene, p_name, "") or "").upper()
+        # There is no corresponding property for no distribution obviously
+        if dist_name == "NONE":
+            return []
         return SimplifiedDistributionSelector._distribution_map[dist_name]
 
 
