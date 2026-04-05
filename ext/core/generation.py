@@ -1,5 +1,5 @@
 from .names import CoreLabels
-from ..pipeline.registry import OperationRegistry
+from ..pipeline.operation_registry import OperationRegistry
 
 from ..ui.pipe_schema import PipeSchemaRegistry
 
@@ -35,7 +35,46 @@ class GenerateOperator(Operator):
         executor = PipelineExecutor(scene)
         executor.compile_pipeline(scene)
 
-        return { 'FINISHED' }
+        # Validate
+        if not output_dir:
+            self.report({'ERROR'}, "Output directory not set")
+            return {'CANCELLED'}
+
+        if not scene.pipeline_data.operations:
+            self.report({'WARNING'}, "Pipeline is empty")
+            return {'CANCELLED'}
+
+        # Create output dir
+        os.makedirs(output_dir, exist_ok=True)
+
+        try:
+            # Compile pipeline once
+            pipeline = PipelineExecutor(scene)
+            random.seed(seed_value)
+
+            # Generate frames
+            for frame_idx in range(num_samples):
+
+                # Set frame number (for animation if needed)
+                scene.frame_set(frame_idx)
+
+                # Apply randomization
+                pipeline.execute(scene)
+
+                # Render
+                filepath = os.path.join(output_dir, f"render_{frame_idx:04d}.png")
+                scene.render.filepath = filepath
+                bpy.ops.render.render(write_still=True)
+
+                if frame_idx % 10 == 0:
+                    print(f"Generated {frame_idx}/{num_samples}")
+
+            self.report({'INFO'}, f"Successfully generated {num_samples} frames to {output_dir}")
+            return {'FINISHED'}
+
+        except Exception as e:
+            self.report({'ERROR'}, f"Generation failed: {str(e)}")
+            return {'CANCELLED'}
 
 
 class PipelineExecutor:
@@ -97,60 +136,3 @@ class PipelineExecutor:
                 print(f"Error executing {op_data['name']}: {e}")
                 # Continue on error or fail? Your choice
                 raise
-
-
-class GenerateDatasetOperator(Operator):
-    bl_idname = "randomizer.generate"
-    bl_label = "Generate Dataset"
-
-    def execute(self, context):
-        scene = context.scene
-        num_samples = scene.randomizer_amount
-        output_dir = scene.randomizer_destination_path
-        seed_value = scene.randomizer_seed
-
-        # Validate
-        if not output_dir:
-            self.report({'ERROR'}, "Output directory not set")
-            return {'CANCELLED'}
-
-        if not scene.pipeline_data.operations:
-            self.report({'WARNING'}, "Pipeline is empty")
-            return {'CANCELLED'}
-
-        # Create output dir
-        os.makedirs(output_dir, exist_ok=True)
-
-        target_objects = context.selected_objects
-        if not target_objects:
-            self.report({'ERROR'}, "No objects selected")
-            return {'CANCELLED'}
-
-        try:
-            # Compile pipeline once
-            pipeline = PipelineExecutor(scene)
-            random.seed(seed_value)
-
-            # Generate frames
-            for frame_idx in range(num_samples):
-
-                # Set frame number (for animation if needed)
-                scene.frame_set(frame_idx)
-
-                # Apply randomization
-                pipeline.execute(scene, target_objects)
-
-                # Render
-                filepath = os.path.join(output_dir, f"render_{frame_idx:04d}.png")
-                scene.render.filepath = filepath
-                bpy.ops.render.render(write_still=True)
-
-                if frame_idx % 10 == 0:
-                    print(f"Generated {frame_idx}/{num_samples}")
-
-            self.report({'INFO'}, f"Successfully generated {num_samples} frames to {output_dir}")
-            return {'FINISHED'}
-
-        except Exception as e:
-            self.report({'ERROR'}, f"Generation failed: {str(e)}")
-            return {'CANCELLED'}

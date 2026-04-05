@@ -1,33 +1,63 @@
 from .names import Labels
 from ..utils.logger import UniqueLogger
+from ..constants import VERSION
 
 import os
 import json
 import platform
 import subprocess
-import io
-from contextlib import redirect_stdout
 
 from bpy.types import Operator
 from bpy.props import StringProperty
 
 import bpy
 
-class LoadPipelineOperator(Operator):
 
-    bl_idname = Labels.LOAD_PIPELINE_JSON.value
-    bl_label = "Load Pipeline"
+class PipelineSerializer:
 
-    def execute(self, context):
-        """Capture undo history by redirecting stdout"""
+    @staticmethod
+    def get_description(scene) -> dict:
+        """
 
-        f = io.StringIO()
-        with redirect_stdout(f):
-            context.window_manager.print_undo_steps()
+        :param scene:
+        :return:
+        """
+        pipe_desc = PipelineSerializer._get_pipe_description(scene)
+        distribution_desc = PipelineSerializer._get_distributions_description(scene)
+        return {
+            # taken from constants.py at the root
+            "version": VERSION,
+            "operations": pipe_desc,
+            "distributions": distribution_desc
+        }
 
-        output = f.getvalue()
-        UniqueLogger.quick_log(output)
-        return {'FINISHED'}
+    @staticmethod
+    def _get_distributions_description(_scene) -> dict:
+        """
+
+        :param _scene:
+        :return:
+        """
+        distributions = ()
+        return {
+            'distributions': distributions
+        }
+
+    @staticmethod
+    def _get_pipe_description(scene) -> dict:
+        """
+
+        :param scene:
+        :return:
+        """
+        pipeline = scene.pipeline_data
+        return {
+            'operations': [ {
+                'operation_type': op.operation_type,
+                'enabled': op.enabled,
+            } for op in pipeline.operations ]
+        }
+
 
 class SavePipelineAsOperator(Operator):
 
@@ -37,44 +67,38 @@ class SavePipelineAsOperator(Operator):
     filepath: StringProperty(subtype='FILE_PATH', default='pipeline.json')          # type: ignore
 
     def execute(self, context):
+        scene = context.scene
+        before_serialized_repr = PipelineSerializer.get_description(scene)
         try:
-            pipeline = context.scene.pipeline_data
-
-            pipeline_dict = {
-                'version': '1.0',
-                'operations': [
-                    {
-                        'operation_type': op.operation_type,
-                        'seed': op.seed,
-                        'intensity': op.config,
-                        'enabled': op.enabled,
-                    }
-                    for op in pipeline.operations
-                ]
-            }
-
+            # Get the path from the scene property
+            path = scene.randomizer_pipeline_save_path
             # Create directory if it doesn't exist
-            os.makedirs(os.path.dirname(self.filepath), exist_ok=True)
-
-            with open(self.filepath, 'w') as f:
-                json.dump(pipeline_dict, f, indent=2)
-
-            # Save the save path
-            context.scene.randomizer_pipeline_save_path = self.filepath
-
-            # Clear unsaved changes flag
-            context.scene.pipeline_has_unsaved_changes = False
-
-            self.report({'INFO'}, f'Saved pipeline to {self.filepath}')
-            return {'FINISHED'}
-
+            os.makedirs(os.path.dirname(path), exist_ok=True)
+            with open(path, 'w') as f:
+                json.dump(before_serialized_repr, f, indent=2)
         except Exception as e:
             self.report({'ERROR'}, f'Failed to save: {str(e)}')
             return {'CANCELLED'}
 
+        self.report({'INFO'}, f'Saved pipeline to {path}')
+        return {'FINISHED'}
+
     def invoke(self, context, _):
         context.window_manager.fileselect_add(self)
         return {'RUNNING_MODAL'}
+
+
+class PipelineLoader:
+    pass
+
+class LoadPipelineOperator(Operator):
+
+    bl_idname = Labels.LOAD_PIPELINE_JSON.value
+    bl_label = "Load Pipeline"
+
+    def execute(self, context):
+        """Capture undo history by redirecting stdout"""
+        return {'FINISHED'}
 
 
 class OpenLogsOperator(Operator):
@@ -110,28 +134,27 @@ class OpenLogsOperator(Operator):
         return { 'FINISHED' }
 
 
-
-def setup_logger_from_scene(context) -> bool:
-    """ Setup logger using scene property """
-
-    try:
-        # Clean up the previous logger, e.g. generate a new writing path
-        UniqueLogger.cleanup()
-        # Now set up the new logger which sets multiple logger variables (the path,
-        # the availability of the logger with UniqueLogger.available())
-        directory = context.scene.randomizer_logging_path
-        UniqueLogger.initialize_logging(directory)
-        return True
-
-    except Exception as e:
-        context.report({ 'ERROR' }, f"Could not setup logger: {e}.")
-        return False
-
-
 class ApplyLogPathOperator(Operator):
 
     bl_idname = Labels.SETUP_LOGGER_DIR.value
     bl_label = "Apply Log Path"
+
+    @staticmethod
+    def _setup_logger_from_scene(context) -> bool:
+        """ Setup logger using scene property """
+
+        try:
+            # Clean up the previous logger, e.g. generate a new writing path
+            UniqueLogger.cleanup()
+            # Now set up the new logger which sets multiple logger variables (the path,
+            # the availability of the logger with UniqueLogger.available())
+            directory = context.scene.randomizer_logging_path
+            UniqueLogger.initialize_logging(directory)
+            return True
+
+        except Exception as e:
+            context.report({'ERROR'}, f"Could not setup logger: {e}.")
+            return False
 
     def execute(self, context):
         """
@@ -139,7 +162,7 @@ class ApplyLogPathOperator(Operator):
         :param context:
         :return:
         """
-        if setup_logger_from_scene(context):
+        if ApplyLogPathOperator._setup_logger_from_scene(context):
             self.report({'INFO'}, "Logger updated!")
             return { 'FINISHED' }
         else:

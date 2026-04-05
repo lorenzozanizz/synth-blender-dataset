@@ -22,6 +22,9 @@ class PipeAddOperator(Operator):
         new_op = pipeline.operations.add()
         new_pipe_order = pipeline.get_last_operation_order()
 
+        # Currently selected pipe is INSIDE a folder? If it is, we add to the folder instead.
+        scene = context.scene
+
         # Set the order of the new pipe in the list.
         new_op.order = new_pipe_order
         new_op.operation_type = self.op_name
@@ -66,10 +69,6 @@ class MenuOperator(Operator):
 
     def draw_menu(self, menu, context):
         layout = menu.layout
-
-        scene = context.scene
-        # Currently selected pipe is INSIDE a folder? If it is, we add to the folder instead.
-
         layout.operator("randomizer.add_folder", text="Folder", icon="FILE")
         # Lighting category
         layout.menu('AddLightingCategoryPipeMenu', icon="LIGHT")

@@ -4,7 +4,7 @@
 
 """
 
-from .registry import OperationRegistry
+from .operation_registry import OperationRegistry
 from ..constants import PipeNames
 
 from abc import ABC, abstractmethod

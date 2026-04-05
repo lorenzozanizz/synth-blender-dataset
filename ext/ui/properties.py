@@ -65,6 +65,7 @@ ext_ui_properties = {
 
 
 operation_properties = {
+
     "use_distribution_tree": BoolProperty(
         name="Use advanced Distribution Editor nodes",
         default=False
