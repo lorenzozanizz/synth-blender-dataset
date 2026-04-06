@@ -1,5 +1,6 @@
 from .names import Labels
 
+from ..pipeline.integrity import ValidatorRegistry
 from ..utils.logger import UniqueLogger
 from ..ui.pipe_schema import PipeSchemaRegistry, PipeSchema
 
@@ -370,6 +371,13 @@ class SavePipeOperator(Operator):
         # The overhead of saving strings and deserializing is minimal because the heavy task (generation)
         # initially deserializes all the pipeline into dictionaries.
         operation.config = serialized
+
+        # We must now call the validator and ensure that the pipe is correctly configured, to display as a
+        # warning sign
+        validator = ValidatorRegistry.get(op_name)
+        if validator:
+            operation.valid = validator.validate(operation)
+
 
         if self.on_save_return:
             # Change back to tab

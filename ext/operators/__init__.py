@@ -7,7 +7,7 @@ from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, Pipe
                            CaptureValueNode, CaptureAndModifyNodeProperties, SavePipeOperator)
 from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator,
                                RemoveImagePathOperator)
-
+from .core_ops import GenerateOperator
 operators = (
 
     #
@@ -22,6 +22,8 @@ operators = (
     PositionRemoveOperator, PositionAddOperator, CaptureObjectPositionOperator, AddMaterialToListOperator, RemoveMaterialFromListOperator,
     CaptureAndModifyNodeProperties, CaptureValueNode, SavePipeOperator,
     #
-    AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator, RemoveImagePathOperator
+    AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator, RemoveImagePathOperator,
+
+    GenerateOperator
 
 )

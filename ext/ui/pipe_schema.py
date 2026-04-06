@@ -221,3 +221,23 @@ class MetallicSchema(MaterialSimplePropertySchema):
 @PipeSchemaRegistry.register(PipeNames.ROUGHNESS.value)
 class RoughnessSchema(MaterialSimplePropertySchema):
     pass
+
+@PipeSchemaRegistry.register(PipeNames.INTENSITY.value)
+class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            PropertyTargeter.reset(context)
+            NodeDistributionSelector.reset(context)
+        else:
+            PropertyTargeter.extract_data(context)
+            NodeDistributionSelector.extract_data(context, dim=1)
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            "target": PropertyTargeter.extract_data(context),
+            "distribution": NodeDistributionSelector.extract_data(context, dim=1)
+        }
+        return dic

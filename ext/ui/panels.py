@@ -1,6 +1,5 @@
 
 from ..operators.names import Labels
-from ..core.names import CoreLabels
 from ..constants import *
 
 from bpy.types import Panel
@@ -42,7 +41,7 @@ class RandomizerPanel(Panel):
         layout.prop(scene, "randomizer_append_checkbox")
 
         layout.separator()  # Adds vertical space
-        layout.operator(CoreLabels.GENERATE.value, text="Generate", icon="TRIA_RIGHT")
+        layout.operator(Labels.GENERATE.value, text="Generate", icon="TRIA_RIGHT")
 
     def extract_data(self, context) -> dict:
         return { }

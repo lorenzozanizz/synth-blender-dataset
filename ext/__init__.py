@@ -26,7 +26,6 @@ from .constants import NODE_CATEGORIES_NAME
 
 from .ui import classes as ui_classes
 from .operators import operators as ops_classes
-from .core import operators as core_ops
 from .distribution import classes as dist_classes
 from .distribution import node_categories
 from .pipeline import classes as pipe_classes
@@ -54,7 +53,6 @@ registration_classes = (
     *pipe_classes,
     *dist_classes,
     *ops_classes,
-    *core_ops,
     *ui_classes
 )
 

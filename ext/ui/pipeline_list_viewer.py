@@ -231,6 +231,9 @@ class PipelineOperationsList(UIList):
         # "open" button)
         row.operator(Labels.EDIT_PIPE.value, text='', icon='GREASEPENCIL').op_index = index
 
+        if not item.valid:
+            row.label(text="", icon="WARNING_LARGE")
+
 
     def draw_folder(self, _context, layout, data, item, _icon, _active_data, _active_propname, index):
 

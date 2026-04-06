@@ -9,6 +9,8 @@ class PipelineOperation(PropertyGroup):
     name: StringProperty(name='Name', default="Unnamed")                    # type: ignore
     config: StringProperty(name='Config', default='{}')                     # type: ignore
     order: IntProperty(default=0)                                           # type: ignore
+    valid: BoolProperty(name='Valid', default=False)                        # type: ignore
+
 
 class PipelineData(PropertyGroup):
     """Container for all operations"""

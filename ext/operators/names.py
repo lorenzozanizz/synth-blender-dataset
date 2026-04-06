@@ -21,6 +21,10 @@ class Labels(Enum):
     extensions. To access an operator's use Labels.NAME.value
     """
 
+    # ------------- Default namespace names ---------------
+    GENERATE                = "randomizer.generate"
+
+
     # ------------- Names inside pipeline_ops.py ---------------
     # |
     # ( Captures a general node form the shader material node-editor )
