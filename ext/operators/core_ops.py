@@ -1,7 +1,7 @@
 from .names import Labels
 from ..core.generation import ExecutionParameters, PipelineExecutor
 
-
+from typing import Union
 from bpy.types import Operator
 
 class GenerateOperator(Operator):
@@ -11,17 +11,10 @@ class GenerateOperator(Operator):
     bl_label = "Generate Dataset"
 
     @staticmethod
-    def extract_relevant_data(context) -> ExecutionParameters:
-        scene = context.scene
-        return ExecutionParameters(1)
-
-    def execute(self, context):
-        """Get all selected nodes"""
+    def validate_data_extract(context) -> Union[None, ExecutionParameters]:
+        """"""
 
         scene = context.scene
-        # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
-        executor = PipelineExecutor(scene)
-        executor.compile_pipeline(scene)
 
         # Validate
         if not output_dir:
@@ -31,6 +24,23 @@ class GenerateOperator(Operator):
         if not scene.pipeline_data.operations:
             self.report({'WARNING'}, "Pipeline is empty")
             return {'CANCELLED'}
+
+
+        return ExecutionParameters(1)
+
+    def execute(self, context):
+        """
+
+        :param context:
+        :return:
+        """
+        #
+        scene = context.scene
+        params = self.validate_data_extract(context)
+
+        # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
+        executor = PipelineExecutor(scene, params)
+        executor.compile_pipeline(scene)
 
         # Create output dir
         os.makedirs(output_dir, exist_ok=True)

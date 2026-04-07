@@ -8,11 +8,13 @@ import random
 import os
 from dataclasses import dataclass
 
-from bpy.types import Operator
 import bpy
 
 @dataclass
 class ExecutionParameters:
+    """
+
+    """
     seed: int
     amount: int
     prefix: str
@@ -24,8 +26,9 @@ class ExecutionParameters:
 class PipelineExecutor:
     """Compiled, reusable pipeline executor"""
 
-    def __init__(self, scene):
+    def __init__(self, scene, parameters):
         self.scene = scene
+        self.parameters = parameters
         self.compiled_ops = []
 
     def compile_pipeline(self, scene) -> list:
@@ -81,3 +84,5 @@ class PipelineExecutor:
                 # Continue on error or fail? Your choice
                 raise
 
+    def run_pipeline(self):
+        pass
