@@ -1,4 +1,4 @@
-from .panels import RandomizerPanel, SettingsPanel, InfoPanel
+from .panels import RandomizerPanel, SettingsPanel, InfoPanel, LabelingPanel
 from .pipeline_list_viewer import (RegistrationPanel, AddCameraCategoryPipeMenu, AddLightingCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
                                    PipelineOperationsList, AddExperimentalCategoryPipeMenu)
@@ -22,7 +22,7 @@ def unregister_handlers():
 
 
 classes = (
-    RandomizerPanel, SettingsPanel, InfoPanel, RegistrationPanel, AddCameraCategoryPipeMenu,
+    RandomizerPanel, SettingsPanel, InfoPanel, RegistrationPanel, LabelingPanel, AddCameraCategoryPipeMenu,
     AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList, AddExperimentalCategoryPipeMenu,
     AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu, DistributionTreeList, PathsUIList,
     ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList, ObjectName, TextureNodeProperty

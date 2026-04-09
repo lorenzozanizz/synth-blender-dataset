@@ -24,7 +24,6 @@ class Labels(Enum):
     # ------------- Default namespace names ---------------
     GENERATE                = "randomizer.generate"
 
-
     # ------------- Names inside pipeline_ops.py ---------------
     # |
     # ( Captures a general node form the shader material node-editor )
@@ -57,7 +56,8 @@ class Labels(Enum):
     ADD_MENU_LIST_          = "randomizer.add_operation_menu"
     # ( An operation which scans for the validity of all pipes in the pipeline. )
     SCAN_PIPELINE           = "randomizer.scan_pipeline"
-
+    # ( Put an operation into a folder at the last place )
+    INTO_FOLDER             = "randomizer.into_folder"
 
     # ------------- Names inside io_ops.py ---------------
     # |

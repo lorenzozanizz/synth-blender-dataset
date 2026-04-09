@@ -59,7 +59,7 @@ class SettingsPanel(Panel):
     bl_region_type = 'UI'
     bl_options = { 'DEFAULT_CLOSED' }
 
-    bl_order = 2
+    bl_order = 3
 
     def draw(self, context):
         layout = self.layout
@@ -92,7 +92,7 @@ class InfoPanel(Panel):
     bl_options = { 'DEFAULT_CLOSED' }
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_order = 3
+    bl_order = 4
 
     def draw(self, _context):
         layout = self.layout
@@ -118,3 +118,19 @@ class InfoPanel(Panel):
         op.url = DOCU_URL
 
 
+class LabelingPanel(Panel):
+    """ The panel containing information regarding the extension, its version,
+    the version it was developed for, a link to the original repository and
+    the documentation.
+    """
+
+    bl_label = "Labeling"
+    bl_idname = panel_conflict_rename("labeling")
+    bl_category = PANEL_CATEGORY
+    bl_options = { 'DEFAULT_CLOSED' }
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'UI'
+    bl_order = 2
+
+    def draw(self, _context):
+        pass

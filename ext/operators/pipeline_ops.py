@@ -113,7 +113,29 @@ class ScanPipelineOperator(Operator):
     bl_label = "Scan Pipeline"
 
     def execute(self, context):
+        scene = context.scene
+        pipeline = scene.pipeline_data
+        found_not_valid = 0
+        for pipe in pipeline.operations:
+            op_type = pipe.operation_type
+            validator = ValidatorRegistry.get(op_type)
+            config = loads(pipe.config)
+            if validator and not validator.validate(pipe, config):
+                pipe.valid = False
+                found_not_valid += 1
 
+        self.report({ 'INFO' },
+            f"Scanned {len(pipeline.operations)} operation{'s' if len(pipeline.operations) > 1 else ''}, "
+            f"{found_not_valid} operation{'s' if len(pipeline.operations) > 1 else ''} were invalid.")
+        return {'FINISHED'}
+
+
+class IntoFolderOperator(Operator):
+
+    bl_idname = Labels.INTO_FOLDER.value
+    bl_label = "Put into folder"
+
+    def execute(self, context):
         pass
 
 class CaptureObjectsOperator(Operator):

@@ -1,5 +1,5 @@
 from .operations import PipelineOperation
-from ..constants import PipeNames
+from ..constants import PipeNames, WidgetSerializationKeys
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
@@ -134,7 +134,10 @@ class AxisTargetValidator(WidgetValidator):
         :param partial_config:
         :return:
         """
-        pass
+        do_x = partial_config
+        do_y = partial_config
+        do_z = partial_config
+        return do_x or do_y or do_z
 
 
 #
@@ -151,7 +154,10 @@ class ObjectTargeterValidator(WidgetValidator):
             name: str
             # Note that this searches for objects in all the different scenes of the active
             # file, not just the current context.
-            obj = bpy.data.objects[name]
+            try:
+                obj = bpy.data.objects[name]
+            except KeyError:
+                return False
             if not obj:
                 return False
         return True
@@ -214,7 +220,10 @@ class MaterialSelectorValidator(WidgetValidator):
             return False
         for mat in materials:
             mat: str
-            tree = bpy.data.materials.get(mat)
+            try:
+                tree = bpy.data.materials.get(mat)
+            except KeyError:
+                return False
             if not tree:
                 return False
         return True
@@ -234,52 +243,3 @@ class ValueTargeterValidator(WidgetValidator):
     @staticmethod
     def validate(partial_config: dict) -> bool:
         pass
-
-
-class WidgetSerializationKeys(Enum):
-
-
-    DIMENSION = "dimension"
-
-    MATERIAL = "materials"
-    MATERIAL_LIST               = "materials"
-
-    # Incomplete, a bit messy for now!
-    PROPERTY = ""
-
-    VALUE   = "value"
-    VALUE_MATERIAL              = "material"
-    VALUE_LABEL                 = "label"
-
-    POSITION = "positions"
-    POSITION_LIST               = "positions"
-
-    SIMPLE  = "distribution"
-    SIMPLE_PRESET_NAME          = "preset"
-    SIMPLE_OFFSET_MODE          = "do_offset"
-    SIMPLE_DISCRETIZE           = "do_discretize"
-    SIMPLE_CLAMP                = "do_clamp"
-    SIMPLE_CLAMPING_EXTREMES    = "clamping_factors"
-    SIMPLE_PARAMETERS           = "parameters"
-
-    NODE    = "distribution"
-    NODE_USE_TREE               = "use_tree"
-    NODE_DISTRIBUTION           = "distribution"
-
-    PATH    = "textures"
-    PATH_USE_FOLDER             = "use_folder"
-    PATH_FILES                  = "files"
-    PATH_FOLDER                 = "folder"
-
-    TEXTURE = "node"
-    TEXTURE_MATERIAL            = "material"
-    TEXTURE_LABEL               = "label"
-
-    OBJECT  = "target"
-    OBJECT_NAMES                = "names"
-
-    AXIS    = "axis"
-    AXIS_DIMS                   = "dims"
-    AXIS_RANDOMIZE_PREFIX_X     = "target_x"
-    AXIS_RANDOMIZE_PREFIX_Y     = "target_Y"
-    AXIS_RANDOMIZE_PREFIX_Z     = "target_Z"

@@ -1,6 +1,7 @@
 from ..operators.names import Labels
 from ..distribution.computation import Distribution
 from ..distribution.nodes import get_tree_dimensionality
+from ..constants import WidgetSerializationKeys
 from ..utils.logger import UniqueLogger
 
 from abc import ABC, abstractmethod

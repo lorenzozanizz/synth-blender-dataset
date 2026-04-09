@@ -9,6 +9,8 @@ from ..constants import PipeNames
 
 from abc import ABC, abstractmethod
 
+from ..utils.logger import UniqueLogger
+
 
 class PipelineOperation(ABC):
     """Base class for all pipeline operations."""
@@ -73,6 +75,7 @@ class RandomizeRotationOperation(PipelineOperation):
 class RandomizeVisibilityOperation(PipelineOperation):
 
     def compile(self,  config: dict):
+        UniqueLogger.quick_log()
         pass
 
     def execute(self, context):

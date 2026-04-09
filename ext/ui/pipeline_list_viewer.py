@@ -105,6 +105,7 @@ class RegistrationPanel(Panel):
         col.operator(Labels.REMOVE_PIPE.value, icon='REMOVE', text='')
         col.separator()
 
+        col.operator(Labels.INTO_FOLDER.value, icon="FOLDER_REDIRECT", text='')
         col.operator(Labels.PIPE_UP_OPERATION_.value, icon='BACK', text='')
         col.operator(Labels.PIPE_DOWN_OPERATION_.value, icon='FORWARD', text='')
 

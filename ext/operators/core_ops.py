@@ -49,4 +49,6 @@ class GenerateOperator(Operator):
             executor.execute()
         except Exception as e:
             self.report({'ERROR'}, f"Generation failed: {str(e)}")
-            return {'CANCELLED'}
+            return { 'CANCELLED' }
+
+        return { 'FINISHED' }

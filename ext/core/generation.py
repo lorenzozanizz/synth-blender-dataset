@@ -27,10 +27,11 @@ class ExecutionParameters:
 class PipelineExecutor:
     """Compiled, reusable pipeline executor"""
 
-    def __init__(self, context, parameters):
+    def __init__(self, context, parameters, reporter = None):
         self.ctx = context
         self.parameters = parameters
         self.compiled_ops = []
+        self.reporter = reporter
 
     def compile_pipeline(self) -> list:
         """Deserialize all operations once"""
@@ -41,15 +42,17 @@ class PipelineExecutor:
         for operation in pipeline.operations:
             if not operation.enabled:
                 continue
-            # Momentarily, invalid operations are skipped. It may be that in the future
-            elif operation.valid:
+            # Momentarily, invalid operations are skipped. It may be that in the future this
+            # is not the case...
+            elif not operation.valid:
                 continue
             op_type = operation.operation_type
             # Deserialize config
             try:
                 config = json.loads(operation.config)
             except json.JSONDecodeError as e:
-                print(f"Failed to parse config for {op_type}: {e}")
+                if self.reporter:
+                    self.reporter.report({'ERROR'}, f"Invaid configuration for pipe {operation.name}")
                 continue
 
             # Get executor class
@@ -57,7 +60,8 @@ class PipelineExecutor:
                 executor = OperationRegistry.get(op_type)
                 executor.compile(config)
             except ValueError:
-                print(f"No executor for {op_type}")
+                if self.reporter:
+                    self.reporter.report({'ERROR'}, f"No executor found for operation {operation.name}")
                 continue
 
             compiled.append(executor)
@@ -71,14 +75,9 @@ class PipelineExecutor:
         scene = self.ctx.scene
         for op_data in self.compiled_ops:
             executor = op_data['executor']
-            config = op_data['config']
 
             try:
-                executor.execute(scene, config)
+                executor.execute(scene)
             except Exception as e:
                 print(f"Error executing {op_data['name']}: {e}")
-                # Continue on error or fail? Your choice
                 raise
-
-    def run_pipeline(self):
-        pass

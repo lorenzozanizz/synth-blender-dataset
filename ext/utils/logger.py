@@ -102,6 +102,8 @@ class UniqueLogger:
 
     @staticmethod
     def quick_log(text: str):
+        if not UniqueLogger.available():
+            return
         logger = UniqueLogger.get_logger("default")
         logger.info(text)
 
