@@ -16,22 +16,22 @@ class PipelineOperation(ABC):
     operation_type: str  # "randomize_position", "randomize_rotation", etc.
 
     @abstractmethod
-    def compile(self) -> dict:
+    def compile(self, config: dict):
         pass
 
     @abstractmethod
-    def execute(self, scene, objects):
-        """Execute this operation on objects."""
+    def execute(self, context):
+        """Execute this operation on the scene."""
         pass
 
 
 @OperationRegistry.register(PipeNames.SCALE.value)
 class RandomizeScaleOperation(PipelineOperation):
 
-    def compile(self) -> dict:
+    def compile(self, config: dict):
         pass
 
-    def execute(self, scene, objects):
+    def execute(self, context):
         # Your logic
         pass
 
@@ -39,10 +39,10 @@ class RandomizeScaleOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.POSITION.value)
 class RandomizePositionOperation(PipelineOperation):
 
-    def compile(self) -> dict:
+    def compile(self, config: dict):
         pass
 
-    def execute(self, scene, objects):
+    def execute(self, context):
         # Your logic
         pass
 
@@ -50,10 +50,10 @@ class RandomizePositionOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.MOVE.value)
 class RandomizeMoveOperation(PipelineOperation):
 
-    def compile(self) -> dict:
+    def compile(self,  config: dict):
         pass
 
-    def execute(self, scene, objects):
+    def execute(self, context):
         # Your logic
         pass
 
@@ -61,10 +61,10 @@ class RandomizeMoveOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.ROTATION.value)
 class RandomizeRotationOperation(PipelineOperation):
 
-    def compile(self) -> dict:
+    def compile(self,  config: dict):
         pass
 
-    def execute(self, scene, objects):
+    def execute(self, context):
         # Your logic
         pass
 
@@ -72,9 +72,9 @@ class RandomizeRotationOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.VISIBILITY.value)
 class RandomizeVisibilityOperation(PipelineOperation):
 
-    def compile(self) -> dict:
+    def compile(self,  config: dict):
         pass
 
-    def execute(self, scene, objects):
+    def execute(self, context):
         # Your logic
         pass

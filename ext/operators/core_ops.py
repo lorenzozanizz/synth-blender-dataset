@@ -12,21 +12,21 @@ class GenerateOperator(Operator):
 
     @staticmethod
     def validate_data_extract(context) -> Union[None, ExecutionParameters]:
-        """"""
+        """
 
+        :param context:
+        :return:
+        """
         scene = context.scene
 
-        # Validate
-        if not output_dir:
-            self.report({'ERROR'}, "Output directory not set")
-            return {'CANCELLED'}
-
-        if not scene.pipeline_data.operations:
-            self.report({'WARNING'}, "Pipeline is empty")
-            return {'CANCELLED'}
-
-
-        return ExecutionParameters(1)
+        return ExecutionParameters(
+            scene.randomizer_seed,
+            scene.randomizer_amount,
+            scene.randomizer_save_prefix,
+            scene.randomizer_label_format,
+            scene.randomizer_append_checkbox,
+            scene.randomizer_destination_path
+        )
 
     def execute(self, context):
         """
@@ -34,42 +34,19 @@ class GenerateOperator(Operator):
         :param context:
         :return:
         """
-        #
-        scene = context.scene
+        # Extract the data from the scene, e.g. the properties of the "Generate" panel which
+        # include the number of images, the seed and saving options
         params = self.validate_data_extract(context)
 
         # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
-        executor = PipelineExecutor(scene, params)
-        executor.compile_pipeline(scene)
-
-        # Create output dir
-        os.makedirs(output_dir, exist_ok=True)
+        executor = PipelineExecutor(context, params)
+        executor.compile_pipeline()
 
         try:
-            # Compile pipeline once
-            pipeline = PipelineExecutor(scene)
-            random.seed(seed_value)
-
-            # Generate frames
-            for frame_idx in range(num_samples):
-
-                # Set frame number (for animation if needed)
-                scene.frame_set(frame_idx)
-
-                # Apply randomization
-                pipeline.execute(scene)
-
-                # Render
-                filepath = os.path.join(output_dir, f"render_{frame_idx:04d}.png")
-                scene.render.filepath = filepath
-                bpy.ops.render.render(write_still=True)
-
-                if frame_idx % 10 == 0:
-                    print(f"Generated {frame_idx}/{num_samples}")
-
-            self.report({'INFO'}, f"Successfully generated {num_samples} frames to {output_dir}")
-            return {'FINISHED'}
-
+            # Entrust the deserialization and execution of the pipeline to the executor object. Any exception
+            # during the execution will be caught and the user notified.
+            # ( Note: invalid pipes are ignored, IO is handled by the executor )
+            executor.execute()
         except Exception as e:
             self.report({'ERROR'}, f"Generation failed: {str(e)}")
             return {'CANCELLED'}

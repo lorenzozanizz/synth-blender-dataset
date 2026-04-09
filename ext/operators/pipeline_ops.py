@@ -107,6 +107,15 @@ class EditPipeOperator(Operator):
         return { 'FINISHED' }
 
 
+class ScanPipelineOperator(Operator):
+
+    bl_idname = Labels.SCAN_PIPELINE.value
+    bl_label = "Scan Pipeline"
+
+    def execute(self, context):
+
+        pass
+
 class CaptureObjectsOperator(Operator):
     """Capture currently selected objects"""
 
@@ -133,7 +142,13 @@ class CaptureObjectsOperator(Operator):
 
 
 def get_selected_node_and_material(reporter, context, node_name: Union[str, None]) -> tuple:
-    """Get the currently selected node in the active editor"""
+    """
+
+    :param reporter:
+    :param context:
+    :param node_name:
+    :return:
+    """
 
     # Get active editor area
     for area in context.screen.areas:
@@ -376,7 +391,7 @@ class SavePipeOperator(Operator):
         # warning sign
         validator = ValidatorRegistry.get(op_name)
         if validator:
-            operation.valid = validator.validate(operation)
+            operation.valid = validator.validate(operation, config)
 
 
         if self.on_save_return:

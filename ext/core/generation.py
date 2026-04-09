@@ -22,31 +22,29 @@ class ExecutionParameters:
 
     from_last: bool
 
+    save_path: str
 
 class PipelineExecutor:
     """Compiled, reusable pipeline executor"""
 
-    def __init__(self, scene, parameters):
-        self.scene = scene
+    def __init__(self, context, parameters):
+        self.ctx = context
         self.parameters = parameters
         self.compiled_ops = []
 
-    def compile_pipeline(self, scene) -> list:
+    def compile_pipeline(self) -> list:
         """Deserialize all operations once"""
+        scene = self.ctx.scene
         pipeline = scene.pipeline_data
         compiled = []
 
         for operation in pipeline.operations:
             if not operation.enabled:
                 continue
-
-            op_type = operation.operation_type
-
-            # Get schema to validate config
-            schema = PipeSchemaRegistry.get(op_type)
-            if not schema:
+            # Momentarily, invalid operations are skipped. It may be that in the future
+            elif operation.valid:
                 continue
-
+            op_type = operation.operation_type
             # Deserialize config
             try:
                 config = json.loads(operation.config)
@@ -56,29 +54,27 @@ class PipelineExecutor:
 
             # Get executor class
             try:
-                executor_cls = OperationRegistry.get(op_type)
+                executor = OperationRegistry.get(op_type)
+                executor.compile(config)
             except ValueError:
                 print(f"No executor for {op_type}")
                 continue
 
-            compiled.append({
-                'name': operation.name,
-                'type': op_type,
-                'config': config,
-                'executor': executor_cls
-            })
+            compiled.append(executor)
 
         self.compiled_ops = compiled
         return compiled
 
-    def execute(self, scene, objects):
+    def execute(self):
         """Execute all compiled operations"""
+
+        scene = self.ctx.scene
         for op_data in self.compiled_ops:
             executor = op_data['executor']
             config = op_data['config']
 
             try:
-                executor.execute(scene, objects, config)
+                executor.execute(scene, config)
             except Exception as e:
                 print(f"Error executing {op_data['name']}: {e}")
                 # Continue on error or fail? Your choice

@@ -55,6 +55,9 @@ class Labels(Enum):
     SAVE_PIPE               = "randomizer.save_pipe"
     # ( An auxiliary operation used to draw the add menus (which represent possible pipes)  )
     ADD_MENU_LIST_          = "randomizer.add_operation_menu"
+    # ( An operation which scans for the validity of all pipes in the pipeline. )
+    SCAN_PIPELINE           = "randomizer.scan_pipeline"
+
 
     # ------------- Names inside io_ops.py ---------------
     # |

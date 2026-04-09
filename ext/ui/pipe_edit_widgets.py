@@ -682,7 +682,7 @@ class MaterialSelector(EditorWidget):
         # We have to search in the list of materials for the one with the given name to
         # repopulate the material list editor.
         scene = context.scene
-        names = config["names"]
+        names = config["materials"]
         for name in names:
             mat = bpy.data.materials.get(name)
             if not mat:

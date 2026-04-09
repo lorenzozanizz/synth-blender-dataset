@@ -228,16 +228,16 @@ class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:
         if not config:
-            PropertyTargeter.reset(context)
+            ValueTargeter.reset(context)
             NodeDistributionSelector.reset(context)
         else:
-            PropertyTargeter.extract_data(context)
-            NodeDistributionSelector.extract_data(context, dim=1)
+            ValueTargeter.setup_from_config(config["value"], context)
+            NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
 
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
         dic = {
-            "target": PropertyTargeter.extract_data(context),
+            "value": ValueTargeter.extract_data(context),
             "distribution": NodeDistributionSelector.extract_data(context, dim=1)
         }
         return dic

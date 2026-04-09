@@ -4,7 +4,7 @@ from .io_ops import (ApplyLogPathOperator, OpenLogsOperator, SavePipelineAsOpera
 from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, PipeRemoveOperator,
                            CaptureObjectsOperator, CaptureTextureOperator, CaptureObjectPositionOperator,
                            PositionRemoveOperator, PositionAddOperator, AddMaterialToListOperator, RemoveMaterialFromListOperator,
-                           CaptureValueNode, CaptureAndModifyNodeProperties, SavePipeOperator)
+                           CaptureValueNode, CaptureAndModifyNodeProperties, SavePipeOperator, ScanPipelineOperator)
 from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator,
                                RemoveImagePathOperator)
 from .core_ops import GenerateOperator
@@ -20,7 +20,7 @@ operators = (
     #
     EditPipeOperator, MenuOperator, PipeAddOperator, PipeRemoveOperator, CaptureObjectsOperator, CaptureTextureOperator,
     PositionRemoveOperator, PositionAddOperator, CaptureObjectPositionOperator, AddMaterialToListOperator, RemoveMaterialFromListOperator,
-    CaptureAndModifyNodeProperties, CaptureValueNode, SavePipeOperator,
+    CaptureAndModifyNodeProperties, CaptureValueNode, SavePipeOperator,  ScanPipelineOperator,
     #
     AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator, RemoveImagePathOperator,
 
