@@ -1,6 +1,7 @@
 from .labeling import LabelingFormats
 
 from ..pipeline.operation_registry import OperationRegistry
+from ..pipeline.context import NestedPipelineContext
 from ..ui.pipe_schema import PipeSchemaRegistry
 
 import json
@@ -39,6 +40,7 @@ class PipelineExecutor:
         pipeline = scene.pipeline_data
         compiled = []
 
+
         for operation in pipeline.operations:
             if not operation.enabled:
                 continue
@@ -68,6 +70,15 @@ class PipelineExecutor:
 
         self.compiled_ops = compiled
         return compiled
+
+    def compile_contexts(self) -> NestedPipelineContext:
+        """
+
+        :return:
+        """
+        full_context = NestedPipelineContext(self.compiled_ops)
+        return full_context
+
 
     def execute(self):
         """Execute all compiled operations"""

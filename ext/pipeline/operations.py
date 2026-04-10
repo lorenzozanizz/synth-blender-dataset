@@ -5,14 +5,15 @@
 """
 
 from .operation_registry import OperationRegistry
+from .context import *
+
 from ..constants import PipeNames
-
-from abc import ABC, abstractmethod
-
 from ..utils.logger import UniqueLogger
 
+from abc import ABCMeta, abstractmethod
 
-class PipelineOperation(ABC):
+
+class PipelineOperation(DoubleFramedPipe, metaclass=ABCMeta):
     """Base class for all pipeline operations."""
 
     operation_type: str  # "randomize_position", "randomize_rotation", etc.
@@ -75,7 +76,6 @@ class RandomizeRotationOperation(PipelineOperation):
 class RandomizeVisibilityOperation(PipelineOperation):
 
     def compile(self,  config: dict):
-        UniqueLogger.quick_log()
         pass
 
     def execute(self, context):
