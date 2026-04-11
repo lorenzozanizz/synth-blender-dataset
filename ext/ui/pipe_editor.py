@@ -43,7 +43,6 @@ class PipeDrawer(ABC):
         pass
 
 
-
 class ScalarPropertyDrawer(PipeDrawer):
 
     @staticmethod
@@ -57,6 +56,7 @@ class ScalarPropertyDrawer(PipeDrawer):
         AxisTarget.draw(layout, context)
         layout.separator()
         #
+        OffsetMode.draw(layout, context)
         NodeDistributionSelector.draw(layout, context,
                                       dim=AxisTarget.get_selected_axis_dimension(context.scene))
 
@@ -159,6 +159,7 @@ class RandomizeMetallicOperation(PipeDrawer):
         :return:
         """
         MaterialSelector.draw(layout, context)
+        OffsetMode.draw(layout, context)
         NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.ROUGHNESS.value)
@@ -173,6 +174,7 @@ class RandomizeRoughnessOperation(PipeDrawer):
         :return:
         """
         MaterialSelector.draw(layout, context)
+        OffsetMode.draw(layout, context)
         NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.INTENSITY.value)
@@ -187,6 +189,7 @@ class RandomizeNodeIntensityOperation(PipeDrawer):
         :return:
         """
         ValueTargeter.draw(layout, context)
+        OffsetMode.draw(layout, context)
         NodeDistributionSelector.draw(layout, context, dim=1)
 
 @OperationDrawerRegistry.register(PipeNames.NODE_PROP.value)
@@ -201,4 +204,5 @@ class RandomizeNodePropOperation(PipeDrawer):
         :return:
         """
         PropertyTargeter.draw(layout, context)
+        OffsetMode.draw(layout, context)
         NodeDistributionSelector.draw(layout, context, dim = 1)

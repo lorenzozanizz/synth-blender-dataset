@@ -10,6 +10,7 @@ import bpy
 from bpy.props import StringProperty, FloatVectorProperty, PointerProperty
 from bpy.types import UIList, PropertyGroup, Material
 
+wsk = WidgetSerializationKeys
 
 class TextureNodeProperty(PropertyGroup):
     """ A property to contain the name of a material and a texture. """
@@ -139,6 +140,34 @@ class EditorWidget(ABC):
     def reset(context) -> None:
         pass
 #
+
+class OffsetMode(EditorWidget):
+
+    @staticmethod
+    def draw(layout, context) -> None:
+        layout = layout
+        scene = context.scene
+
+        row = layout.row(align=True)
+        row.prop(scene, "do_offset")
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            wsk.OFFSET_MODE.value: scene.do_offset
+        }
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.do_offset = config[wsk.OFFSET_MODE.value]
+
+    @staticmethod
+    def reset(context) -> None:
+        scene = context.scene
+        scene.do_offset = True
+
 
 class AxisTarget(EditorWidget):
 
@@ -458,14 +487,14 @@ class SimplifiedDistributionSelector(EditorWidget):
         for prop in SimplifiedDistributionSelector._value:
             name = SimplifiedDistributionSelector._name_prefix + prop
             setattr(scene, name, 0)
-        for attr in ("do_offset", "do_discretize", "do_clamp"):
+        for attr in ("do_discretize", "do_clamp"):
             setattr(scene, attr, False)
         scene.clamping_factors = (0, 0)
 
     @staticmethod
     def setup_from_config(config: dict, context, dim: int = 0) -> None:
         scene = context.scene
-        for attr in ("do_offset", "do_discretize", "do_clamp", "clamping_factors"):
+        for attr in ("do_discretize", "do_clamp", "clamping_factors"):
             setattr(scene, attr, config[attr])
         preset_name = config["preset"]
         params = config["parameters"]
@@ -492,7 +521,6 @@ class SimplifiedDistributionSelector(EditorWidget):
         dist = (getattr(scene, p_name, "") or "").upper()
         return {
             "preset": dist,
-            "do_offset": scene.do_offset,
             "do_discretize": scene.do_discretize,
             "do_clamp": scene.do_clamp,
             "clamping_factors": tuple(scene.clamping_factors),
@@ -606,7 +634,6 @@ class SimplifiedDistributionSelector(EditorWidget):
         :return:
         """
         row = layout.row(align=True)
-        row.prop(context.scene, "do_offset")
         row.prop(context.scene, "do_discretize")
 
         row = layout.row(align=True)

@@ -1,4 +1,4 @@
-from .data import PipelineData, PipelineOperation, data_properties, DistributionItem
+from .bpy_properties import PipelineData, PipelineOperation, data_properties, DistributionItem
 from . import operations
 
 classes = (

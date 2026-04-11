@@ -7,7 +7,7 @@
 from .operation_registry import OperationRegistry
 from .context import *
 
-from ..constants import PipeNames
+from ..constants import PipeNames, WidgetSerializationKeys
 from ..utils.logger import UniqueLogger
 
 from abc import ABCMeta, abstractmethod
@@ -28,8 +28,19 @@ class PipelineOperation(DoubleFramedPipe, metaclass=ABCMeta):
         pass
 
 
+class NumericRandomOperation:
+
+    def __init__(self, operation: PipelineOperation):
+        pass
+
 @OperationRegistry.register(PipeNames.SCALE.value)
 class RandomizeScaleOperation(PipelineOperation):
+
+    def get_global_context(self):
+        pass
+
+    def get_frame_context(self):
+        pass
 
     def compile(self, config: dict):
         pass
@@ -37,6 +48,13 @@ class RandomizeScaleOperation(PipelineOperation):
     def execute(self, context):
         # Your logic
         pass
+
+    class ScaleContext(ContextManager):
+
+        def __enter__(self):
+            pass
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            pass
 
 
 @OperationRegistry.register(PipeNames.POSITION.value)

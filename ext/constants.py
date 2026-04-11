@@ -105,3 +105,6 @@ class WidgetSerializationKeys(Enum):
     AXIS_RANDOMIZE_PREFIX_X     = "target_x"
     AXIS_RANDOMIZE_PREFIX_Y     = "target_Y"
     AXIS_RANDOMIZE_PREFIX_Z     = "target_Z"
+
+    OFFSET  = "offset"
+    OFFSET_MODE                 = "mode"

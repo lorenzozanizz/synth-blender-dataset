@@ -8,6 +8,7 @@ from ..constants import PipeNames
 from abc import ABC, abstractmethod
 from typing import Union
 
+wsk = WidgetSerializationKeys
 
 class PipeSchemaRegistry:
     """Registry of all available operations."""
@@ -102,6 +103,7 @@ class ScalarPropertyDrawer(PipeSchema):
         dic = {
             "dimension": dim,
             "axis": AxisTarget.extract_data(context),
+            wsk.OFFSET.value: OffsetMode.extract_data(context),
             "target": ObjectTargeter.extract_data(context),
             "distribution": NodeDistributionSelector.extract_data(context, dim=dim)
         }
@@ -112,11 +114,13 @@ class ScalarPropertyDrawer(PipeSchema):
         if not config:
             ObjectTargeter.reset(context)
             NodeDistributionSelector.reset(context)
+            OffsetMode.reset(context)
             AxisTarget.reset(context)
         else:
             dimension = config["dimension"]
             AxisTarget.setup_from_config(config["axis"], context)
             ObjectTargeter.setup_from_config(config["target"], context)
+            OffsetMode.setup_from_config(config[wsk.OFFSET.value], context)
             NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=dimension)
 
 
@@ -200,16 +204,19 @@ class MaterialSimplePropertySchema(PipeSchema):
     def apply_config_to_ui(context, operation, config) -> None:
         if not config:
             MaterialSelector.reset(context)
+            OffsetMode.reset(context)
             NodeDistributionSelector.reset(context)
         else:
             NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
             MaterialSelector.setup_from_config(config["materials"], context)
+            OffsetMode.setup_from_config(config[wsk.OFFSET.value], context)
 
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
         dic = {
             "distribution": NodeDistributionSelector.extract_data(context, dim=1),
-            "materials": MaterialSelector.extract_data(context)
+            "materials": MaterialSelector.extract_data(context),
+            wsk.OFFSET.value: OffsetMode.extract_data(context)
         }
         return dic
 
@@ -230,7 +237,9 @@ class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
         if not config:
             ValueTargeter.reset(context)
             NodeDistributionSelector.reset(context)
+            OffsetMode.reset(context)
         else:
+            OffsetMode.setup_from_config(config[wsk.OFFSET.value], context)
             ValueTargeter.setup_from_config(config["value"], context)
             NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
 
@@ -238,6 +247,7 @@ class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
     def extract_config_from_ui(context, operation) -> dict:
         dic = {
             "value": ValueTargeter.extract_data(context),
-            "distribution": NodeDistributionSelector.extract_data(context, dim=1)
+            "distribution": NodeDistributionSelector.extract_data(context, dim=1),
+            wsk.OFFSET.value: OffsetMode.extract_data(context)
         }
         return dic

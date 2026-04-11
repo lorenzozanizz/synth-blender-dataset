@@ -1,5 +1,5 @@
 from .names import Labels
-from ..core.generation import ExecutionParameters, PipelineExecutor
+from ..core.generation import ExecutionParameters, Executor
 
 from typing import Union
 from bpy.types import Operator
@@ -38,15 +38,18 @@ class GenerateOperator(Operator):
         # include the number of images, the seed and saving options
         params = self.validate_data_extract(context)
 
+        pipeline = context.scene.pipeline_data
         # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
-        executor = PipelineExecutor(context, params)
-        executor.compile_pipeline()
+        executor = Executor(context, pipeline, params, reporter=self)
 
         try:
             # Entrust the deserialization and execution of the pipeline to the executor object. Any exception
             # during the execution will be caught and the user notified.
             # ( Note: invalid pipes are ignored, IO is handled by the executor )
+            # Internally, the executor will compile the pipeline and distributions, will construct the
+            # context managers and execute the pipeline for every different synthesis
             executor.execute()
+
         except Exception as e:
             self.report({'ERROR'}, f"Generation failed: {str(e)}")
             return { 'CANCELLED' }

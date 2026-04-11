@@ -136,7 +136,7 @@ class IntoFolderOperator(Operator):
     bl_label = "Put into folder"
 
     def execute(self, context):
-        pass
+        return { 'FINISHED' }
 
 class CaptureObjectsOperator(Operator):
     """Capture currently selected objects"""
