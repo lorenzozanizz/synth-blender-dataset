@@ -116,21 +116,3 @@ class InfoPanel(Panel):
         op.url = REPO_URL
         op = row.operator(Labels.OPEN_URL.value, text="Documentation", icon='FILE_FOLDER')
         op.url = DOCU_URL
-
-
-class LabelingPanel(Panel):
-    """ The panel containing information regarding the extension, its version,
-    the version it was developed for, a link to the original repository and
-    the documentation.
-    """
-
-    bl_label = "Labeling"
-    bl_idname = panel_conflict_rename("labeling")
-    bl_category = PANEL_CATEGORY
-    bl_options = { 'DEFAULT_CLOSED' }
-    bl_space_type = 'VIEW_3D'
-    bl_region_type = 'UI'
-    bl_order = 2
-
-    def draw(self, _context):
-        pass

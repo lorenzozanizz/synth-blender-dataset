@@ -1,4 +1,4 @@
-from .labeling import LabelingFormats
+from ..labeling import LabelingFormats
 from ..pipeline.bpy_properties import PipelineData, PipelineOperation
 from ..pipeline.operation_registry import OperationRegistry
 from ..pipeline.context import NestedPipelineContext

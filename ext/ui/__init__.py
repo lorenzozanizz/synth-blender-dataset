@@ -1,10 +1,11 @@
-from .panels import RandomizerPanel, SettingsPanel, InfoPanel, LabelingPanel
+from .panels import RandomizerPanel, SettingsPanel, InfoPanel
 from .pipeline_list_viewer import (RegistrationPanel, AddCameraCategoryPipeMenu, AddLightingCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
                                    PipelineOperationsList, AddExperimentalCategoryPipeMenu)
 from .properties import ext_ui_properties, distribution_settings, operation_properties
 from .pipe_editor import (DistributionTreeList, PathsUIList, ImagePath, PositionsUIList, ObjectName, TextureNodeProperty,
                           ObjectPosition, MaterialListItem, MaterialUIList)
+from .labeling_panel import LabelingPanel
 
 from .handlers import sync_distribution_handler
 

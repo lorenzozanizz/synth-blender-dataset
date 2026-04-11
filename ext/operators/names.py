@@ -85,6 +85,23 @@ class Labels(Enum):
     # ( Open the editor for the selected distribution in another workflow sidebar)
     OPEN_DISTRI_EDITOR      = "randomizer.open_distribution_editor"
 
+
+    # ------------- Names inside labeling_ops.py ---------------
+    # |
+    # ( Add a new class to the available labels )
+    ADD_LABEL_CLASS         = "randomizer.add_label_class"
+    # ( Remove a class from the available labels )
+    REMOVE_LABEL_CLASS      = "randomizer.remove_label_class"
+    # ( Assign a label to an object )
+    ADD_OBJECT_LABEL        = "randomizer.add_object_label"
+    # ( Remove a label from an object )
+    REMOVE_OBJECT_LABEL     = "randomizer.remove_object_label"
+    # ( Add a labeling rule )
+    ADD_LABEL_RULE          = "randomizer.add_label_rule"
+    # ( Remove a labeling rule )
+    REMOVE_LABEL_RULE       = "randomizer.remove_label_rule"
+
+
     # ------------- Names inside distribution_ops.py ---------------
     # |
     # ( Remove a target image path from the randomization pool )

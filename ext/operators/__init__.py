@@ -9,6 +9,9 @@ from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, Pipe
 from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator,
                                RemoveImagePathOperator)
 from .core_ops import GenerateOperator
+from .labeling_ops import (AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
+                           AddObjectLabelOperator, RemoveLabelClassOperator)
+
 operators = (
 
     #
@@ -25,6 +28,9 @@ operators = (
     #
     AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator, RemoveImagePathOperator,
 
-    GenerateOperator
+    GenerateOperator,
+
+    AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
+                           AddObjectLabelOperator, RemoveLabelClassOperator
 
 )

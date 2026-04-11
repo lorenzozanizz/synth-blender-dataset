@@ -92,7 +92,7 @@ class RegistrationPanel(Panel):
         legend.enabled = False
 
         list_col.template_list(
-            'PipelineOperationsList',  # UIList class name
+            PipelineOperationsList.__name__,  # UIList class name
             'pipeline_operations',  # Unique ID
             pipeline,  # Data object
             'operations',  # Collection property name

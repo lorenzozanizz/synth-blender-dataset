@@ -29,7 +29,9 @@ from .operators import operators as ops_classes
 from .distribution import classes as dist_classes
 from .distribution import node_categories
 from .pipeline import classes as pipe_classes
+from .labeling import classes as labeling_classes
 
+from .labeling import properties as labeling_properties
 from .pipeline import properties as pipeline_properties
 from .ui import register_handlers, unregister_handlers
 from .ui import properties as ui_properties
@@ -53,12 +55,13 @@ registration_classes = (
     *pipe_classes,
     *dist_classes,
     *ops_classes,
-    *ui_classes
+    *ui_classes,
+    *labeling_classes
 )
 
 # Construct a dictionary with all properties declarations across all modules
 properties = {}
-for properties_set in (ui_properties, pipeline_properties):
+for properties_set in (ui_properties, pipeline_properties, labeling_properties):
     properties.update(properties_set)
 
 
