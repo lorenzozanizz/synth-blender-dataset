@@ -10,22 +10,33 @@ class GenerateOperator(Operator):
     bl_idname = Labels.GENERATE.value
     bl_label = "Generate Dataset"
 
-    @staticmethod
-    def validate_data_extract(context) -> Union[None, ExecutionParameters]:
+    def validate_data_extract(self, context) -> Union[None, ExecutionParameters]:
         """
 
         :param context:
         :return:
         """
         scene = context.scene
+        amount = scene.randomizer_amount
+        if amount <= 0:
+            self.report({'ERROR'}, 'Cannot generate: invalid amount of images')
+            return None
+        save_prefix = scene.randomizer_save_prefix
+        if not save_prefix:
+            self.report({'ERROR'}, 'Cannot generate: invalid save prefix')
+            return None
+        dest_path = scene.randomizer_destination_path
+        if not dest_path:
+            self.report({'ERROR'}, 'Cannot generate: invalid destination path')
+            return None
 
         return ExecutionParameters(
             scene.randomizer_seed,
-            scene.randomizer_amount,
-            scene.randomizer_save_prefix,
+            amount,
+            save_prefix,
             scene.randomizer_label_format,
             scene.randomizer_append_checkbox,
-            scene.randomizer_destination_path
+            dest_path
         )
 
     def execute(self, context):
@@ -36,11 +47,13 @@ class GenerateOperator(Operator):
         """
         # Extract the data from the scene, e.g. the properties of the "Generate" panel which
         # include the number of images, the seed and saving options
-        params = self.validate_data_extract(context)
+        params_or_error = self.validate_data_extract(context)
+        if params_or_error is None:
+            return { 'CANCELLED'}
 
         pipeline = context.scene.pipeline_data
         # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
-        executor = Executor(context, pipeline, params, reporter=self)
+        executor = Executor(context, pipeline, params_or_error, reporter=self)
 
         try:
             # Entrust the deserialization and execution of the pipeline to the executor object. Any exception

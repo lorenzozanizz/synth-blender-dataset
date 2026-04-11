@@ -1,11 +1,13 @@
 from .operations import PipelineOperation
-from ..constants import PipeNames, WidgetSerializationKeys
+from ..constants import PipeNames, WidgetSerializationKeys, DISTRO_EDITOR_NAME
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
 from typing import Union
 
 import bpy
+
+wsk = WidgetSerializationKeys
 
 class PipeValidator(metaclass=ABCMeta):
     """
@@ -41,29 +43,29 @@ class ValidatorRegistry:
         """Get all available operation types."""
         return list(cls._operations.keys())
 
-@ValidatorRegistry.register(PipeNames.SCALE.value)
-class ScaleValidator(PipeValidator):
+class NumericPropertyValidator(PipeValidator):
 
     @staticmethod
     def validate(pipe: PipelineOperation, config: dict) -> bool:
-        return False
+        axi_ok = AxisTargetValidator.validate(config[wsk.AXIS.value])
+        obj_ok = ObjectTargeterValidator.validate(config[wsk.OBJECT.value])
+        dis_ok = NodeDistributionSelectorValidator.validate(config[wsk.NODE.value])
+        return axi_ok and obj_ok and dis_ok
+
+@ValidatorRegistry.register(PipeNames.SCALE.value)
+class ScaleValidator(NumericPropertyValidator):
+    pass
 
 @ValidatorRegistry.register(PipeNames.POSITION.value)
-class PositionValidator(PipeValidator):
+class PositionValidator(NumericPropertyValidator):
+    pass
 
-    @staticmethod
-    def validate(pipe: PipelineOperation,  config: dict) -> bool:
-        return False
+@ValidatorRegistry.register(PipeNames.ROTATION.value)
+class RotationValidator(NumericPropertyValidator):
+    pass
 
 @ValidatorRegistry.register(PipeNames.MOVE.value)
 class MoveValidator(PipeValidator):
-
-    @staticmethod
-    def validate(pipe: PipelineOperation,  config: dict) -> bool:
-        return False
-
-@ValidatorRegistry.register(PipeNames.ROTATION.value)
-class RotationValidator(PipeValidator):
 
     @staticmethod
     def validate(pipe: PipelineOperation,  config: dict) -> bool:
@@ -81,8 +83,8 @@ class MaterialValidator(PipeValidator):
 
     @staticmethod
     def validate(pipe: PipelineOperation, config: dict) -> bool:
-        obj_ok = ObjectTargeterValidator.validate(config[WidgetSerializationKeys.OBJECT.value])
-        mat_ok = MaterialSelectorValidator.validate(config[WidgetSerializationKeys.MATERIAL.value])
+        obj_ok = ObjectTargeterValidator.validate(config[wsk.OBJECT.value])
+        mat_ok = MaterialSelectorValidator.validate(config[wsk.MATERIAL.value])
         return mat_ok and obj_ok
 
 @ValidatorRegistry.register(PipeNames.TEXTURE.value)
@@ -115,6 +117,7 @@ class RoughnessValidator(PipeValidator):
     def validate(pipe: PipelineOperation, config: dict) -> bool:
         return False
 
+
 class WidgetValidator(metaclass=ABCMeta):
     """
 
@@ -134,9 +137,9 @@ class AxisTargetValidator(WidgetValidator):
         :param partial_config:
         :return:
         """
-        do_x = partial_config
-        do_y = partial_config
-        do_z = partial_config
+        do_x = partial_config[wsk.AXIS_RANDOMIZE_PREFIX_X.value]
+        do_y = partial_config[wsk.AXIS_RANDOMIZE_PREFIX_Y.value]
+        do_z = partial_config[wsk.AXIS_RANDOMIZE_PREFIX_Z.value]
         return do_x or do_y or do_z
 
 
@@ -146,7 +149,7 @@ class ObjectTargeterValidator(WidgetValidator):
     @staticmethod
     def validate(partial_config: dict) -> bool:
         # We simply ensure that all the objects do exist in the bpy data.
-        objects = partial_config[WidgetSerializationKeys.OBJECT_NAMES.value]
+        objects = partial_config[wsk.OBJECT_NAMES.value]
         # The pipe is noto OK if it has no target. "OK" means useful and working.
         if not objects:
             return False
@@ -161,7 +164,6 @@ class ObjectTargeterValidator(WidgetValidator):
             if not obj:
                 return False
         return True
-
 
 #
 class ImageTextureTargeterValidator(WidgetValidator):
@@ -184,8 +186,22 @@ class NodeDistributionSelectorValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
-        pass
 
+        use_tree = partial_config['use_tree']
+        if use_tree:
+            name = partial_config['distribution]']
+            tree = next(
+                (ng for ng in bpy.data.node_groups
+                 if ng.bl_idname == DISTRO_EDITOR_NAME and ng.name == name),
+                None
+            )
+            if tree is None:
+                return False
+        else:
+            preset = partial_config['preset']
+            if preset.lower() == "None":
+                return False
+        return True
 
 #
 class SimplifiedDistributionSelectorValidator(WidgetValidator):
@@ -215,7 +231,7 @@ class MaterialSelectorValidator(WidgetValidator):
         """
 
         # We simply ensure that all the materials listed do exist in the bpy data.
-        materials = partial_config[WidgetSerializationKeys.MATERIAL_LIST.value]
+        materials = partial_config[wsk.MATERIAL_LIST.value]
         if not materials:
             return False
         for mat in materials:

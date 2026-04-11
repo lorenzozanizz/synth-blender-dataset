@@ -41,6 +41,7 @@ class PipeNames(Enum):
     METALLIC    = "Metallic"
     ROUGHNESS   = "Roughness"
     NODE_PROP   = "Node Property"
+    BASE_COLOR  = "Base Color"
 
     # Lighting
     TEMPERATURE = "Temperature"
@@ -102,9 +103,9 @@ class WidgetSerializationKeys(Enum):
 
     AXIS    = "axis"
     AXIS_DIMS                   = "dims"
-    AXIS_RANDOMIZE_PREFIX_X     = "target_x"
-    AXIS_RANDOMIZE_PREFIX_Y     = "target_Y"
-    AXIS_RANDOMIZE_PREFIX_Z     = "target_Z"
+    AXIS_RANDOMIZE_PREFIX_X     = "randomize_x"
+    AXIS_RANDOMIZE_PREFIX_Y     = "randomize_y"
+    AXIS_RANDOMIZE_PREFIX_Z     = "randomize_z"
 
     OFFSET  = "offset"
     OFFSET_MODE                 = "mode"

@@ -404,6 +404,7 @@ class SavePipeOperator(Operator):
         config = schema.extract_config_from_ui(context, operation)
         serialized = dumps(config)
 
+        UniqueLogger.quick_log(serialized)
         # Now we write back the serialized dictionary in a blender property associated with the pipe.
         # The overhead of saving strings and deserializing is minimal because the heavy task (generation)
         # initially deserializes all the pipeline into dictionaries.

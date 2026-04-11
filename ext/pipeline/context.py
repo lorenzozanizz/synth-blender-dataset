@@ -8,9 +8,9 @@ class FrameContext:
 
     def __init__(self, pipeline):
         self.pipeline = pipeline
+        self.frame_contexts = []
 
         self.from_pipeline(pipeline)
-        self.frame_contexts = []
 
     def from_pipeline(self, pipeline) -> None:
 
@@ -90,9 +90,6 @@ class DoubleFramedPipe(metaclass=ABCMeta):
 
 class ContextManager:
     """Restore scales after each frame"""
-
-    def __init__(self):
-        pass
 
     def __enter__(self) -> 'ContextManager':
         pass

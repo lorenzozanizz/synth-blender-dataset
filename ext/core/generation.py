@@ -31,12 +31,13 @@ class ExecutionParameters:
 
 class ExecutablePipeline:
 
-    def __init__(self, pipeline_data: PipelineData, reporter = None ):
+    def __init__(self, ctx, pipeline_data: PipelineData, reporter = None ):
         """
 
         :param pipeline_data:
         :param reporter:
         """
+        self.ctx = ctx
         self.reporter = reporter
         self.data = pipeline_data
         self.pipes_executable: list[PipelineOperation] = []
@@ -87,7 +88,7 @@ class ExecutablePipeline:
     def execute(self):
 
         for pipe in self.pipes_executable:
-            pipe.execute()
+            pipe.execute(self.ctx)
 
 class Executor:
     """Compiled, reusable pipeline executor"""
@@ -98,7 +99,7 @@ class Executor:
         self.parameters = parameters
         self.reporter = reporter
 
-        self.pipeline = ExecutablePipeline(data, reporter)
+        self.pipeline = ExecutablePipeline(self.ctx, data, reporter)
 
     def compile_contexts(self) -> NestedPipelineContext:
         """
@@ -122,36 +123,48 @@ class Executor:
         # Seed the random library with the user requested seed.
         random.seed(seed)
 
-        index       = 0
+        start_idx       = 0
         prefix      = self.parameters.prefix
         if self.parameters.from_last and isdir(path_root):
             # We have to inspect the data folder, if there are already fils with the same root and
             # some indexes are already present, start counting from the last
-            index = self._analyze_folder_last_index(path_root, prefix)
+            start_idx = self._analyze_folder_last_index(path_root, prefix)
 
         # We disable the updates in the viewport so that the program does not crash or lag!
-        with NoViewportUpdate():
+        # In the future, this will be set in the settings!
+        update_viewport = NoViewportUpdate(disable=False)
 
-            full_context = self.compile_contexts()
-            with full_context:
+        # Generate the progress bar
+        wm = self.ctx.window_manager
+        wm.progress_begin(0, amount)
 
-                for shot_idx in range(index, index + amount):
-                    # Frame context enters/exits each iteration
+        try:
+            with update_viewport:
 
-                    with full_context.frame_context():
+                full_context = self.compile_contexts()
+                with full_context:
 
-                        # Execute pipeline
-                        self.pipeline.execute()
+                    for shot_idx in range(start_idx, start_idx + amount):
+                        # Frame context enters/exits each iteration
 
-                        # Renders
-                        write_path = join(path_root, f"{prefix}_{shot_idx}.png")
-                        scene.render.filepath = write_path
-                        bpy.ops.render.render(write_still=True)
+                        with full_context.frame_context():
 
-                        # ^ Frame context exits here—restores frame-level state, required for
-                        # pipes that require per-frame restoring (e.g. those that act as offset
+                            # Execute pipeline
+                            self.pipeline.execute()
 
-                # ^ Global contexts exit here—restores global state
+                            # Renders
+                            write_path = join(path_root, f"{prefix}_{shot_idx}.png")
+                            scene.render.filepath = write_path
+                            bpy.ops.render.render(write_still=True)
+
+                            wm.progress_update(shot_idx-start_idx)
+
+                            # ^ Frame context exits here—restores frame-level state, required for
+                            # pipes that require per-frame restoring (e.g. those that act as offset
+
+                    # ^ Global contexts exit here—restores global state
+        finally:
+            wm.progress_end()
 
         return {'FINISHED'}
 
@@ -178,23 +191,14 @@ class Executor:
 
 class NoViewportUpdate:
 
+    def __init__(self, disable):
+        self.disable = disable
+
     def __enter__(self):
-        # Disable updates
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                for region in area.regions:
-                    if region.type == 'WINDOW':
-                        region.tag_redraw = False
+        # Disable the visibility of everything in the viewport only (not the rendering)
+        # this will be restored at the end
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        # Force single update
-        bpy.context.view_layer.update()
-
-        # Re-enable viewport
-        for area in bpy.context.screen.areas:
-            if area.type == 'VIEW_3D':
-                for region in area.regions:
-                    if region.type == 'WINDOW':
-                        region.tag_redraw = True
+        pass
         return False

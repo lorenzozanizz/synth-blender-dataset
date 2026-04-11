@@ -144,3 +144,10 @@ class DistributionNodeCategory(NodeCategory):
 
 def get_tree_dimensionality(tree):
     return 1
+
+
+class NodeDistributionSerializer:
+
+    @staticmethod
+    def serialize(node) -> dict:
+        return {}

@@ -203,7 +203,7 @@ class AxisTarget(EditorWidget):
             "randomize_x": scene.randomize_x,
             "randomize_y": scene.randomize_y,
             "randomize_z": scene.randomize_z,
-            "dims": AxisTarget.get_selected_axis_dimension(context.scene),
+            "dimension": AxisTarget.get_selected_axis_dimension(context.scene),
         }
 
     @staticmethod
