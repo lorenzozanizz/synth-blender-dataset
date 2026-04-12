@@ -1,6 +1,11 @@
 
 class LabelingEngine:
+    """
+
+    """
+
     def __init__(self, scene):
+
         self.scene = scene
         self.labels = {}  # obj_name -> class_id
 

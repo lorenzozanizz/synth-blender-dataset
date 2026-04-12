@@ -26,6 +26,7 @@ class RandomizerPanel(Panel):
         scene = context.scene
 
         layout.prop(scene, "randomizer_destination_path")
+        layout.prop(scene, "randomizer_save_prefix")
 
         layout.separator()  # Adds vertical space
         row = layout.row()
@@ -36,7 +37,7 @@ class RandomizerPanel(Panel):
         row.prop(scene, "randomizer_seed", text="")
 
         layout.separator()  # Adds vertical space
-        layout.prop(scene, "randomizer_save_prefix")
+        layout.prop(scene, "randomizer_do_labelize")
         layout.prop(scene, "randomizer_label_format")
         layout.prop(scene, "randomizer_append_checkbox")
 

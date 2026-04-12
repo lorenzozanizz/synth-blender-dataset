@@ -21,8 +21,13 @@ class Labels(Enum):
     extensions. To access an operator's use Labels.NAME.value
     """
 
-    # ------------- Default namespace names ---------------
+    # ------------- Names inside core_ops.py ---------------
+    # |
+    #
     GENERATE                = "randomizer.generate"
+    #
+    PREVIEW_SAMPLE          = "randomizer.preview"
+
 
     # ------------- Names inside pipeline_ops.py ---------------
     # |

@@ -423,7 +423,6 @@ class NodeDistributionSelector(EditorWidget):
         scene = context.scene
         layout.prop(scene, "use_distribution_tree")
 
-        UniqueLogger.quick_log(f"USING DIM {dim}")
         if scene.use_distribution_tree:
             box = layout.box()
             box.label(text="Saved Distributions")
@@ -602,7 +601,6 @@ class SimplifiedDistributionSelector(EditorWidget):
             box.label(text=label)
 
         interested_properties = SimplifiedDistributionSelector._distribution_map[dist_name]
-        UniqueLogger.quick_log(f"DRAWING DIM {num_dims}")
 
         # Vector properties need to change with dimension.
         for property_name in interested_properties:

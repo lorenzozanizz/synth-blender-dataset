@@ -45,6 +45,9 @@ ext_ui_properties = {
         min=0,
         default=0
     ),
+    "randomizer_do_labelize": BoolProperty(
+        name="Generate labels for renders",
+    default=True),
     "randomizer_label_format": EnumProperty(
         name="Format",
         items=[("YOLO", "YOLO", "Export labels in YOLO format")]

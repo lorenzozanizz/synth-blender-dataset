@@ -156,13 +156,12 @@ class RandomizeScaleOperation(NumericRandomOperation):
             self.scales = []
 
         def __enter__(self):
+            # Clear to avoid polluting and damaging the values
+            self.scales.clear()
             for item in self.items:
                 self.scales.append(tuple(bpy.data.objects[item].scale))
 
         def __exit__(self, exc_type, exc_val, exc_tb):
-
-            UniqueLogger.quick_log("Exiting")
-            UniqueLogger.quick_log(self.scales.__str__())
             for item, scale in zip(self.items, self.scales):
                 bpy.data.objects[item].scale = scale
 
