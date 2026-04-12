@@ -260,6 +260,9 @@ class ObjectTargeter(EditorWidget):
              if len(scene.targeted_objects_display) != 0 else "None"
         box.label(text=text_label, icon='OBJECT_DATA')
         box.operator(Labels.CAPTURE_OBJECTS.value, text="Capture Selected", icon='EYEDROPPER')
+        view = box.operator(Labels.VIEW_TARGET_SELECTED.value, text="", icon='VIS_SEL_10')
+        view.collection_attribute = 'targeted_objects_display'
+        view.name_attribute = 'obj_name'
 
     @staticmethod
     def extract_data(context) -> dict:
@@ -306,7 +309,7 @@ class ImageTextureTargeter(EditorWidget):
         mat_prop = scene.targeted_texture_node
         text_label = f"{mat_prop.mat_name} > {mat_prop.node_label}" if (mat_prop.mat_name and mat_prop.node_label) else "None"
         box.label(text=text_label, icon='OBJECT_DATA')
-        box.operator(Labels.CAPTURE_TEXTURE_NODE.value, text="Capture Selected", icon='EYEDROPPER')
+        box.operator(Labels.CAPTURE_TEXTURE_NODE.value, text="Capture", icon='EYEDROPPER')
 
 #
 class PathListSelector(EditorWidget):

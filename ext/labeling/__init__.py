@@ -1,7 +1,7 @@
 from .bpy_properties import *
 
 classes = (
-    LabelClass, LabelRule, ObjectLabel, LabelingData
+    ObjectNameStr, LabelClass, LabelRule, ObjectLabel, LabelingData
 )
 # export this name for the parent module
 

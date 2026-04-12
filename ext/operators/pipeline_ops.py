@@ -9,6 +9,7 @@ from bpy.props import IntProperty, StringProperty, BoolProperty, CollectionPrope
 import bpy
 
 from typing import Union
+from functools import reduce
 from json import dumps, loads
 
 class PipeAddOperator(Operator):
@@ -239,6 +240,51 @@ class CaptureObjectPositionOperator(Operator):
         self.report({'INFO'}, f"Captured position from currently selected object.")
         return {'FINISHED'}
 
+
+class ViewTargetSelectedOperator(Operator):
+    bl_idname = "randomizer.view_target_selected"
+    bl_label = "View Target Selected"
+
+    # Pass in which collection to use, taken from the scene
+    collection_attribute: StringProperty()      # type: ignore
+    name_attribute: StringProperty()            # type: ignore
+
+    def execute(self, context):
+        scene = context.scene
+
+        collection = scene
+        try:
+            # Handle attributes like scene.data.collection
+            for attr in self.collection_attribute.split('.'):
+                collection = getattr(collection, attr)
+        except KeyError:
+            self.report({'ERROR'}, f"Unknown collection: {self.collection_path}")
+            return {'CANCELLED'}
+
+        # Deselect all first
+        bpy.ops.object.select_all(action='DESELECT')
+
+        selected_count = 0
+        missing_count = 0
+
+        for item in collection:
+            # Handle different item types
+            if hasattr(item, self.name_attribute):  # ObjectLabel has obj_names collection
+                obj_name_item = getattr(item, self.name_attribute)
+                obj = scene.objects.get(obj_name_item)
+                if obj:
+                    obj.select_set(True)
+                    selected_count += 1
+                else:
+                    self.report({'WARNING'}, f"Object not found: {obj_name_item}")
+                    missing_count += 1
+        # Set one as active if any were selected
+        if selected_count > 0 and scene.objects:
+            context.view_layer.objects.active = scene.objects[0]
+
+        # Final report
+        self.report({'INFO'}, f"Selected {selected_count} objects ({missing_count} not found)")
+        return {'FINISHED'}
 
 class PositionAddOperator(Operator):
 

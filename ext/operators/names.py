@@ -58,6 +58,8 @@ class Labels(Enum):
     SCAN_PIPELINE           = "randomizer.scan_pipeline"
     # ( Put an operation into a folder at the last place )
     INTO_FOLDER             = "randomizer.into_folder"
+    # ( View the stored target objects, selecting them in the scene )
+    VIEW_TARGET_SELECTED    = "randomizer.view_target_selected"
 
     # ------------- Names inside io_ops.py ---------------
     # |
@@ -100,7 +102,10 @@ class Labels(Enum):
     ADD_LABEL_RULE          = "randomizer.add_label_rule"
     # ( Remove a labeling rule )
     REMOVE_LABEL_RULE       = "randomizer.remove_label_rule"
-
+    # ( Capture the currently selected objects to be applied to the selected label assignment )
+    CAPTURE_OBJECTS_LABEL   = "randomizer.capture_objects_label"
+    # ( Refresh the names assigned to labels in the pipeline, highlighting dead objects )
+    REFRESH_LABEL_NAMES     = "randomizer.refresh_label_names"
 
     # ------------- Names inside distribution_ops.py ---------------
     # |

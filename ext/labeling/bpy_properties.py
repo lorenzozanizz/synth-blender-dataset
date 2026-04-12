@@ -2,7 +2,9 @@ from enum import Enum
 from typing import Union
 
 from bpy.types import PropertyGroup
-from bpy.props import EnumProperty, StringProperty, IntProperty, FloatVectorProperty, CollectionProperty, PointerProperty
+from bpy.props import (EnumProperty, StringProperty, IntProperty, FloatVectorProperty,
+                       CollectionProperty, PointerProperty, BoolProperty)
+
 
 class LabelingFormats(Enum):
 
@@ -15,18 +17,41 @@ class LabelingFormats(Enum):
         return None
 
 
+def get_label_classes_enum(_, context):
+    """Generate enum items from label_classes"""
+    labeling_data = context.scene.labeling_data
+    items = [("None", "None", "")]
+
+    for i, label_class in enumerate(labeling_data.label_classes):
+        items.append((str(label_class.class_id), label_class.name, label_class.name))
+
+    return items
+
 class LabelClass(PropertyGroup):
     """ """
-    name: StringProperty(default="Class")  # type: ignore
+    name: StringProperty(default="Unnamed")  # type: ignore
     class_id: IntProperty(default=0)  # type: ignore
-    color: FloatVectorProperty(subtype='COLOR')  # type: ignore
+    color: FloatVectorProperty(subtype='COLOR', # type: ignore
+        default=(0.2, 0.4, 0.8, 1.0),  # RGBA: mid-gray, fully opaque
+        size=4,
+        min=0.0,
+        max=1.0
+   )
+
+class ObjectNameStr(PropertyGroup):
+    """ Single object name. """
+    obj_name: StringProperty(name="Name")                       # type: ignore
 
 class ObjectLabel(PropertyGroup):
     """ """
-
-    obj_name: StringProperty()  # type: ignore
-    class_id: IntProperty()  # type: ignore
-
+    # This id is used to reference this assignment from the capture object operator.
+    assignment_id: IntProperty(default=0) #type: ignore
+    obj_names: CollectionProperty(type=ObjectNameStr) # type: ignore
+    # class_id: IntProperty()  # type: ignore
+    class_id: EnumProperty(           # type: ignore
+        items=get_label_classes_enum,
+        name="Class Name"
+    )
 
 class LabelRule(PropertyGroup):
 
@@ -35,6 +60,7 @@ class LabelRule(PropertyGroup):
             ('MATERIAL', 'Material', ''),
             ('NAME_CONTAINS', 'Name Contains', ''),
             ('COLLECTION', 'Collection', ''),
+            ('NONE', 'None', ''),
         ]
     )
 
@@ -47,15 +73,21 @@ class LabelRule(PropertyGroup):
 
 class LabelingData(PropertyGroup):
 
-    label_classes: CollectionProperty(type=LabelClass) # type: ignore
+    label_classes: CollectionProperty(type=LabelClass)  # type: ignore
     class_active_index: IntProperty(default=0)          # type: ignore
 
     direct_labels: CollectionProperty(type=ObjectLabel) # type: ignore
     direct_active_index: IntProperty(default=0)         # type: ignore
 
+    use_rules: BoolProperty(default=False)              # type: ignore
     label_rules: CollectionProperty(type=LabelRule)     # type: ignore
     rule_active_index: IntProperty(default=0)           # type: ignore
 
+    default_class: EnumProperty(                        # type: ignore
+        items=get_label_classes_enum,
+        name="Default Class",
+        description="Label assigned to objects that don't match any rules"
+    )
 
 label_properties = {
     "labeling_data": PointerProperty(

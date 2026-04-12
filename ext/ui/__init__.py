@@ -5,7 +5,7 @@ from .pipeline_list_viewer import (RegistrationPanel, AddCameraCategoryPipeMenu,
 from .properties import ext_ui_properties, distribution_settings, operation_properties
 from .pipe_editor import (DistributionTreeList, PathsUIList, ImagePath, PositionsUIList, ObjectName, TextureNodeProperty,
                           ObjectPosition, MaterialListItem, MaterialUIList)
-from .labeling_panel import LabelingPanel
+from .labeling_panel import LabelingPanel, LabelClassesUIList, ObjectLabelsUIList, LabelRulesUIList
 
 from .handlers import sync_distribution_handler
 
@@ -26,7 +26,8 @@ classes = (
     RandomizerPanel, SettingsPanel, InfoPanel, RegistrationPanel, LabelingPanel, AddCameraCategoryPipeMenu,
     AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList, AddExperimentalCategoryPipeMenu,
     AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu, DistributionTreeList, PathsUIList,
-    ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList, ObjectName, TextureNodeProperty
+    ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList, ObjectName, TextureNodeProperty,
+    LabelClassesUIList, ObjectLabelsUIList, LabelRulesUIList
 )
 
 # Update the main UI properties of the pipeline with settings for the configuration of each pipe's distributions

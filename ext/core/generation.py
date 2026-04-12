@@ -183,8 +183,8 @@ class Executor:
             if match:
                 indices.append(int(match.group(1)))
 
-        # Get the last index, or 0 if no matches
-        last_index = max(indices) if indices else 0
+        # Get the last index, or -1 (which becomes 0 when i add +1) if no matches
+        last_index = max(indices) if indices else -1
         next_index = last_index + 1
         return next_index
 
