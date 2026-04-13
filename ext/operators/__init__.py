@@ -8,7 +8,7 @@ from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, Pipe
                            IntoFolderOperator, ViewTargetSelectedOperator)
 from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator,
                                RemoveImagePathOperator)
-from .core_ops import GenerateOperator
+from .core_ops import GenerateOperator, PreviewOperator
 from .labeling_ops import (AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
                            AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator)
 
@@ -26,11 +26,14 @@ operators = (
     PositionRemoveOperator, PositionAddOperator, CaptureObjectPositionOperator, AddMaterialToListOperator, RemoveMaterialFromListOperator,
     CaptureAndModifyNodeProperties, CaptureValueNode, SavePipeOperator,  ScanPipelineOperator, IntoFolderOperator,
     ViewTargetSelectedOperator,
+
     #
     AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator, RemoveImagePathOperator,
 
-    GenerateOperator,
+    #
+    GenerateOperator, PreviewOperator,
 
+    #
     AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
                            AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator
 

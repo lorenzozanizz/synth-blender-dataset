@@ -1,5 +1,6 @@
 from .names import Labels
 from ..core.generation import ExecutionParameters, Executor
+from ..core.preview import PreviewGenerator
 
 from typing import Union
 from bpy.types import Operator
@@ -84,26 +85,14 @@ class PreviewOperator(Operator):
         :return:
         """
         scene = context.scene
-        amount = scene.randomizer_amount
-        if amount <= 0:
-            self.report({'ERROR'}, 'Cannot generate: invalid amount of images')
-            return None
-        save_prefix = scene.randomizer_save_prefix
-        if not save_prefix:
-            self.report({'ERROR'}, 'Cannot generate: invalid save prefix')
-            return None
-        dest_path = scene.randomizer_destination_path
-        if not dest_path:
-            self.report({'ERROR'}, 'Cannot generate: invalid destination path')
-            return None
-
+        # No checks are required
         return ExecutionParameters(
             scene.randomizer_seed,
-            amount,
-            save_prefix,
+            scene.randomizer_amount,
+            scene.randomizer_save_prefix,
             scene.randomizer_label_format,
             scene.randomizer_append_checkbox,
-            dest_path
+            scene.randomizer_destination_path
         )
 
     def execute(self, context):
@@ -116,19 +105,17 @@ class PreviewOperator(Operator):
         # include the number of images, the seed and saving options
         params_or_error = self.validate_data_extract(context)
         if params_or_error is None:
-            return { 'CANCELLED'}
+            return { 'CANCELLED' }
 
         pipeline = context.scene.pipeline_data
-        # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
-        executor = Executor(context, pipeline, params_or_error, reporter=self)
+        preview = PreviewGenerator(context, pipeline, params_or_error, reporter=self)
 
         try:
-            # Entrust the deserialization and execution of the pipeline to the executor object. Any exception
-            # during the execution will be caught and the user notified.
             # ( Note: invalid pipes are ignored, IO is handled by the executor )
             # Internally, the executor will compile the pipeline and distributions, will construct the
             # context managers and execute the pipeline for every different synthesis
-            executor.execute()
+            preview.execute()
+            preview.display_and_render_preview()
 
         except Exception as e:
             self.report({'ERROR'}, f"Generation failed: {str(e)}")

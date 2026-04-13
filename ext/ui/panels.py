@@ -42,10 +42,13 @@ class RandomizerPanel(Panel):
         layout.prop(scene, "randomizer_append_checkbox")
 
         layout.separator()  # Adds vertical space
-        layout.operator(Labels.GENERATE.value, text="Generate", icon="TRIA_RIGHT")
+        row = layout.row()
+        row.operator(Labels.GENERATE.value, text="Generate", icon="TRIA_RIGHT")
+        row.operator(Labels.PREVIEW_SAMPLE.value, text="", icon="HIDE_OFF")
 
     def extract_data(self, context) -> dict:
         return { }
+
 
 class SettingsPanel(Panel):
     """ The main panel for the randomizer class, containing the hooks for the
