@@ -7,7 +7,7 @@ extraction of data can happen without interrogating the bpy data component every
 
 from .nodes import NodeDistributionSerializer
 from ..constants import WidgetSerializationKeys, DISTRO_EDITOR_NAME
-from ..utils.math import geometric
+from ..utils.math_funcs import geometric
 from ..utils.logger import UniqueLogger
 
 from enum import Enum

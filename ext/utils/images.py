@@ -1,4 +1,5 @@
 from typing import Tuple, Dict, List
+import math
 
 def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> None:
     """
@@ -104,9 +105,9 @@ def estimate_text_pixel_width(text: str, size: int) -> int:
         width += char_width_pixels * size + min(2, 1 * size // 2)
     return width
 
+
 def estimate_text_pixel_height(_text: str, size: int) -> int:
     return size*8
-
 
 
 def draw_bitmap_text(img, text: str, position: tuple[int, int] = (0, 0),
@@ -211,6 +212,126 @@ def fill_polygon(img, polygon, color):
     img.pixels[:] = pixels
     img.update()
 
+
+def convex_hull(points):
+    """Graham scan algorithm for convex hull"""
+    points = sorted(set(points))
+    if len(points) <= 1:
+        return points
+
+    # Build lower hull
+    lower = []
+    for p in points:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    # Build upper hull
+    upper = []
+    for p in reversed(points):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+
+    return lower[:-1] + upper[:-1]
+
+
+def draw_line(img, p0: tuple[int, int], p1: tuple[int, int],
+              color: tuple[float, float, float, float],
+              line_width: int = 1, channels: int = 4) -> None:
+    """
+    Draw a line from p0 to p1 on an image using Bresenham's algorithm.
+
+    :param channels:
+    :param img: Blender image object
+    :param p0: Starting point (x, y)
+    :param p1: Ending point (x, y)
+    :param color: RGBA color tuple (0.0 to 1.0)
+    :param line_width: Line thickness in pixels
+    """
+    width, height = img.size
+    pixels = list(img.pixels)
+
+
+    def draw_thick_pixel(x: int, y: int) -> None:
+        """Draw a pixel with thickness"""
+        for l_dx in range(-line_width // 2, (line_width + 1) // 2):
+            for l_dy in range(-line_width // 2, (line_width + 1) // 2):
+                if 0 < x + l_dx < width and 0< y + l_dy < height:
+                    idx = to_index((x + l_dx, y + l_dy), width, channels=channels)
+                    draw_color(pixels, color, idx)
+
+    # Bresenham's line algorithm
+    x0, y0 = int(p0[0]), int(p0[1])
+    x1, y1 = int(p1[0]), int(p1[1])
+
+    # Safety checks
+    if x0 == x1 and y0 == y1:
+        # Single point
+        draw_thick_pixel(x0, y0)
+        img.pixels[:] = pixels
+        img.update()
+        return
+
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    sx = 1 if x1 > x0 else -1
+    sy = 1 if y1 > y0 else -1
+    err = dx - dy
+
+    x, y = x0, y0
+
+    while True:
+        draw_thick_pixel(x, y)
+
+        if x == x1 and y == y1:
+            break
+
+        e2 = 2 * err
+        if e2 > -dy:
+            err -= dy
+            x += sx
+        if e2 < dx:
+            err += dx
+            y += sy
+
+    img.pixels[:] = pixels
+    img.update()
+
+
+def simplify_by_angle(points, min_angle=10.0):
+    """Remove points where the angle change is small"""
+
+    if len(points) < 3:
+        return points
+
+    def angle_between(p1, p2, p3):
+        """Calculate angle at p2"""
+        x1, y1 = p1
+        x2, y2 = p2
+        x3, y3 = p3
+
+        v1 = (x1 - x2, y1 - y2)
+        v2 = (x3 - x2, y3 - y2)
+
+        dot = v1[0] * v2[0] + v1[1] * v2[1]
+        det = v1[0] * v2[1] - v1[1] * v2[0]
+        angle = abs(math.degrees(math.atan2(det, dot)))
+
+        return min(angle, 180 - angle)
+
+    simplified = [points[0]]
+    for i in range(1, len(points) - 1):
+        angle = angle_between(points[i - 1], points[i], points[i + 1])
+        if angle > min_angle:
+            simplified.append(points[i])
+    simplified.append(points[-1])
+
+    return simplified
+
+
+def cross(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
 
 #
 BITMAP_FONT = {

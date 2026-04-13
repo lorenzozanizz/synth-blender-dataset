@@ -49,9 +49,34 @@ class ObjectLabelsUIList(UIList):
 
 class LabelRulesUIList(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+
+        scene = context.scene
+
         row = layout.row(align=True)
-        row.label(text=item.rule_type)
-        row.label(text=f"{item.class_name}")
+        row.prop(item, 'rule_type', text="")
+        row.separator()
+        if item.rule_type == 'MATERIAL':
+            row.prop(item, 'material_name', text="")
+        elif item.rule_type == 'NAME_CONTAINS':
+            row.prop(item, 'name_filter', text="")
+        elif item.rule_type == 'COLLECTION':
+            row.prop(item, 'collection_name', text="")
+        else:
+            return
+        row.separator()
+        # The class has to be an enum depending on the classes currently registered.
+        # Now show a small band with the class color for visual aid.
+        # Find the corresponding class, put its color for clarity.
+        row.prop(item, 'class_id', text="")
+
+        row = layout.row(align=True)
+        cls = next((cls for cls in scene.labeling_data.label_classes
+                    if str(cls.class_id).lower() == item.class_id.lower()), None)
+        if cls:
+            sub = row.column(align=True)
+            sub.scale_x = 0.3
+            sub.prop(cls, 'color', text='')
+            row.separator()
 
 
 class LabelingPanel(Panel):
@@ -114,6 +139,11 @@ class LabelingPanel(Panel):
         if labeling_data.use_rules:
             box = layout.box()
             box.label(text="Labeling Rules", icon='SOLO_ON')
+
+            legend = box.row(align=True)  # ensure same number of columns
+            for lab in ("Type", "Setting", "Class"):
+                legend.label(text=lab)
+            legend.enabled = False
             row = box.row()
             row.template_list(
                 LabelRulesUIList.__name__,
@@ -126,7 +156,7 @@ class LabelingPanel(Panel):
             col.operator(Labels.REMOVE_LABEL_RULE.value, icon='REMOVE', text='')
 
         # Show rule editor if selected
-
+        """
         if labeling_data.label_rules:
             rule = labeling_data.label_rules[labeling_data.rule_active_index]
             box = layout.box()
@@ -140,3 +170,4 @@ class LabelingPanel(Panel):
                 box.prop(rule, 'collection_name', text='Collection')
 
             box.prop(rule, 'class_id', text='Assign to Class')
+            """

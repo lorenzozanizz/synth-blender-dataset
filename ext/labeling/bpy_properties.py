@@ -5,6 +5,7 @@ from bpy.types import PropertyGroup
 from bpy.props import (EnumProperty, StringProperty, IntProperty, FloatVectorProperty,
                        CollectionProperty, PointerProperty, BoolProperty)
 
+import bpy
 
 class LabelingFormats(Enum):
 
@@ -61,15 +62,31 @@ class LabelRule(PropertyGroup):
             ('NAME_CONTAINS', 'Name Contains', ''),
             ('COLLECTION', 'Collection', ''),
             ('NONE', 'None', ''),
-        ]
+        ], name = "Rule type"
     )
 
     # Rule parameters
-    material_name: StringProperty()  # type: ignore
+    material_name: bpy.props.EnumProperty(                   # type: ignore
+        name="Material",
+        description="Select material to add",
+        items= lambda self, context: [
+            (mat.name, mat.name, "")
+            for mat in bpy.data.materials
+        ] or [("NONE", "No materials", "")]
+    )
     name_filter: StringProperty()  # type: ignore
-    collection_name: StringProperty()  # type: ignore
+    collection_name: bpy.props.EnumProperty(  # type: ignore
+        name="Material",
+        description="Select material to add",
+        items=lambda self, context: [
+            (c.name, c.name, "") for c in bpy.data.collections
+        ] or [("NONE", "No Collection", "")]
+    )
 
-    class_id: IntProperty()  # type: ignore
+    class_id: EnumProperty(           # type: ignore
+        items=get_label_classes_enum,
+        name="Class Name"
+    )
 
 class LabelingData(PropertyGroup):
 

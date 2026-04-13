@@ -4,6 +4,7 @@ from ..labeling import LabelingFormats
 from ..pipeline.bpy_properties import PipelineData, PipelineOperation
 from ..pipeline.context import NestedPipelineContext
 from ..labeling.raytracing import get_visible_objects_from_camera
+from ..utils.images import convex_hull
 from ..utils.logger import UniqueLogger
 from ..ui.pipe_schema import PipeSchemaRegistry
 
@@ -145,15 +146,24 @@ class Executor:
 
         visible_objs = get_visible_objects_from_camera(context.scene, context.evaluated_depsgraph_get(),
                                                        context.scene.objects['Camera'],
-                                      resolution_x=res_x, resolution_y=res_y, compute_bounding_boxes=True)
+                                      resolution_x=res_x, resolution_y=res_y, compute_convex_hull=True)
 
         width = int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
         height = int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
 
         name_bdbox = {
-            obj.name: xyxy for obj, xyxy in visible_objs.items()
+            obj.name: hull for obj, hull in visible_objs.items()
         }
+        UniqueLogger.quick_log("bdd" + name_bdbox.__str__())
+        for name, hull in name_bdbox.items():
 
+            UniqueLogger.quick_log("hu" + hull.__str__())
+            for coo in hull:
+                x = (coo[0] + 1) * width / 2
+                y = (coo[1] + 1) * height / 2
+                UniqueLogger.quick_log(f"({x}, {y})")
+
+        """
         for name, xyxy in name_bdbox.items():
             x_min, y_min, x_max, y_max = xyxy
 
@@ -163,6 +173,8 @@ class Executor:
             y_max_px = (y_min + 1) * height / 2
             UniqueLogger.quick_log(f"Pixel bbox before: ({xyxy}) -> {name}")
             UniqueLogger.quick_log(f"Pixel bbox: ({x_min_px}, {y_min_px}, {x_max_px}, {y_max_px}) -> {name}")
+            """
+
 
 class NoViewportUpdate:
 

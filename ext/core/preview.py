@@ -16,7 +16,9 @@ import os
 import bpy
 
 class PreviewGenerator:
+    """
 
+    """
     _preview_name = "randomizer_preview.png"
 
     def __init__(self, context, data: PipelineData, parameters, reporter=None):
@@ -35,7 +37,6 @@ class PreviewGenerator:
 
     def compile_contexts(self) -> NestedPipelineContext:
         """
-
         :return:
         """
         full_context = self.pipeline.build_context_manager()
@@ -82,10 +83,11 @@ class PreviewGenerator:
         return { 'FINISHED' }
 
     def display_and_render_preview(self,
-       show_obj_name: bool = True,
-       show_class_name_or_id: str = "id",
-       show_bounding_boxes: bool = True,
-       draw_default_class: bool = False
+        show_obj_name: bool = True,
+        show_class_name_or_id: str = "id",
+        show_bounding_boxes: bool = True,
+        show_convex_hull: bool = True,
+        draw_default_class: bool = False
     ) -> None:
         """
         :param show_bounding_boxes:
@@ -141,7 +143,6 @@ class PreviewGenerator:
             # Draw the bounding box first, so that the text is visible in all cases, hopefully.
             if show_bounding_boxes:
                 draw_bounding_box(img, color, p0, p1, y_grows_up_to_down=False, line_width=4)
-
             if show_obj_name or (show_class_name_or_id != "none"):
 
                 text = f"" if show_class_name_or_id == "none" else \
@@ -157,5 +158,5 @@ class PreviewGenerator:
                 font_size = max(2, int(base_size * scale))
                 y_min = min(p0[1], p1[1])
                 draw_bitmap_text(
-                    img, text, (p0[0]+ 10, y_min + estimate_text_pixel_height("", font_size)),
+                    img, text, (p0[0]+ 20, 10 + y_min + estimate_text_pixel_height("", font_size)),
                     color=color, size=font_size)

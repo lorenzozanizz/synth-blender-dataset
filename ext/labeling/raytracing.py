@@ -6,7 +6,9 @@ https://github.com/DLR-RM/BlenderProc/blob/main/blenderproc/python/camera/Camera
 https://blender.stackexchange.com/questions/269014/list-all-occluded-objects-from-camera
 
 """
-from ext.utils.logger import UniqueLogger
+from ..utils.logger import UniqueLogger
+from ..utils.images import convex_hull
+
 
 try:
     from numpy import linspace
@@ -29,7 +31,8 @@ def get_visible_objects_from_camera(scene, depsgraph,
                                     camera,
                                     resolution_x: int = 4, resolution_y: int = 4,
                                     num_ray: int = 0,
-                                    compute_bounding_boxes: bool = False
+                                    compute_bounding_boxes: bool = False,
+                                    compute_convex_hull: bool = False
     ) -> Union[Set[Any], Dict[Any, Tuple[int, int, int, int]]]:
     """
 
@@ -39,6 +42,7 @@ def get_visible_objects_from_camera(scene, depsgraph,
     :param resolution_x:
     :param resolution_y:
     :param num_ray:
+    :param compute_convex_hull:
     :param compute_bounding_boxes:
     :return:
     """
@@ -82,15 +86,16 @@ def get_visible_objects_from_camera(scene, depsgraph,
             if is_hit:
                 hit_data.add(hit_obj)
                 # Keep track of all hits
-                if compute_bounding_boxes:
+                if compute_bounding_boxes or compute_convex_hull:
                     x_normalized = (x - top_left[0]) / (top_right[0] - top_left[0]) * 2 - 1
                     y_normalized = (y - top_left[1]) / (bottom_left[1] - top_left[1]) * 2 - 1
                     bounding_boxes_mappings[hit_obj].append((x_normalized, y_normalized))
 
 
     if compute_bounding_boxes:
-        UniqueLogger.quick_log(bounding_boxes_mappings.__str__())
         return { obj: get_minimal_bounding_box_fast(points) for obj, points in bounding_boxes_mappings.items() }
+    elif compute_convex_hull:
+        return { obj: convex_hull(points) for obj, points in bounding_boxes_mappings.items() }
     else:
         return hit_data
 

@@ -48,6 +48,10 @@ class AddLabelRuleOperator(Operator):
     bl_idname = Labels.ADD_LABEL_RULE.value
     bl_label = "Add a new label rule"
 
+    def execute(self, context):
+        rules = context.scene.labeling_data.label_rules
+        new_val = rules.add()
+        return { 'FINISHED' }
 
 class RemoveLabelRuleOperator(Operator):
     bl_idname = Labels.REMOVE_LABEL_RULE.value
