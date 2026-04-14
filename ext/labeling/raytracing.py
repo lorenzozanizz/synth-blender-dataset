@@ -20,8 +20,8 @@ except ImportError:
         return (start + step * i for i in range(num))
 
 from collections import defaultdict
-from math import sqrt
-from mathutils import Vector
+from math import sqrt, tan
+from mathutils import Vector, Matrix
 from typing import Any, Set, Dict, Tuple, List, Union
 
 import bpy
@@ -129,3 +129,91 @@ def normalized_center_coordinate_to_pixel(x, y, width, height):
     pixel_x = (x + 1) * width / 2
     pixel_y = (1 - y) * height / 2  # The (1 - y) flips
     return pixel_x, pixel_y
+
+
+def estimate_occlusion_3d(obj, camera, context, render, visible_bbox):
+    """Compare 3D bbox projected area vs actual visible bbox"""
+
+    points = list()
+    bounding_box = obj.bound_box
+    for threed_p in bounding_box:
+        local_point = Vector((threed_p[0], threed_p[1], threed_p[2]))
+        transform = obj.matrix_world
+        point = transform @ local_point
+        proj = project_3d_point(camera, point, context, render)
+        points.append(proj)
+
+    min_x = float(min(p[0] for p in points))
+    max_x = float(max(p[0] for p in points))
+    min_y = float(min(p[1] for p in points))
+    max_y = float(max(p[1] for p in points))
+
+    bbox_3d_area = compute_bbox_area((min_x, min_y, max_x, max_y))
+    UniqueLogger.quick_log("3d before" + (min_x, min_y, max_x, max_y).__str__())
+    UniqueLogger.quick_log("3d projected" + bbox_3d_area.__str__())
+
+    # Compute the actually visible area
+    bbox_visible_area = float(compute_bbox_area(visible_bbox))
+
+    UniqueLogger.quick_log(f"3d visible{bbox_visible_area}")
+    UniqueLogger.quick_log(f"3d projected{bbox_3d_area}")
+    UniqueLogger.quick_log(f" pixls hee {visible_bbox}")
+
+    occlusion = bbox_visible_area / bbox_3d_area if bbox_3d_area > 0 else 1.0
+    return occlusion
+
+
+def compute_bbox_area(bbox):
+    """Compute area from (x_min, y_min, x_max, y_max)"""
+    x_min, y_min, x_max, y_max = bbox
+    return abs(x_max - x_min) * abs(y_max - y_min)
+
+    return None
+
+
+def project_3d_point(camera: bpy.types.Object,
+                     p: Vector,
+                     context,
+                     render) -> Vector:
+
+    # https://blender.stackexchange.com/questions/16472/how-can-i-get-the-cameras-projection-matrix
+    """
+    Given a camera and its projection matrix M;
+    given p, a 3d point to project:
+
+    Compute P’ = M * P
+    P’= (x’, y’, z’, w')
+
+    Ignore z'
+    Normalize in:
+    x’’ = x’ / w’
+    y’’ = y’ / w’
+
+    x’’ is the screen coordinate in normalised range -1 (left) +1 (right)
+    y’’ is the screen coordinate in  normalised range -1 (bottom) +1 (top)
+
+    :param context:
+    :param camera: The camera for which we want the projection
+    :param p: The 3D point to project
+    :param render: The render settings associated to the scene.
+    :return: The 2D projected point in normalized range [-1, 1] (left to right, bottom to top)
+    """
+
+    # Get the two components to calculate M
+    modelview_matrix = camera.matrix_world.inverted()
+    projection_matrix = camera.calc_matrix_camera(
+        context.evaluated_depsgraph_get(),
+        x = render.resolution_x,
+        y = render.resolution_y,
+        scale_x = render.pixel_aspect_x,
+        scale_y = render.pixel_aspect_y,
+    )
+
+    # print(projection_matrix * modelview_matrix)
+    # Compute P’ = M * P
+    p1 = projection_matrix @ modelview_matrix @ Vector((p[0], p[1], p[2], 1))
+
+    # Normalize in: x’’ = x’ / w’, y’’ = y’ / w’
+    p2 = Vector((p1.x / p1.w, p1.y / p1.w))
+
+    return p2

@@ -1,4 +1,4 @@
-from typing import Tuple, Dict, List
+from typing import Tuple, Dict, List, Union
 import math
 
 def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> None:
@@ -9,10 +9,16 @@ def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> N
     :param index:
     :return:
     """
-    pixel[index]     = color[0]
-    pixel[index + 1] = color[1]
-    pixel[index + 2] = color[2]
-    pixel[index + 3] = color[3]
+    if color:
+        pixel[index]     = color[0]
+        pixel[index + 1] = color[1]
+        pixel[index + 2] = color[2]
+        pixel[index + 3] = color[3]
+    else:
+        # Invert the pixel for visibility.
+        pixel[index]     = 1 - pixel[index]
+        pixel[index + 1] = 1 - pixel[index + 1]
+        pixel[index + 2] = 1 - pixel[index + 2]
     return
 
 def to_index(p, w, channels: int = 4) -> int:
@@ -62,7 +68,11 @@ def draw_bounding_box(
         """Draw a vertical line starting at point, extending line_height pixels down"""
         for width_idx in range(line_width):
             start_x = point[0] + width_idx
+            if start_x >= width:
+                continue
             for y in range(point[1], point[1] + line_height):
+                if y >= height:
+                    continue
                 idx = to_index((start_x, y), width, channels=channels)
                 if idx <= max_idx:
                     draw_color(pixels, color, idx)
@@ -111,7 +121,7 @@ def estimate_text_pixel_height(_text: str, size: int) -> int:
 
 
 def draw_bitmap_text(img, text: str, position: tuple[int, int] = (0, 0),
-                     color: tuple[float, float, float, float] = (1.0, 1.0, 1.0, 1.0),
+                     color: Union[None, tuple[float, float, float, float]] = (1.0, 1.0, 1.0, 1.0),
                      size: int = 1,
                      channels: int = 4,
                      crop_width=None) -> None:
@@ -449,16 +459,18 @@ EIGHT_BIT_BITMAP_FONT: Dict[str, List] = {
     '0': ["00111000", "01000100", "10000010", "10000010", "10000010", "01000100", "00111000"],
     '1': ["0100", "1100", "0100", "0100", "0100", "0100", "1110"],
     '2': ["00111000", "01000100", "00000010", "00000100", "00001000", "00010000", "01111110"],
-    '3': ["00111000", "01000100", "00000010", "00011100", "00000010", "01000100", "00111000"],
+    '3': ["00111000", "01000100", "00000010", "00011110", "00000010", "01000100", "00111000"],
     '4': ["01000100", "01000100", "01000100", "01111110", "00000100", "00000100", "00000100"],
     '5': ["01111110", "01000000", "01000000", "00111100", "00000010", "01000010", "00111100"],
     '6': ["00111000", "01000100", "10000000", "11111000", "10000100", "01000100", "00111000"],
     '7': ["11111110", "00000010", "00000100", "00001000", "00010000", "00100000", "01000000"],
-    '8': ["00111000", "01000100", "10000010", "00111000", "10000010", "01000100", "00111000"],
-    '9': ["00111000", "01000100", "10000010", "01111010", "00000010", "01000100", "00111000"],
+    '8': ["00111000", "01000100", "10000010", "01111100", "10000010", "01000100", "00111000"],
+    '9': ["00111000", "01000100", "10000010", "01111110", "00000010", "01000100", "00111000"],
 
     '_': ["0000000", "0000000", "0000000", "0000000", "0000000", "0000000", "1111111"],
     '.': ["000", "000", "000", "000", "000", "110", "100"],
+    ',': ["000", "000", "000", "000", "000", "110", "010", "010", "100"],
     '-': ["00000000", "00000000", "00000000", "11111110", "00000000", "00000000", "00000000"],
     ' ': ["00000", "00000", "00000", "00000", "00000", "00000", "00000"],
+    '%': ["10000010", "10000100", "00001000", "00010000", "00100000", "01000010", "10000010"],
 }

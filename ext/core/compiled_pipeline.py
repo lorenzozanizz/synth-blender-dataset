@@ -2,6 +2,7 @@ from ..pipeline.bpy_properties import PipelineData, PipelineOperation
 from ..pipeline.operation_registry import OperationRegistry
 from ..pipeline.context import NestedPipelineContext
 
+import time
 import json
 
 
@@ -17,7 +18,10 @@ class ExecutablePipeline:
         self.reporter = reporter
         self.data = pipeline_data
         self.pipes_executable: list[PipelineOperation] = []
+
+        self.compilation_time = time.time()
         self.compile_pipeline()
+        self.compilation_time = time.time() - self.compilation_time
 
     def compile_pipeline(self):
         """Deserialize all operations once"""
@@ -65,3 +69,6 @@ class ExecutablePipeline:
 
         for pipe in self.pipes_executable:
             pipe.execute(self.ctx)
+
+    def get_compilation_time(self):
+        return self.compilation_time
