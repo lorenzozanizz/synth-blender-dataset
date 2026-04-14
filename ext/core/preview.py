@@ -10,7 +10,7 @@ from ..pipeline.context import NestedPipelineContext
 from ..utils.images import draw_bounding_box, draw_bitmap_text, estimate_text_pixel_width, estimate_text_pixel_height
 
 import random
-from typing import Dict
+from typing import Dict, Any
 import tempfile
 import os
 import bpy
@@ -42,6 +42,8 @@ class PreviewGenerator:
         self.labeling_time = None
         self.compilation_time = self.pipeline.get_compilation_time()
 
+        self.estimated_occlusion = None
+
     def compile_contexts(self) -> NestedPipelineContext:
         """
         :return:
@@ -55,10 +57,6 @@ class PreviewGenerator:
         """
 
         scene = self.ctx.scene
-        seed = self.parameters.seed
-
-        # Seed the random library with the user requested seed.
-        random.seed(seed)
 
         # We disable the updates in the viewport so that the program does not crash or lag!
         # In the future, this will be set in the settings!
@@ -86,6 +84,11 @@ class PreviewGenerator:
                         resolution_x=res_x, resolution_y=res_y, compute_bounding_boxes=True)
                     self.labeling_time = time.time() - self.labeling_time
 
+                    self.estimated_occlusion: Dict[Any, float] = dict()
+                    for obj, bbox in self.visible.items():
+                        self.estimated_occlusion[obj] = float(
+                            estimate_occlusion_3d(obj, self.used_camera, self.ctx, scene.render, bbox)
+                    )
 
                 # We render in a temp path
                 self.render_time = time.time()
@@ -139,6 +142,8 @@ class PreviewGenerator:
 
         base_size = 4  # arbitrary reference size
 
+        # Extract the default class from the scene and conditionally draw it.
+
         for obj, xyxy in visible_objects.items():
 
             UniqueLogger.quick_log("Evaluating" + obj.name)
@@ -184,7 +189,8 @@ class PreviewGenerator:
 
             if show_occlusion:
 
-                estimated_occlusion = float(estimate_occlusion_3d(obj, self.used_camera, self.ctx, scene.render, xyxy))
+                estimated_occlusion = self.estimated_occlusion[obj]
+                # estimated_occlusion = float(estimate_occlusion_3d(obj, self.used_camera, self.ctx, scene.render, xyxy))
                 text = f"{int(estimated_occlusion * 100)}%"
                 base_width = estimate_text_pixel_width(text, base_size)
 

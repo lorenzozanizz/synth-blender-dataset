@@ -1,6 +1,20 @@
 from typing import Tuple, Dict, List, Union
 import math
 
+
+
+class DrawableCanvas:
+    """
+
+    """
+
+    def __init__(self, image, height, width, major_offset_x, major_offset_y):
+        self.image = image
+        self.height = height
+        self.width = width
+
+
+
 def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> None:
     """
 

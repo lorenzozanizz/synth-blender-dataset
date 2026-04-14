@@ -33,6 +33,7 @@ class Distribution(Enum):
     GEOMETRIC = "Geometric"
     BINOMIAL = "Binomial"
     GAUSSIAN = "Gaussian"
+    CATEGORICAL_UNIFORM = "Categorical Uniform"
 
     MULTIVARIATE_UNIFORM = "Multivariate Uniform"
     MULTIVARIATE_GAUSSIAN = "Multivariate Gaussian"
@@ -43,7 +44,7 @@ class Distribution(Enum):
 # One dimensional distributions to be used when the datatype to be randomized is scalar
 ONE_D_DISTRIBUTIONS = (
     Distribution.UNIFORM, Distribution.GEOMETRIC, Distribution.GAUSSIAN,
-    Distribution.BETA, Distribution.BINOMIAL, Distribution.BERNOULLI
+    Distribution.BETA, Distribution.BINOMIAL, Distribution.BERNOULLI, Distribution.CATEGORICAL_UNIFORM
 )
 
 # These are the distributions available for multidimensional distributions. In reality, it is
@@ -83,6 +84,16 @@ class PresetSampler(CompiledSampler):
 
     """
 
+    @staticmethod
+    def _sample_categorical_uniform(params: Dict[str, Any], dim: int ):
+        """
+
+        :param params:
+        :param dim:
+        :return:
+        """
+        n = params['n'] + 1 # Ensure that n is included in the sampling
+        return list(random.sample(range(0, n), dim))
 
     @staticmethod
     def _sample_uniform(params: Dict[str, Any], dim: int):
@@ -263,7 +274,7 @@ class SamplerCompiler:
     @staticmethod
     def _compile_simple_config(config: Dict[str, Any], dim: int = 1) -> CompiledSampler:
         """Compile simple preset distribution"""
-        return PresetSampler(config, dim = 1)
+        return PresetSampler(config, dim = dim)
 
     @staticmethod
     def _compile_node_config(config: Dict[str, Any], dim: int = 1) -> CompiledSampler:

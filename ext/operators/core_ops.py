@@ -2,6 +2,7 @@ from .names import Labels
 from ..core.generation import ExecutionParameters, Executor
 from ..core.preview import PreviewGenerator
 
+import traceback
 from typing import Union
 from bpy.types import Operator
 
@@ -65,7 +66,7 @@ class GenerateOperator(Operator):
             executor.execute()
 
         except Exception as e:
-            self.report({'ERROR'}, f"Generation failed: {str(e)}")
+            self.report({'ERROR'}, f"Generation failed: {traceback.format_exc()}")
             return { 'CANCELLED' }
 
         return { 'FINISHED' }
@@ -118,7 +119,7 @@ class PreviewOperator(Operator):
             preview.display_and_render_preview()
 
         except Exception as e:
-            self.report({'ERROR'}, f"Generation failed: {str(e)}")
+            self.report({'ERROR'}, f"Generation failed: {traceback.format_exc()}")
             return { 'CANCELLED' }
 
         return { 'FINISHED' }

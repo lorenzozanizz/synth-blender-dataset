@@ -76,7 +76,10 @@ class VisibilityValidator(PipeValidator):
 
     @staticmethod
     def validate(pipe: PipelineOperation,  config: dict) -> bool:
-        return False
+        obj_ok = ObjectTargeterValidator.validate(config[wsk.OBJECT.value])
+        dis_ok = SimplifiedDistributionSelectorValidator.validate(config[wsk.SIMPLE.value])
+        return obj_ok and dis_ok
+
 
 @ValidatorRegistry.register(PipeNames.MATERIAL.value)
 class MaterialValidator(PipeValidator):
@@ -208,7 +211,8 @@ class SimplifiedDistributionSelectorValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
-        pass
+
+        return True
 
 
 #
