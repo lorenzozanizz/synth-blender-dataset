@@ -35,10 +35,11 @@ class GenerateOperator(Operator):
         return ExecutionParameters(
             scene.randomizer_seed,
             amount,
+            scene.randomizer_append_checkbox,
+            dest_path,
             save_prefix,
             scene.randomizer_label_format,
-            scene.randomizer_append_checkbox,
-            dest_path
+            scene.randomizer_do_labelize
         )
 
     def execute(self, context):

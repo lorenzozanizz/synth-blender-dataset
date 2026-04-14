@@ -1,16 +1,14 @@
 from .compiled_pipeline import ExecutablePipeline
 
 from ..labeling import LabelingFormats
-from ..pipeline.bpy_properties import PipelineData, PipelineOperation
+from ..labeling.generator import LabelingManager
+from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
 from ..labeling.raytracing import get_visible_objects_from_camera
-from ..utils.images import convex_hull
 from ..utils.logger import UniqueLogger
-from ..ui.pipe_schema import PipeSchemaRegistry
 
 import random
 import re
-import os
 from dataclasses import dataclass
 from pathlib import Path
 from os import listdir
@@ -25,13 +23,13 @@ class ExecutionParameters:
     """
     seed: int
     amount: int
-    prefix: str
-    format: str
 
     from_last: bool
-
     save_path: str
+    prefix: str
 
+    format: str
+    do_labeling: bool
 
 class Executor:
     """Compiled, reusable pipeline executor"""
@@ -43,6 +41,7 @@ class Executor:
         self.reporter = reporter
 
         self.pipeline = ExecutablePipeline(self.ctx, data, reporter)
+        self.label_manager = None
 
     def compile_contexts(self) -> NestedPipelineContext:
         """
@@ -62,6 +61,11 @@ class Executor:
         amount      = self.parameters.amount
         seed        = self.parameters.seed
         labeling_f  = LabelingFormats.from_string(self.parameters.format)
+        do_labeling = self.parameters.do_labeling
+
+        if do_labeling:
+            self.label_manager = LabelingManager(folder=path_root, format=labeling_f)
+            self.label_manager.create_label_directory()
 
         # Seed the random library with the user requested seed.
         random.seed(seed)
@@ -101,10 +105,9 @@ class Executor:
                             bpy.ops.render.render(write_still=True)
                             self.occlusion()
 
-                            wm.progress_update(shot_idx-start_idx)
-
-                            # ^ Frame context exits here—restores frame-level state, required for
-                            # pipes that require per-frame restoring (e.g. those that act as offset
+                        # ^ Frame context exits here—restores frame-level state, required for
+                        # pipes that require per-frame restoring (e.g. those that act as offset
+                        wm.progress_update(shot_idx-start_idx)
 
                     # ^ Global contexts exit here—restores global state
         finally:

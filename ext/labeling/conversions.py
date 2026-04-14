@@ -4,7 +4,7 @@
 """
 
 
-def one_minus_one_centered_into_absolute_pixels_0y_top_invert(
+def convert_camera_centered_to_absolute_pixels_0y_top_invert(
         ximn_ymin_xmax_ymax: tuple[float, float, float, float], width: int, height: int
 ) -> tuple[int, int, int, int]:
     """ The resulting values are given so that the y values GROW as the point goes
@@ -27,7 +27,7 @@ def one_minus_one_centered_into_absolute_pixels_0y_top_invert(
 
     return x_min_px, y_min_px, x_max_px, y_max_px
 
-def one_minus_one_centered_into_absolute_pixels_0y_top(
+def convert_camera_centered_to_absolute_pixels_0y_top(
         ximn_ymin_xmax_ymax: tuple[float, float, float, float], width: int, height: int
 ) -> tuple[int, int, int, int]:
     """ The resulting values are given so that the y values GROW as the point goes
@@ -49,3 +49,22 @@ def one_minus_one_centered_into_absolute_pixels_0y_top(
     y_max_px = int((y_max + 1) * height / 2)
 
     return x_min_px, y_min_px, x_max_px, y_max_px
+
+def convert_camera_centered_to_absolute_pixels_y_inverted(
+    ximn_ymin_xmax_ymax: tuple[float, float, float, float], width: int, height: int
+) -> tuple[int, int, int, int]:
+    """
+
+    :param ximn_ymin_xmax_ymax:
+    :param width:
+    :param height:
+    :return:
+    """
+    x_min, y_min, x_max, y_max = convert_camera_centered_to_absolute_pixels_0y_top(ximn_ymin_xmax_ymax, width, height)
+    y_min = height - y_min
+    y_max = height - y_max
+    return x_min, y_min, x_max, y_max
+
+
+
+

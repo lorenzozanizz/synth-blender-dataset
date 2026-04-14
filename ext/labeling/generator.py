@@ -1,6 +1,21 @@
+
+from ..utils.timer import TimingContext
+from .raytracing import get_visible_objects_from_camera
+
 from abc import ABCMeta, abstractmethod
+
+from typing import Iterable, Any, Dict, Callable
 import json
 
+
+class LabelManager:
+
+    def __init__(self, folder, fmt: str):
+        self.format = fmt
+        self.folder = folder
+
+    def create_label_directory(self) -> None:
+        pass
 
 class LabelGenerator:
     """Main orchestrator for label generation"""
@@ -27,15 +42,15 @@ class LabelGenerator:
         for obj in visible_objects:
             # Get class
             class_id, class_name = class_engine.resolve(obj)
-            bbox_data = bbox_extractor.extract(obj, camera, context, render)
+            # bbox_data = bbox_extractor.extract(obj, camera, context, render)
 
             # Build annotation entry
             annotation = {
                 "object": obj.name,
                 "class_id": class_id,
                 "class_name": class_name,
-                "bbox": bbox_data["bbox"],
-                "visibility": bbox_data["visibility"]
+                # "bbox": bbox_data["bbox"],
+                # "visibility": bbox_data["visibility"]
             }
             annotations.append(annotation)
 
@@ -50,38 +65,65 @@ class LabelGenerator:
         return None
 
 
-class BboxExtractor:
+class BoundingBoxExtractor:
     """Encapsulates bbox extraction logic"""
 
-    def extract(self, obj, camera, context, render):
+    def __init__(self, context):
+        self.ctx = context
 
-        bbox_3d_projected = self.compute_projected_3d_bbox(obj, camera, context, render)
-        bbox_3d_clipped = self.clip_bbox_to_image(bbox_3d_projected, render)
-        visible_bbox = self.get_visible_bbox(obj, camera, context, render)
+        self.timings: Dict[str, float] = dict()
 
-        return {
-            "bbox": self.normalize_bbox(bbox_3d_clipped, render)
-        }
+        self.visible_objects = dict()
 
-    def compute_projected_3d_bbox(self, obj, camera, context, render):
-        # Your projection logic
-        pass
 
-    def clip_bbox_to_image(self, bbox, render):
-        pass
+    def extract(self, camera, ray_casting_ratio: float = 0.5):
+        """
 
-    def get_visible_bbox(self, obj, camera, context, render):
-        pass
+        :return:
+        """
+        res_x = int(self.ctx.scene.render.resolution_x * ray_casting_ratio)
+        res_y = int(self.ctx.scene.render.resolution_y * ray_casting_ratio)
 
-    def normalize_bbox(self, bbox, render):
-        # Normalize to 0-1 for YOLO, or keep pixel coords for COCO
-        pass
+        with TimingContext(self.timings, 'labeling'):
+            self.visible_objects = get_visible_objects_from_camera(
+                self.ctx.scene, self.ctx.evaluated_depsgraph_get(), camera,
+                resolution_x=res_x, resolution_y=res_y, compute_bounding_boxes=True)
+
+    def get_labeling_time(self) -> float:
+        """ Get the time it took to compute the boxes and the visible objects """
+        return self.timings['labeling']
+
+    def get_visible_objects(self) -> Iterable[Any]:
+        """ Get the visible objects """
+        return self.visible_objects.keys()
+
+    def get_bounding_boxes(self, conv_func: Callable = None) -> Iterable[Any]:
+        """ Get the camera centered bounding boxes """
+        if not conv_func:
+            return self.visible_objects.values()
+        else:
+            return (conv_func(bbox) for bbox in self.visible_objects.values())
+
+    def get_bbox_mappings(self) -> Dict:
+        """ Get the mappings from object to bounding boxes """
+        return self.visible_objects
 
 
 class Formatter(metaclass=ABCMeta):
+    """
 
+    """
+
+    @abstractmethod
     def save(self, annotations, output_dir):
+        """
+
+        :param annotations:
+        :param output_dir:
+        :return:
+        """
         pass
+
 
 class YoloFormatter(Formatter):
     """YOLO-specific output format"""
