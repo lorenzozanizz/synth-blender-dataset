@@ -13,6 +13,8 @@ class DrawableCanvas:
         self.height = height
         self.width = width
 
+    def reserve_section(self) -> None:
+        pass
 
 
 def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> None:
