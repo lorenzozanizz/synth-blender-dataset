@@ -1,0 +1,1 @@
+# labeling.png: A snapshot of the preview which shows labeling and visibility computation
