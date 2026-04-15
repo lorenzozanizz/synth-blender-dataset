@@ -22,7 +22,7 @@ except ImportError:
 from collections import defaultdict
 from math import sqrt, tan
 from mathutils import Vector, Matrix
-from typing import Any, Set, Dict, Tuple, List, Union
+from typing import Any, Set, Dict, Tuple, List, Union, Iterable
 
 import bpy
 
@@ -31,9 +31,8 @@ def get_visible_objects_from_camera(scene, depsgraph,
                                     camera,
                                     resolution_x: int = 4, resolution_y: int = 4,
                                     num_ray: int = 0,
-                                    compute_bounding_boxes: bool = False,
-                                    compute_convex_hull: bool = False
-    ) -> Union[Set[Any], Dict[Any, Tuple[int, int, int, int]]]:
+                                    compute_mapping: bool = False,
+    ) -> Union[Set[Any], Dict[Any, List]]:
     """
 
     :param scene:
@@ -42,8 +41,7 @@ def get_visible_objects_from_camera(scene, depsgraph,
     :param resolution_x:
     :param resolution_y:
     :param num_ray:
-    :param compute_convex_hull:
-    :param compute_bounding_boxes:
+    :param compute_mapping:
     :return:
     """
     # Get vectors which define view frustum of camera
@@ -86,18 +84,14 @@ def get_visible_objects_from_camera(scene, depsgraph,
             if is_hit:
                 hit_data.add(hit_obj)
                 # Keep track of all hits
-                if compute_bounding_boxes or compute_convex_hull:
+                if compute_mapping:
                     x_normalized = (x - top_left[0]) / (top_right[0] - top_left[0]) * 2 - 1
                     y_normalized = (y - top_left[1]) / (bottom_left[1] - top_left[1]) * 2 - 1
                     bounding_boxes_mappings[hit_obj].append((x_normalized, y_normalized))
 
-
-    if compute_bounding_boxes:
-        return { obj: get_minimal_bounding_box_fast(points) for obj, points in bounding_boxes_mappings.items() }
-    elif compute_convex_hull:
-        return { obj: convex_hull(points) for obj, points in bounding_boxes_mappings.items() }
-    else:
+    if not compute_mapping:
         return hit_data
+    else: return bounding_boxes_mappings
 
 
 def get_minimal_bounding_box_fast(points: List[Tuple[int, int]]):
@@ -131,25 +125,14 @@ def normalized_center_coordinate_to_pixel(x, y, width, height):
     return pixel_x, pixel_y
 
 
-def estimate_occlusion_3d(obj, camera, context, render, visible_bbox):
+def estimate_visibility_3d(obj, camera, depsgraph, context, render, visible_bbox):
     """Compare 3D bbox projected area vs actual visible bbox"""
 
-    points = list()
-    bounding_box = obj.bound_box
-    for threed_p in bounding_box:
-        local_point = Vector((threed_p[0], threed_p[1], threed_p[2]))
-        transform = obj.matrix_world
-        point = transform @ local_point
-        proj = project_3d_point(camera, point, context, render)
-        points.append(proj)
 
-    min_x = float(min(p[0] for p in points))
-    max_x = float(max(p[0] for p in points))
-    min_y = float(min(p[1] for p in points))
-    max_y = float(max(p[1] for p in points))
+    camera_bbox = compute_object_camera_space_projected_bbox(obj, depsgraph, camera, context, render)
 
-    bbox_3d_area = compute_bbox_area((min_x, min_y, max_x, max_y))
-    UniqueLogger.quick_log("3d before" + (min_x, min_y, max_x, max_y).__str__())
+    bbox_3d_area = compute_bbox_area(camera_bbox)
+    UniqueLogger.quick_log("3d before" + camera_bbox.__str__())
     UniqueLogger.quick_log("3d projected" + bbox_3d_area.__str__())
 
     # Compute the actually visible area
@@ -161,6 +144,65 @@ def estimate_occlusion_3d(obj, camera, context, render, visible_bbox):
 
     occlusion = bbox_visible_area / bbox_3d_area if bbox_3d_area > 0 else 1.0
     return occlusion
+
+def compute_camera_space_boxes(objects: Iterable[Any], camera, depsgraph, context, render) \
+        -> Dict[Any, Tuple[float, float, float, float]]:
+    """
+
+    :param objects:
+    :param camera:
+    :param depsgraph:
+    :param context:
+    :param render:
+    :return:
+    """
+    return { obj: compute_object_camera_space_projected_bbox(obj, depsgraph, camera, context, render)
+             for obj in objects }
+
+
+def compute_area_ratio(xyxy1, xyxy2):
+    """
+
+    :param xyxy1:
+    :param xyxy2:
+    :return:
+    """
+    area_1 = compute_bbox_area(xyxy2)
+    area_2 = compute_bbox_area(xyxy1)
+    return area_1 / area_2
+
+
+def union_bounding_boxes(bounding_boxes: Iterable[tuple[float, float, float, float]]) -> tuple[float, float, float, float]:
+    pass
+
+
+def compute_object_camera_space_projected_bbox(obj, depsgraph, camera, context, render):
+    """
+
+    :param depsgraph:
+    :param obj:
+    :param camera:
+    :param context:
+    :param render:
+    :return:
+    """
+
+    obj_eval = obj.evaluated_get(depsgraph)
+    points = list()
+    bounding_box = obj_eval.bound_box
+    for threed_p in bounding_box:
+        local_point = Vector((threed_p[0], threed_p[1], threed_p[2]))
+        transform = obj_eval.matrix_world
+        point = transform @ local_point
+        proj = project_3d_point(camera, point, context, render)
+        points.append(proj)
+
+    min_x = float(min(p[0] for p in points))
+    max_x = float(max(p[0] for p in points))
+    min_y = float(min(p[1] for p in points))
+    max_y = float(max(p[1] for p in points))
+
+    return min_x, min_y, max_x, max_y
 
 
 def compute_bbox_area(bbox):

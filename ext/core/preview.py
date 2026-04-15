@@ -3,7 +3,7 @@ from .generation import NoViewportUpdate
 from ..labeling.rule_engine import LabelingEngine
 
 from ..labeling.generator import BoundingBoxExtractor
-from ..labeling.raytracing import get_visible_objects_from_camera, estimate_occlusion_3d
+from ..labeling.raytracing import get_visible_objects_from_camera, estimate_visibility_3d
 from ..labeling.conversions import convert_camera_centered_to_absolute_pixels_y_inverted
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -47,7 +47,7 @@ class PreviewGenerator:
 
         # Timing statistics
         self.timings: Dict[str, float] = { 'compile': self.pipeline.get_compilation_time() }
-        self.estimated_occlusion: Dict[Any, float] = dict()
+        self.estimated_visibility: Dict[Any, float] = dict()
 
         self.bbox_extractor = BoundingBoxExtractor(context=self.ctx)
 
@@ -83,13 +83,10 @@ class PreviewGenerator:
                     self.used_camera = default_camera
 
                     # Compute the bounding boxes from the scene using the given camera and ray tracing
-                    self.bbox_extractor.extract(self.used_camera, ray_casting_ratio=0.1)
+                    self.bbox_extractor.extract(self.used_camera, ray_casting_ratio=0.1, estimate_visibility=True)
                     self.timings['labeling'] = self.bbox_extractor.get_labeling_time()
 
-                    for obj, bbox in self.bbox_extractor.get_bbox_mappings().items():
-                        self.estimated_occlusion[obj] = float(
-                            estimate_occlusion_3d(obj, self.used_camera, self.ctx, scene.render, bbox)
-                    )
+                    self.estimated_visibility = self.bbox_extractor.get_estimated_visibility()
 
                 # We render in a temp path
                 scene.render.filepath = self.path
@@ -111,20 +108,20 @@ class PreviewGenerator:
         bpy.ops.image.open(filepath=self.path)
 
     def display_and_render_preview(self,
-        show_obj_name: bool = True,
-        show_class_name_or_id: str = "id",
-        show_bounding_boxes: bool = True,
-        show_convex_hull: bool = True,
-        draw_default_class: bool = False,
-        show_occlusion: bool = True,
-        show_rendering_time: bool = True
-    ) -> None:
+                                   show_obj_name: bool = True,
+                                   show_class_name_or_id: str = "id",
+                                   show_obj_boundaries: bool = True,
+                                   show_entity: bool = True,
+                                   ignore_default_class: str = "",
+                                   show_visibility: bool = True,
+                                   show_rendering_time: bool = True
+                                   ) -> None:
         """
-        :param draw_default_class:
-        :param show_convex_hull:
-        :param show_occlusion:
+        :param show_entity:
+        :param ignore_default_class:
+        :param show_visibility:
         :param show_rendering_time:
-        :param show_bounding_boxes:
+        :param show_obj_boundaries:
         :param show_obj_name:
         :param show_class_name_or_id:
         :return:
@@ -138,40 +135,58 @@ class PreviewGenerator:
         img = bpy.data.images[PreviewGenerator._preview_name]
 
         # self.visible is a { object, bounding_box } dictionary, but the extraction may have failed
-        if not self.bbox_extractor.get_bbox_mappings():
+        if not self.bbox_extractor.get_bbox_objects():
             return
 
-        engine = LabelingEngine(self.ctx)
+        engine: LabelingEngine = LabelingEngine(self.ctx)
         engine.create_rule_mappings(self.bbox_extractor.get_visible_objects())
 
         width = int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
         height = int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
-        # Extract the default class from the scene and conditionally draw it.
 
-        for obj, xyxy in self.bbox_extractor.get_bbox_mappings().items():
+        for obj, xyxy in self.bbox_extractor.get_bbox_objects().items():
 
-            match_class = engine.get(obj)
+            match_class = engine.get_entity(obj)
             # Only classified objects have a bounding box and label info
             if not match_class:
                 continue
+            elif ignore_default_class and match_class.name == ignore_default_class:
+                continue
             # Draw the information related to the object, conditional on the render flags and
             # the preview settings.
-            self._render_object_info(img, obj, xyxy, width, height, cls=match_class,
-                 show_class_name_or_id=show_class_name_or_id, show_bounding_boxes=show_bounding_boxes,
-                 show_occlusion=show_occlusion, show_obj_name=show_obj_name)
+            self._render_object_info(img, obj.name, obj, xyxy, width, height, cls=match_class,
+                 show_class_name_or_id=show_class_name_or_id, show_bounding_boxes=show_obj_boundaries,
+                 show_visibility=show_visibility, show_obj_name=show_obj_name)
+
+        if show_entity:
+
+            for entity, xyxy in self.bbox_extractor.get_bbox_entities():
+
+                match_class = engine.get_entity(entity)
+                # Only classified objects have a bounding box and label info
+                if not match_class:
+                    continue
+                elif ignore_default_class and match_class.name == ignore_default_class:
+                    continue
+                self._render_object_info(img, entity, entity, xyxy, width, height, cls=match_class,
+                                         show_class_name_or_id=show_class_name_or_id,
+                                         show_bounding_boxes=show_obj_boundaries,
+                                         show_visibility=show_visibility, show_obj_name=show_obj_name)
 
         if show_rendering_time:
             self._render_bottom_left_time_stats(img, width)
 
-    def _render_object_info(self, img, obj, xyxy: tuple[float, float, float, float],
-        width: int, height: int, cls,
-        # Flags which are used to conditionally draw various elements in the object info
-        show_bounding_boxes: bool = True, show_obj_name: bool = True,
-        show_class_name_or_id: str = "id", show_occlusion: bool = True) -> None:
+    def _render_object_info(self, img, obj_name, obj_key, xyxy: tuple[float, float, float, float],
+                            width: int, height: int, cls,
+                            # Flags which are used to conditionally draw various elements in the object info
+                            show_bounding_boxes: bool = True, show_obj_name: bool = True,
+                            show_class_name_or_id: str = "id", show_visibility: bool = True,
+                            show_unoccluded_bbox: bool = True) -> None:
         """
 
         :param img:
-        :param obj:
+        :param obj_name:
+        :param obj_key:
         :param xyxy:
         :param width:
         :param height:
@@ -192,12 +207,14 @@ class PreviewGenerator:
         # Draw the bounding box first, so that the text is visible in all cases, hopefully.
         if show_bounding_boxes:
             draw_bounding_box(img, color, p0, p1, y_grows_up_to_down=False, line_width=4)
+        if show_unoccluded_bbox:
+            pass
         if show_obj_name or (show_class_name_or_id != "none"):
 
             text = f"" if show_class_name_or_id == "none" else \
                 f" {cls.name}" if show_class_name_or_id == "name" else f"{cls.class_id}"
             if show_obj_name:
-                text = f"{obj.name}" + (" - " if text else "") + text
+                text = f"{obj_name}" + (" - " if text else "") + text
             # Generate in a single pass the text to be written, then write it.
 
             font_size = font_size_fit_box_perc(text, box_width, 0.9)
@@ -206,10 +223,10 @@ class PreviewGenerator:
                 img, text, (p0[0] + 20, 10 + y_min + estimate_text_pixel_height("", font_size)),
                 color=color, size=font_size)
 
-        if show_occlusion:
-            estimated_occlusion = self.estimated_occlusion[obj]
+        if show_visibility:
+            estimated_visibility = self.estimated_visibility[obj_key]
             # estimated_occlusion = float(estimate_occlusion_3d(obj, self.used_camera, self.ctx, scene.render, xyxy))
-            text = f"{int(estimated_occlusion * 100)}%"
+            text = f"{int(estimated_visibility * 100)}%"
 
             font_size = font_size_fit_box_perc(text, box_width, 0.3)
             y_max = max(p0[1], p1[1])

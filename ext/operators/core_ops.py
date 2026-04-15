@@ -89,12 +89,10 @@ class PreviewOperator(Operator):
         scene = context.scene
         # No checks are required
         return ExecutionParameters(
-            scene.randomizer_seed,
-            scene.randomizer_amount,
-            scene.randomizer_save_prefix,
-            scene.randomizer_label_format,
-            scene.randomizer_append_checkbox,
-            scene.randomizer_destination_path
+            scene.randomizer_seed,      scene.randomizer_amount,
+            scene.randomizer_save_prefix,   scene.randomizer_label_format,
+            scene.randomizer_append_checkbox,   scene.randomizer_destination_path,
+            scene.randomizer_do_labelize
         )
 
     def execute(self, context):
@@ -112,12 +110,16 @@ class PreviewOperator(Operator):
         pipeline = context.scene.pipeline_data
         preview = PreviewGenerator(context, pipeline, params_or_error, reporter=self)
 
+        # extract the default class
+        default_class = context.scene.labeling_data.default_class
+        if not default_class or default_class.lower() == "None":
+            default_class = ""
         try:
             # ( Note: invalid pipes are ignored, IO is handled by the executor )
             # Internally, the executor will compile the pipeline and distributions, will construct the
             # context managers and execute the pipeline for every different synthesis
             preview.execute()
-            preview.display_and_render_preview()
+            preview.display_and_render_preview(ignore_default_class=default_class)
 
         except Exception as e:
             self.report({'ERROR'}, f"Generation failed: {traceback.format_exc()}")

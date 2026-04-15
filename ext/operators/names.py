@@ -109,8 +109,14 @@ class Labels(Enum):
     REMOVE_LABEL_RULE       = "randomizer.remove_label_rule"
     # ( Capture the currently selected objects to be applied to the selected label assignment )
     CAPTURE_OBJECTS_LABEL   = "randomizer.capture_objects_label"
+
+    SELECT_ENTITY_LABEL     = "randomizer.select_entity_label"
     # ( Refresh the names assigned to labels in the pipeline, highlighting dead objects )
-    REFRESH_LABEL_NAMES     = "randomizer.refresh_label_names"
+    REFRESH_LABEL_SETTINGS  = "randomizer.refresh_label_settings"
+    # ( Add a multi-object entity )
+    ADD_ENTITY              = "randomizer.add_entity"
+    # ( Remove a multi-object entity )
+    REMOVE_ENTITY           = "randomizer.remove_entity"
 
     # ------------- Names inside distribution_ops.py ---------------
     # |

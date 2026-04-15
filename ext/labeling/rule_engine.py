@@ -139,7 +139,7 @@ class LabelingEngine:
         else: return None
         return relevant_data
 
-    def get(self, obj: Union[str, Any]) -> Union[None, LabelClass]:
+    def get_entity(self, obj: Union[str, Any]) -> Union[None, LabelClass]:
         """
 
         :param obj:

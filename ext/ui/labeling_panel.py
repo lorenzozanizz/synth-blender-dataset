@@ -46,6 +46,10 @@ class ObjectLabelsUIList(UIList):
             sub.scale_x = 0.4
             sub.label(text=f"({cls.class_id})")
 
+class NamedEntitiesUIList(UIList):
+
+    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        scene = context.scene
 
 class LabelRulesUIList(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -121,7 +125,27 @@ class LabelingPanel(Panel):
             sub.prop(cls, 'color', text='')
             row.separator()
 
+        layout.prop(labeling_data, 'use_entities', text="Define multi-object entities")
+        # Allow the user to create multi-object entities.
+        if labeling_data.use_entities:
+            # Show the entity creation UI list.
 
+            box = layout.box()
+            box.label(text="Named Entities Labels", icon='GHOST_ENABLED')
+            row = box.row()
+            row.template_list(
+                NamedEntitiesUIList.__name__,
+                'entities_list',
+                labeling_data, 'entities',
+                labeling_data, 'entities_active_index'
+            )
+            col = row.column()
+            col.operator(Labels.ADD_ENTITY.value, icon='ADD', text='')
+            col.operator(Labels.REMOVE_ENTITY.value, icon='REMOVE', text='')
+
+
+        layout.separator()
+        layout.label(text="Class assignment")
         box = layout.box()
         box.label(text="Object Labels", icon='OBJECT_DATA')
         row = box.row()

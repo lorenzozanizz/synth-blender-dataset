@@ -57,6 +57,22 @@ class RemoveLabelRuleOperator(Operator):
     bl_idname = Labels.REMOVE_LABEL_RULE.value
     bl_label = "Remove a label rule"
 
+
+class AddEntityOperator(Operator):
+    bl_idname = Labels.ADD_ENTITY.value
+    bl_label = "Add a new entity definition"
+
+    def execute(self, context):
+        rules = context.scene.labeling_data.entities
+        new_val = rules.add()
+        return { 'FINISHED' }
+
+
+class RemoveEntityOperator(Operator):
+    bl_idname = Labels.REMOVE_ENTITY.value
+    bl_label = "Remove an entity"
+
+
 class TargetObjectsLabelOperator(Operator):
     bl_idname = Labels.CAPTURE_OBJECTS_LABEL.value
     bl_label = "Capture selected objects for this label"

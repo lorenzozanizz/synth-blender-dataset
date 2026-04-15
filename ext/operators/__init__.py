@@ -10,7 +10,7 @@ from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperat
                                RemoveImagePathOperator)
 from .core_ops import GenerateOperator, PreviewOperator
 from .labeling_ops import (AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
-                           AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator)
+                           AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator, AddEntityOperator, RemoveEntityOperator)
 
 operators = (
 
@@ -35,6 +35,7 @@ operators = (
 
     #
     AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
-                           AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator
+                           AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator,
+    AddEntityOperator, RemoveEntityOperator
 
 )

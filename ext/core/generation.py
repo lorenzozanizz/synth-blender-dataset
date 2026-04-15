@@ -147,6 +147,7 @@ class Executor:
         res_x = int(context.scene.render.resolution_x * res_ratio)
         res_y = int(context.scene.render.resolution_y * res_ratio)
 
+        """
         visible_objs = get_visible_objects_from_camera(context.scene, context.evaluated_depsgraph_get(),
                                                        context.scene.objects['Camera'],
                                       resolution_x=res_x, resolution_y=res_y, compute_convex_hull=True)
@@ -165,7 +166,7 @@ class Executor:
                 x = (coo[0] + 1) * width / 2
                 y = (coo[1] + 1) * height / 2
                 UniqueLogger.quick_log(f"({x}, {y})")
-
+        """
         """
         for name, xyxy in name_bdbox.items():
             x_min, y_min, x_max, y_max = xyxy
