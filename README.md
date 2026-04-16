@@ -6,6 +6,7 @@ A Blender extension for generating synthetic datasets through procedural randomi
 The Generator provides a node-based system for defining randomization pipelines within Blender. Users can specify how objects, materials, and lighting conditions should vary across multiple renders, then automatically output images with corresponding metadata suitable for computer vision training datasets.
 
 ## Features
+![Live Preview](./resources/preview.png)
 
 - **Distribution-Based Randomization**: Define probability distributions for scene parameters using a visual node editor
 - **Pipeline Configuration**: Build randomization pipelines by connecting operations for object transforms, material properties, and lighting
@@ -19,6 +20,8 @@ The Generator provides a node-based system for defining randomization pipelines 
   - Camera parameters and positioning
   - Ground plane and boundary constraints
 - **Export Integration**: Export rendered datasets in formats compatible with computer vision frameworks (YOLO, etc.)
+
+- **Live Preview**: Allows the user to generate previews of the output of the blender directly inside Blender, including boundary boxes, labels and visibility statistics
 
 ## System Requirements
 
