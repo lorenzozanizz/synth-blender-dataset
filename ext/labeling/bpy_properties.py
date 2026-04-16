@@ -54,6 +54,9 @@ class ObjectLabel(PropertyGroup):
         name="Class Name"
     )
 
+    is_entity: BoolProperty(default=False)                      # type: ignore
+
+
 class Entity(PropertyGroup):
 
     # This id is used to refer to this particular entity declaration by operators.

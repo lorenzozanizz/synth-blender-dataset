@@ -33,6 +33,7 @@ class PipeNames(Enum):
     MOVE        = "Move"
     POSITION    = "Position"
     VISIBILITY  = "Visibility"
+    LINE        = "Line"
 
     # Material
     MATERIAL    = "Material"

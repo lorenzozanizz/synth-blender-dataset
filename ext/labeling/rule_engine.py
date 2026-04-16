@@ -1,4 +1,4 @@
-from typing import Union, Any, Iterable, Dict
+from typing import Union, Any, Iterable, Dict, List
 from  .bpy_properties import LabelClass, ObjectLabel, LabelRule
 
 import bpy
@@ -18,7 +18,21 @@ class LabelingEngine:
         """
         self.ctx = context
         self.labels_mappings: Dict[str, LabelClass] = { }  # obj_name -> class_id
+        self.entity_mappings: Dict[str, LabelClass] = { }
 
+    def extract_entity_data(self) -> Dict[str, List[str]]:
+        """
+
+        :return:
+        """
+        entity_data = self.ctx.scene.labeling_data.entities
+
+        ret_data = dict()
+        for ent_declaration in entity_data:
+            name = ent_declaration.entity_name
+            components = [ comp.obj_name for comp in ent_declaration.obj_names ]
+            ret_data[name] = components
+        return ret_data
 
     def create_rule_mappings(self, target_blender_objects: Iterable[Any]) -> None:
         """
@@ -44,10 +58,12 @@ class LabelingEngine:
             if target_class is None:
                 # There is a dangling reference. ignore (and report, maybe?)
                 continue
+            if label.is_entity:
+                self.entity_mappings.update( { name.obj_name: target_class for name in names } )
+            else:
+                self.labels_mappings.update( { name.obj_name: target_class for name in names } )
 
-            self.labels_mappings.update( { name.obj_name: target_class for name in names } )
         # then evaluate rules.
-
         do_use_rules = label_data.use_rules
         if not do_use_rules:
             return
@@ -139,7 +155,7 @@ class LabelingEngine:
         else: return None
         return relevant_data
 
-    def get_entity(self, obj: Union[str, Any]) -> Union[None, LabelClass]:
+    def map_obj(self, obj: Union[str, Any]) -> Union[None, LabelClass]:
         """
 
         :param obj:
@@ -151,6 +167,9 @@ class LabelingEngine:
         if name in self.labels_mappings:
             return self.labels_mappings[name]
         return None
+
+    def map_entity(self, entity_name: str) -> Union[None, LabelClass]:
+        return self.entity_mappings.get(entity_name)
 
     def get_mapping(self) -> Dict[str, LabelClass]:
         return self.labels_mappings

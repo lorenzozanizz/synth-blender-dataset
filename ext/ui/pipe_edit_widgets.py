@@ -469,6 +469,7 @@ class SimplifiedDistributionSelector(EditorWidget):
         d_e.GAUSSIAN.name: ['mean', 'std'],
         d_e.MULTIVARIATE_GAUSSIAN.name: ['mean_vec', 'cov_matrix'],
         d_e.MULTIVARIATE_ISOTROPIC_GAUSSIAN.name: ['mean_vec', 'variance'],
+        d_e.CATEGORICAL_UNIFORM.name: ['n']
     }
 
     _vectors = frozenset({"mean_vec", "min_vec", "max_vec"})

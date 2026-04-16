@@ -2,8 +2,8 @@ from .compiled_pipeline import ExecutablePipeline
 from .generation import NoViewportUpdate
 from ..labeling.rule_engine import LabelingEngine
 
+from ..utils.logger import UniqueLogger
 from ..labeling.generator import BoundingBoxExtractor
-from ..labeling.raytracing import get_visible_objects_from_camera, estimate_visibility_3d
 from ..labeling.conversions import convert_camera_centered_to_absolute_pixels_y_inverted
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -50,6 +50,7 @@ class PreviewGenerator:
         self.estimated_visibility: Dict[Any, float] = dict()
 
         self.bbox_extractor = BoundingBoxExtractor(context=self.ctx)
+        self.engine: LabelingEngine = LabelingEngine(self.ctx)
 
 
     def compile_contexts(self) -> NestedPipelineContext:
@@ -82,8 +83,11 @@ class PreviewGenerator:
                 else:
                     self.used_camera = default_camera
 
+                    # Extract entity data:
+                    entity_data = self.engine.extract_entity_data()
                     # Compute the bounding boxes from the scene using the given camera and ray tracing
-                    self.bbox_extractor.extract(self.used_camera, ray_casting_ratio=0.1, estimate_visibility=True)
+                    self.bbox_extractor.extract(self.used_camera, ray_casting_ratio=0.1,
+                                                entity_data=entity_data, estimate_visibility=True)
                     self.timings['labeling'] = self.bbox_extractor.get_labeling_time()
 
                     self.estimated_visibility = self.bbox_extractor.get_estimated_visibility()
@@ -105,6 +109,10 @@ class PreviewGenerator:
         # Opens the F12 render window and opens the newly temp rendered file. this file is later
         # opened and modified to draw over boxes, texts, etc...
         bpy.ops.render.opengl('INVOKE_DEFAULT')
+        if img := bpy.data.images.get(self.path):
+            bpy.data.images.remove(img)
+        elif img := bpy.data.images.get(self._preview_name):
+            bpy.data.images.remove(img)
         bpy.ops.image.open(filepath=self.path)
 
     def display_and_render_preview(self,
@@ -138,15 +146,14 @@ class PreviewGenerator:
         if not self.bbox_extractor.get_bbox_objects():
             return
 
-        engine: LabelingEngine = LabelingEngine(self.ctx)
-        engine.create_rule_mappings(self.bbox_extractor.get_visible_objects())
+        self.engine.create_rule_mappings(self.bbox_extractor.get_visible_objects())
 
         width = int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
         height = int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
 
         for obj, xyxy in self.bbox_extractor.get_bbox_objects().items():
 
-            match_class = engine.get_entity(obj)
+            match_class = self.engine.map_obj(obj)
             # Only classified objects have a bounding box and label info
             if not match_class:
                 continue
@@ -160,9 +167,10 @@ class PreviewGenerator:
 
         if show_entity:
 
-            for entity, xyxy in self.bbox_extractor.get_bbox_entities():
+            UniqueLogger.quick_log("ENTITIES" + self.bbox_extractor.get_bbox_entities().__str__())
+            for entity, xyxy in self.bbox_extractor.get_bbox_entities().items():
 
-                match_class = engine.get_entity(entity)
+                match_class = self.engine.map_entity(entity)
                 # Only classified objects have a bounding box and label info
                 if not match_class:
                     continue

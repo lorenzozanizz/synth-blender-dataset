@@ -8,16 +8,12 @@ class LabelGenerator:
         self.format_type = format_type
         self.formatter = LabelGenerator._get_formatter(format_type)
 
-    def generate_labels(self, visible_objects, class_engine, bbox_extractor,
-                        camera, context, render, output_dir):
+    def generate_labels(self, visible_objects, class_engine, bbox_extractor, output_dir):
         """
 
         :param visible_objects:
         :param class_engine:
         :param bbox_extractor:
-        :param camera:
-        :param context:
-        :param render:
         :param output_dir:
         :return:
         """

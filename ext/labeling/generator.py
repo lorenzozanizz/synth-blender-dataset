@@ -63,14 +63,22 @@ class BoundingBoxExtractor:
             # The operation of joining the clouds before computing the bboxes and computing the total
             # box is equivalent mathematically!
             visible_named_objects = {obj.name: (obj, bbox) for obj, bbox in self.visible_objects.items()}
-            for entity_name, components in entity_data.items():
+            UniqueLogger.quick_log("visible_named_objects " + visible_named_objects.__str__())
 
-                visible_components = (v for k in components if (v := visible_named_objects.get(k)) is not None)
+            for entity_name, components in entity_data.items():
+                UniqueLogger.quick_log(f"{entity_name} visible components" + components.__str__())
+
+                visible_components = [k for k in components if visible_named_objects.get(k) is not None]
+                UniqueLogger.quick_log("visible_components " + visible_components.__str__())
                 # If no subcomponent is visible, leave early.
                 if not visible_components:
                     continue
-                bboxes = (self.visible_objects[name] for name in visible_components)
+                bboxes = [visible_named_objects[name][1] for name in visible_components]
+                UniqueLogger.quick_log("bboxes" + bboxes.__str__())
+                if not bboxes:
+                    continue
                 total_visible_bbox = union_bounding_boxes(bboxes)
+                UniqueLogger.quick_log("total_visible_bbox" + total_visible_bbox.__str__())
                 # Note: we are not deleting sub objects, the user may want to differentiate them! e.g. hands in a body
                 self.visible_entities[entity_name] = total_visible_bbox
 
@@ -79,9 +87,15 @@ class BoundingBoxExtractor:
 
                 if estimate_visibility:
                     # We are only using visible objects (there may be more in the entity declaration)
-                    camera_space_sub_boxes = compute_camera_space_boxes(visible_components,
+                    UniqueLogger.quick_log("OBJECts" + [visible_named_objects[name][0] for name in visible_components].__str__())
+
+                    camera_space_sub_boxes = compute_camera_space_boxes(
+                        (visible_named_objects[name][0] for name in visible_components),
                          camera, deps, self.ctx, self.ctx.scene.render)
-                    total_camera_bbox = union_bounding_boxes(camera_space_sub_boxes)
+                    UniqueLogger.quick_log("camera_space_sub_boxes" + camera_space_sub_boxes.__str__())
+
+                    total_camera_bbox = union_bounding_boxes(camera_space_sub_boxes.values())
+                    UniqueLogger.quick_log("total_camera_bbox" + total_camera_bbox.__str__())
                     self.estimated_visibility[entity_name] = compute_area_ratio(total_visible_bbox, total_camera_bbox)
 
 

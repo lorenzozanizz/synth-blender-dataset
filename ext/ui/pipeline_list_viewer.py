@@ -27,7 +27,8 @@ pipe_to_ico_mapping = {
     PipeNames.NODE_PROP: "CURSOR",
 
     PipeNames.INTENSITY: "FORCE_TURBULENCE",
-
+    PipeNames.LINE: "IPO_BACK",
+    PipeNames.BASE_COLOR: "COLOR"
 }
 
 class RegistrationPanel(Panel):
@@ -116,7 +117,6 @@ class RegistrationPanel(Panel):
 
         # === SAVE SECTION ===
 
-        layout.operator("object.randomizer_node_selector", text="Pick node", icon="LINE_DATA")
         scene = context.scene
 
         main_row = layout.row(align=True)
@@ -276,7 +276,8 @@ class AddObjectCategoryPipeMenu(Menu):
     def draw(self, context):
         layout = self.layout
         for name in (
-            PipeNames.ROTATION, PipeNames.MOVE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY
+            PipeNames.ROTATION, PipeNames.MOVE, PipeNames.POSITION, PipeNames.SCALE, PipeNames.VISIBILITY,
+            PipeNames.LINE
         ):
             layout.operator(Labels.ADD_PIPE.value, text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value
@@ -299,7 +300,8 @@ class AddMaterialCategoryPipeMenu(Menu):
     def draw(self, context):
         layout = self.layout
         for name in (
-            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.METALLIC, PipeNames.ROUGHNESS, PipeNames.INTENSITY, PipeNames.NODE_PROP
+            PipeNames.MATERIAL, PipeNames.TEXTURE, PipeNames.METALLIC, PipeNames.ROUGHNESS,
+            PipeNames.INTENSITY, PipeNames.NODE_PROP, PipeNames.BASE_COLOR
         ):
             layout.operator(Labels.ADD_PIPE.value, text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value

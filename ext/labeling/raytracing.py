@@ -167,16 +167,27 @@ def compute_area_ratio(xyxy1, xyxy2):
     :param xyxy2:
     :return:
     """
-    area_1 = compute_bbox_area(xyxy2)
-    area_2 = compute_bbox_area(xyxy1)
+    area_1 = compute_bbox_area(xyxy1)
+    area_2 = compute_bbox_area(xyxy2)
+    if abs(area_2) < 1e-4:
+        return 0.0
     return area_1 / area_2
 
 
 def union_bounding_boxes(bounding_boxes: Iterable[tuple[float, float, float, float]]) -> tuple[float, float, float, float]:
-    pass
+    """
 
+    :param bounding_boxes:
+    :return:
+    """
+    min_x = float(min(bb[0] for bb in bounding_boxes))
+    max_x = float(max(bb[2] for bb in bounding_boxes))
+    min_y = float(min(bb[1] for bb in bounding_boxes))
+    max_y = float(max(bb[3] for bb in bounding_boxes))
 
-def compute_object_camera_space_projected_bbox(obj, depsgraph, camera, context, render):
+    return min_x, min_y, max_x, max_y
+
+def compute_object_camera_space_projected_bbox(obj, depsgraph, camera, context, render) -> tuple[float, float, float, float]:
     """
 
     :param depsgraph:
@@ -209,8 +220,6 @@ def compute_bbox_area(bbox):
     """Compute area from (x_min, y_min, x_max, y_max)"""
     x_min, y_min, x_max, y_max = bbox
     return abs(x_max - x_min) * abs(y_max - y_min)
-
-    return None
 
 
 def project_3d_point(camera: bpy.types.Object,

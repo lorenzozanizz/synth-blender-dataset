@@ -215,21 +215,49 @@ class RandomizeMoveOperation(PipelineOperation):
     def get_global_context(self):
         return RandomizePositionOperation.PositionContext(self.targets)
 
-    def compile(self,  config: dict):
-        pass
+    def compile(self, config: dict):
+        self.targets = config[wsk.OBJECT.value][wsk.OBJECT_NAMES.value]
+        # The distribution will be compiled ( a bernoulli )
+        self.distribution = SamplerCompiler.compile(config[wsk.NODE_DISTRIBUTION.value], dim=1)
 
     def execute(self, context):
-        pass
+        # One dimensional result, a bernoulli
+
+        result = self.distribution.sample()[0]
+        for item in self.targets:
+            obj = bpy.data.objects[item]
 
 
 @OperationRegistry.register(PipeNames.ROTATION.value)
-class RandomizeRotationOperation(PipelineOperation):
-
-    def compile(self,  config: dict):
-        pass
+class RandomizeRotationOperation(NumericRandomOperation):
 
     def execute(self, context):
-        pass
+        result = self.distribution.sample()
+        for item in self.targets:
+            obj = bpy.data.objects[item]
+            if self.offset_mode:
+                self.axis.increment(obj.rotation_euler, result)
+            else:
+                self.axis.assign(obj.rotation_euler, result)
+
+    class RotationContext(ContextManager):
+
+        def __init__(self, items):
+            self.items = items
+            self.rotations = []
+
+        def __enter__(self):
+            # Clear to avoid polluting and damaging the values
+            self.rotations.clear()
+            for item in self.items:
+                self.rotations.append(tuple(bpy.data.objects[item].rotation_euler))
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            for item, rot in zip(self.items, self.rotations):
+                bpy.data.objects[item].rotation_euler  = rot
+
+    def get_context(self):
+        return RandomizeRotationOperation.RotationContext(self.targets)
 
 
 @OperationRegistry.register(PipeNames.VISIBILITY.value)

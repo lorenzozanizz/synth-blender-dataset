@@ -173,6 +173,13 @@ class ImageTextureTargeterValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
+        """
+
+        :param partial_config:
+        :return:
+        """
+
+        # Ensure that all specified paths exist and are properly read accessible.
         pass
 
 
@@ -211,17 +218,21 @@ class SimplifiedDistributionSelectorValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
-
-        return True
-
+        """ Pretty much any distribution is correct by design, as the numeric attributes
+        have boundaries which prevent mathematically illegal values. """
+        dis_name = partial_config[wsk.SIMPLE_PRESET_NAME.value]
+        if not dis_name or dis_name.lower() == "none":
+            return False
+        else:
+            return True
 
 #
 class PositionListSelectorValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
-        pass
-
+        positions = partial_config[wsk.POSITION_LIST.value]
+        return len(positions) != 0
 
 #
 class MaterialSelectorValidator(WidgetValidator):
@@ -247,7 +258,6 @@ class MaterialSelectorValidator(WidgetValidator):
             if not tree:
                 return False
         return True
-
 
 
 #

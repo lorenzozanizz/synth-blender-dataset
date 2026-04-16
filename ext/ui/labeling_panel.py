@@ -35,10 +35,19 @@ class ObjectLabelsUIList(UIList):
         text_label = str([n_prop.obj_name for n_prop in item.obj_names]) \
              if len(item.obj_names) != 0 else "None"
 
-        row.label(text=text_label, icon='OBJECT_DATA')
+        ico_name = 'OBJECT_DATA' if not item.is_entity else 'GHOST_DISABLED'
+
+
+        row.label(text=text_label, icon=ico_name)
         row.operator(Labels.CAPTURE_OBJECTS_LABEL.value, icon="EYEDROPPER", text="").target_rule_obj_id = (
             item.assignment_id)
-
+        # Ensure that the entities are enabled
+        use_entities = scene.labeling_data.use_entities
+        if use_entities:
+            # Add the entity selection operator
+            row.operator(Labels.SELECT_ENTITY_LABEL.value, text="", icon="GHOST_DISABLED").target_rule_obj_id = (
+                item.assignment_id
+            )
         row.separator()
         row.prop(item, 'class_id', emboss=False, text="")
         if cls:
@@ -49,7 +58,21 @@ class ObjectLabelsUIList(UIList):
 class NamedEntitiesUIList(UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        scene = context.scene
+        row = layout.row(align=True)
+
+        text_label = str([n_prop.obj_name for n_prop in item.obj_names]) \
+             if len(item.obj_names) != 0 else "None"
+
+        row.label(text=text_label, icon='OBJECT_DATA')
+        row.operator(Labels.CAPTURE_OBJECTS_ENTITY.value, icon="EYEDROPPER", text="").target_entity_id = (
+            item.entity_id
+        )
+
+        row.separator()
+        row.prop(item, 'entity_name', emboss=False, text="")
+        sub = row.column(align=True)
+        sub.scale_x = 0.4
+        sub.label(text=f"({item.entity_id})")
 
 class LabelRulesUIList(UIList):
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
@@ -131,7 +154,7 @@ class LabelingPanel(Panel):
             # Show the entity creation UI list.
 
             box = layout.box()
-            box.label(text="Named Entities Labels", icon='GHOST_ENABLED')
+            box.label(text="Named Entities", icon='GHOST_ENABLED')
             row = box.row()
             row.template_list(
                 NamedEntitiesUIList.__name__,

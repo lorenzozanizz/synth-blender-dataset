@@ -110,6 +110,8 @@ class Labels(Enum):
     # ( Capture the currently selected objects to be applied to the selected label assignment )
     CAPTURE_OBJECTS_LABEL   = "randomizer.capture_objects_label"
 
+    CAPTURE_OBJECTS_ENTITY  = "randomizer.capture_objects_entity"
+
     SELECT_ENTITY_LABEL     = "randomizer.select_entity_label"
     # ( Refresh the names assigned to labels in the pipeline, highlighting dead objects )
     REFRESH_LABEL_SETTINGS  = "randomizer.refresh_label_settings"

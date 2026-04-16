@@ -125,9 +125,6 @@ class PresetSampler(CompiledSampler):
     def _sample_multivariate_uniform(params: Dict[str, Any], dim: int):
         max_vect = params['max_vec']
         min_vect = params['min_vec']
-        UniqueLogger.quick_log(max_vect.__str__())
-        UniqueLogger.quick_log(dim)
-
         return [random.uniform(min_vect[i], max_vect[i]) for i in range(dim)]
 
     @staticmethod
@@ -189,11 +186,11 @@ class PresetSampler(CompiledSampler):
         :return:
         """
         self.type = Distribution[self.config['preset']]
-        self.discretize = self.config["do_discretize"]
-        if self.config["do_clamp"]:
+        self.discretize = self.config.get("do_discretize")
+        if self.config.get("do_clamp"):
             self.clamp = tuple(self.config["clamping_factors"])
 
-        self.params = self.config["parameters"]
+        self.params = self.config.get("parameters")
 
 
     @property
