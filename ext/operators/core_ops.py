@@ -1,5 +1,5 @@
 from .names import Labels
-from ..core.generation import ExecutionParameters, Executor
+from ..core.generation import GenerationConfig, Executor
 from ..core.preview import PreviewGenerator
 
 import traceback
@@ -12,7 +12,7 @@ class GenerateOperator(Operator):
     bl_idname = Labels.GENERATE.value
     bl_label = "Generate Dataset"
 
-    def validate_data_extract(self, context) -> Union[None, ExecutionParameters]:
+    def validate_data_extract(self, context) -> Union[None, GenerationConfig]:
         """
 
         :param context:
@@ -32,7 +32,7 @@ class GenerateOperator(Operator):
             self.report({'ERROR'}, 'Cannot generate: invalid destination path')
             return None
 
-        return ExecutionParameters(
+        return GenerationConfig(
             scene.randomizer_seed,
             amount,
             scene.randomizer_append_checkbox,
@@ -80,7 +80,7 @@ class PreviewOperator(Operator):
     bl_idname = Labels.PREVIEW_SAMPLE.value
     bl_label = "Generate Dataset"
 
-    def validate_data_extract(self, context) -> Union[None, ExecutionParameters]:
+    def validate_data_extract(self, context) -> Union[None, GenerationConfig]:
         """
 
         :param context:
@@ -88,7 +88,7 @@ class PreviewOperator(Operator):
         """
         scene = context.scene
         # No checks are required
-        return ExecutionParameters(
+        return GenerationConfig(
             scene.randomizer_seed,      scene.randomizer_amount,
             scene.randomizer_save_prefix,   scene.randomizer_label_format,
             scene.randomizer_append_checkbox,   scene.randomizer_destination_path,

@@ -1,11 +1,9 @@
-from .compiled_pipeline import ExecutablePipeline
+from .executable_pipeline import ExecutablePipeline
 
 from ..labeling import LabelingFormats
-from ..labeling.generator import LabelingManager
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
-from ..labeling.raytracing import get_visible_objects_from_camera
-from ..utils.logger import UniqueLogger
+
 
 import random
 import re
@@ -17,10 +15,11 @@ from os.path import isdir, isfile, join
 import bpy
 
 @dataclass
-class ExecutionParameters:
+class GenerationConfig:
     """
 
     """
+
     seed: int
     amount: int
 
@@ -37,11 +36,13 @@ class Executor:
     def __init__(self, context, data: PipelineData, parameters, reporter = None):
         self.data = data
         self.ctx = context
-        self.parameters = parameters
+        self.parameters: GenerationConfig = parameters
         self.reporter = reporter
 
         self.pipeline = ExecutablePipeline(self.ctx, data, reporter)
-        self.label_manager = None
+        self.io_manager = None
+
+        self.classifier = None
 
     def compile_contexts(self) -> NestedPipelineContext:
         """
@@ -60,13 +61,8 @@ class Executor:
         path_root   = Path(self.parameters.save_path)
         amount      = self.parameters.amount
         seed        = self.parameters.seed
-        labeling_f  = LabelingFormats.from_string(self.parameters.format)
         do_labeling = self.parameters.do_labeling
-
-        if do_labeling:
-            self.label_manager = LabelingManager(folder=path_root, format=labeling_f)
-            self.label_manager.create_label_directory()
-
+        labeling_f  = self.parameters.format
         # Seed the random library with the user requested seed.
         random.seed(seed)
 
@@ -99,11 +95,26 @@ class Executor:
                             # Execute pipeline
                             self.pipeline.execute()
 
+                            # Extract classifications
+                            classifications = self.classifier.classify_visible_objects(
+                                self.pipeline.get_visible_objects()
+                            )
+
+                            # Run generation pipeline (handles extraction + formatting)
+                            self.label_data = self.generation_pipeline.execute(
+                                visible_objects=self.pipeline.get_visible_objects(),
+                                classifications=classifications,
+                                camera=camera,
+                                depsgraph=self.ctx.evaluated_depsgraph_get(),
+                                render_settings=self.ctx.scene.render
+                            )
+
+                            write_path = self.io_manager.get_path_for(shot_idx)
+
                             # Renders
                             write_path = join(path_root, f"{prefix}_{shot_idx}.png")
                             scene.render.filepath = write_path
                             bpy.ops.render.render(write_still=True)
-                            self.occlusion()
 
                         # ^ Frame context exits here—restores frame-level state, required for
                         # pipes that require per-frame restoring (e.g. those that act as offset
@@ -134,50 +145,6 @@ class Executor:
         last_index = max(indices) if indices else -1
         next_index = last_index + 1
         return next_index
-
-
-    def occlusion(self):
-
-        context = bpy.context
-        scene = context.scene
-
-        # sampling resolution of raytracing from the camera
-        # usually scene objects are not pixel-sized, so you can get away with fewer pixels
-        res_ratio = 0.1
-        res_x = int(context.scene.render.resolution_x * res_ratio)
-        res_y = int(context.scene.render.resolution_y * res_ratio)
-
-        """
-        visible_objs = get_visible_objects_from_camera(context.scene, context.evaluated_depsgraph_get(),
-                                                       context.scene.objects['Camera'],
-                                      resolution_x=res_x, resolution_y=res_y, compute_convex_hull=True)
-
-        width = int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
-        height = int(scene.render.resolution_y * scene.render.resolution_percentage / 100)
-
-        name_bdbox = {
-            obj.name: hull for obj, hull in visible_objs.items()
-        }
-        UniqueLogger.quick_log("bdd" + name_bdbox.__str__())
-        for name, hull in name_bdbox.items():
-
-            UniqueLogger.quick_log("hu" + hull.__str__())
-            for coo in hull:
-                x = (coo[0] + 1) * width / 2
-                y = (coo[1] + 1) * height / 2
-                UniqueLogger.quick_log(f"({x}, {y})")
-        """
-        """
-        for name, xyxy in name_bdbox.items():
-            x_min, y_min, x_max, y_max = xyxy
-
-            x_min_px = (x_min + 1) * width / 2
-            x_max_px = (x_max + 1) * width / 2
-            y_min_px = (y_max + 1) * height / 2
-            y_max_px = (y_min + 1) * height / 2
-            UniqueLogger.quick_log(f"Pixel bbox before: ({xyxy}) -> {name}")
-            UniqueLogger.quick_log(f"Pixel bbox: ({x_min_px}, {y_min_px}, {x_max_px}, {y_max_px}) -> {name}")
-            """
 
 
 class NoViewportUpdate:

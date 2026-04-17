@@ -1,6 +1,6 @@
-from .compiled_pipeline import ExecutablePipeline
+from .executable_pipeline import ExecutablePipeline
 from .generation import NoViewportUpdate
-from ..labeling.rule_engine import LabelingEngine
+from ..labeling.class_engine import ClassificationEngine
 
 from ..utils.logger import UniqueLogger
 from ..labeling.generator import BoundingBoxExtractor
@@ -12,11 +12,19 @@ from ..utils.timer import TimingContext
 from ..utils.images import (draw_bounding_box, draw_bitmap_text, font_size_fit_box_perc,
                             estimate_text_pixel_height)
 
+from dataclasses import dataclass
 from typing import Dict, Any
 import tempfile
 import os
 
 import bpy
+
+@dataclass
+class PreviewConfig:
+
+
+    pass
+
 
 class PreviewGenerator:
     """
@@ -50,7 +58,7 @@ class PreviewGenerator:
         self.estimated_visibility: Dict[Any, float] = dict()
 
         self.bbox_extractor = BoundingBoxExtractor(context=self.ctx)
-        self.engine: LabelingEngine = LabelingEngine(self.ctx)
+        self.engine: ClassificationEngine = ClassificationEngine(self.ctx)
 
 
     def compile_contexts(self) -> NestedPipelineContext:
@@ -146,7 +154,7 @@ class PreviewGenerator:
         if not self.bbox_extractor.get_bbox_objects():
             return
 
-        self.engine.create_rule_mappings(self.bbox_extractor.get_visible_objects())
+        self.engine.classify_visible_objects(self.bbox_extractor.get_visible_objects())
 
         width = int(scene.render.resolution_x * scene.render.resolution_percentage / 100)
         height = int(scene.render.resolution_y * scene.render.resolution_percentage / 100)

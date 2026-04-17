@@ -6,9 +6,6 @@ https://github.com/DLR-RM/BlenderProc/blob/main/blenderproc/python/camera/Camera
 https://blender.stackexchange.com/questions/269014/list-all-occluded-objects-from-camera
 
 """
-from ..utils.logger import UniqueLogger
-from ..utils.images import convex_hull
-
 
 try:
     from numpy import linspace
@@ -59,10 +56,6 @@ def get_visible_objects_from_camera(scene, depsgraph,
             (top_right[0] - top_left[0]) * (bottom_left[1] - top_left[1]) / num_ray)))
 
     # Get iteration range for both the x and y axes, sampled based on the resolution
-    UniqueLogger.quick_log(f"resolution_x: {resolution_x}")
-    UniqueLogger.quick_log(f"resolution_y: {resolution_y}")
-
-    UniqueLogger.quick_log(f"{top_left[0]}- {top_right[0]}, {top_left[1]}-{bottom_left[1]}, ")
     x_range = linspace(top_left[0], top_right[0], resolution_x)
     y_range = linspace(top_left[1], bottom_left[1], resolution_y)
 
@@ -132,15 +125,8 @@ def estimate_visibility_3d(obj, camera, depsgraph, context, render, visible_bbox
     camera_bbox = compute_object_camera_space_projected_bbox(obj, depsgraph, camera, context, render)
 
     bbox_3d_area = compute_bbox_area(camera_bbox)
-    UniqueLogger.quick_log("3d before" + camera_bbox.__str__())
-    UniqueLogger.quick_log("3d projected" + bbox_3d_area.__str__())
-
     # Compute the actually visible area
     bbox_visible_area = float(compute_bbox_area(visible_bbox))
-
-    UniqueLogger.quick_log(f"3d visible{bbox_visible_area}")
-    UniqueLogger.quick_log(f"3d projected{bbox_3d_area}")
-    UniqueLogger.quick_log(f" pixls hee {visible_bbox}")
 
     occlusion = bbox_visible_area / bbox_3d_area if bbox_3d_area > 0 else 1.0
     return occlusion

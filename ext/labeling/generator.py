@@ -6,16 +6,6 @@ from .raytracing import (get_visible_objects_from_camera, get_minimal_bounding_b
 from typing import Iterable, Any, Dict, Callable, List, Union
 
 
-class LabelingManager:
-
-    def __init__(self, folder, fmt: str):
-        self.format = fmt
-        self.folder = folder
-
-    def create_label_directory(self) -> None:
-        pass
-
-
 class BoundingBoxExtractor:
     """Encapsulates bbox extraction logic"""
 
@@ -50,7 +40,6 @@ class BoundingBoxExtractor:
             # There are simple objects visibility, not entities.
             if estimate_visibility:
                 for obj, bbox in self.visible_objects.items():
-                    UniqueLogger.quick_log("Examining" + obj.name)
                     self.estimated_visibility[obj] = float(
                         estimate_visibility_3d(obj, camera, deps, self.ctx, self.ctx.scene.render, bbox)
                     )
@@ -63,22 +52,17 @@ class BoundingBoxExtractor:
             # The operation of joining the clouds before computing the bboxes and computing the total
             # box is equivalent mathematically!
             visible_named_objects = {obj.name: (obj, bbox) for obj, bbox in self.visible_objects.items()}
-            UniqueLogger.quick_log("visible_named_objects " + visible_named_objects.__str__())
 
             for entity_name, components in entity_data.items():
-                UniqueLogger.quick_log(f"{entity_name} visible components" + components.__str__())
 
                 visible_components = [k for k in components if visible_named_objects.get(k) is not None]
-                UniqueLogger.quick_log("visible_components " + visible_components.__str__())
                 # If no subcomponent is visible, leave early.
                 if not visible_components:
                     continue
                 bboxes = [visible_named_objects[name][1] for name in visible_components]
-                UniqueLogger.quick_log("bboxes" + bboxes.__str__())
                 if not bboxes:
                     continue
                 total_visible_bbox = union_bounding_boxes(bboxes)
-                UniqueLogger.quick_log("total_visible_bbox" + total_visible_bbox.__str__())
                 # Note: we are not deleting sub objects, the user may want to differentiate them! e.g. hands in a body
                 self.visible_entities[entity_name] = total_visible_bbox
 
@@ -87,17 +71,13 @@ class BoundingBoxExtractor:
 
                 if estimate_visibility:
                     # We are only using visible objects (there may be more in the entity declaration)
-                    UniqueLogger.quick_log("OBJECts" + [visible_named_objects[name][0] for name in visible_components].__str__())
 
                     camera_space_sub_boxes = compute_camera_space_boxes(
                         (visible_named_objects[name][0] for name in visible_components),
                          camera, deps, self.ctx, self.ctx.scene.render)
-                    UniqueLogger.quick_log("camera_space_sub_boxes" + camera_space_sub_boxes.__str__())
 
                     total_camera_bbox = union_bounding_boxes(camera_space_sub_boxes.values())
-                    UniqueLogger.quick_log("total_camera_bbox" + total_camera_bbox.__str__())
                     self.estimated_visibility[entity_name] = compute_area_ratio(total_visible_bbox, total_camera_bbox)
-
 
     def get_estimated_visibility(self) -> Dict[Union[str, Any], float]:
         """ Get the estimated visibility for entities and objects """
@@ -111,12 +91,18 @@ class BoundingBoxExtractor:
         """ Get the visible objects """
         return self.visible_objects.keys()
 
-    def get_bounding_boxes_objects(self, conv_func: Callable = None) -> Iterable[Any]:
+    def map_boxes(self, conv_func: Callable = None) -> Iterable[Any]:
         """ Get the camera centered bounding boxes """
         if not conv_func:
             return self.visible_objects.values()
         else:
             return (conv_func(bbox) for bbox in self.visible_objects.values())
+
+    def get_polygon_objects(self) -> Dict:
+        pass
+
+    def get_polygon_entity(self) -> Dict:
+        pass
 
     def get_bbox_objects(self) -> Dict:
         """ Get the mappings from object to bounding boxes """
@@ -125,3 +111,8 @@ class BoundingBoxExtractor:
     def get_bbox_entities(self) -> Dict:
         """ Get the mappings from object to bounding boxes """
         return self.visible_entities
+
+
+class PolygonExtractor:
+
+    pass

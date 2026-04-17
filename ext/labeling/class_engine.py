@@ -3,10 +3,7 @@ from  .bpy_properties import LabelClass, ObjectLabel, LabelRule
 
 import bpy
 
-from ..utils.logger import UniqueLogger
-
-
-class LabelingEngine:
+class ClassificationEngine:
     """
 
     """
@@ -34,7 +31,7 @@ class LabelingEngine:
             ret_data[name] = components
         return ret_data
 
-    def create_rule_mappings(self, target_blender_objects: Iterable[Any]) -> None:
+    def classify_visible_objects(self, target_blender_objects: Iterable[Any]) -> None:
         """
 
         :param target_blender_objects:
