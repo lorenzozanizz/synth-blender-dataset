@@ -12,7 +12,7 @@ class GenerateOperator(Operator):
     bl_idname = Labels.GENERATE.value
     bl_label = "Generate Dataset"
 
-    def validate_data_extract(self, context) -> Union[None, GenerationConfig]:
+    def validate_extract_gen_config(self, context) -> Union[None, GenerationConfig]:
         """
 
         :param context:
@@ -42,6 +42,9 @@ class GenerateOperator(Operator):
             scene.randomizer_do_labelize
         )
 
+    def validate_extract_label_config(self, context):
+        pass
+
     def execute(self, context):
         """
 
@@ -50,7 +53,7 @@ class GenerateOperator(Operator):
         """
         # Extract the data from the scene, e.g. the properties of the "Generate" panel which
         # include the number of images, the seed and saving options
-        params_or_error = self.validate_data_extract(context)
+        params_or_error = self.validate_extract_gen_config(context)
         if params_or_error is None:
             return { 'CANCELLED'}
 

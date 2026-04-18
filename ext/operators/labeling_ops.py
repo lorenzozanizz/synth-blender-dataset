@@ -123,7 +123,7 @@ class AddEntityOperator(Operator):
         max_prev_id = max_prev_id if max_prev_id else 0
         new_val.entity_id = max_prev_id + 1
 
-        new_val.entity_name = f"Unnamed Entity {new_val.entity_id}"
+        new_val.obj_or_entity_name = f"Unnamed Entity {new_val.entity_id}"
         return { 'FINISHED' }
 
 class SelectEntityOperator(Operator):
@@ -137,7 +137,7 @@ class SelectEntityOperator(Operator):
         name="Entities",
         description="Select an entity to add",
         items= lambda self, ctx: [                          # type: ignore
-            (entity.entity_name, entity.entity_name, "")
+            (entity.obj_or_entity_name, entity.obj_or_entity_name, "")
             for entity in ctx.scene.labeling_data.entities
         ] or [("None", "No Entity defined", "")]
     )

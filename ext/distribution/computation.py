@@ -27,19 +27,21 @@ class Distribution(Enum):
 
     """
 
-    BERNOULLI = "Bernoulli"
-    UNIFORM = "Uniform"
-    BETA = "Beta"
-    GEOMETRIC = "Geometric"
-    BINOMIAL = "Binomial"
-    GAUSSIAN = "Gaussian"
-    CATEGORICAL_UNIFORM = "Categorical Uniform"
+    BERNOULLI                       = "Bernoulli"
+    UNIFORM                         = "Uniform"
+    BETA                            = "Beta"
+    GEOMETRIC                       = "Geometric"
+    BINOMIAL                        = "Binomial"
+    GAUSSIAN                        = "Gaussian"
+    CATEGORICAL_UNIFORM             = "Categorical Uniform"
 
-    MULTIVARIATE_UNIFORM = "Multivariate Uniform"
-    MULTIVARIATE_GAUSSIAN = "Multivariate Gaussian"
+    UNIFORM_SPHERE                  = "Uniform Sphere"
+    UNIFORM_RING                    = "Uniform Ring"
+    MULTIVARIATE_UNIFORM            = "Multivariate Uniform"
+    MULTIVARIATE_GAUSSIAN           = "Multivariate Gaussian"
     MULTIVARIATE_ISOTROPIC_GAUSSIAN = "Multivariate Isotropic Gaussian"
 
-    NONE = "None"
+    NONE                            = "None"
 
 # One dimensional distributions to be used when the datatype to be randomized is scalar
 ONE_D_DISTRIBUTIONS = (

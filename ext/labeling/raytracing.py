@@ -17,11 +17,32 @@ except ImportError:
         return (start + step * i for i in range(num))
 
 from collections import defaultdict
-from math import sqrt, tan
-from mathutils import Vector, Matrix
+from math import sqrt
+from mathutils import Vector
 from typing import Any, Set, Dict, Tuple, List, Union, Iterable
+from dataclasses import dataclass
 
 import bpy
+
+@dataclass
+class Point:
+
+    x: float
+    y: float
+
+
+@dataclass
+class BoundingBox:
+
+    min_x: float
+    min_y: float
+    max_x: float
+    max_y: float
+
+@dataclass
+class PolygonConvexHull:
+
+    vertices: Iterable[Point]
 
 
 def get_visible_objects_from_camera(scene, depsgraph,

@@ -11,7 +11,7 @@ class ClassificationEngine:
     def __init__(self, context):
         """
 
-        :param scene:
+        :param context:
         """
         self.ctx = context
         self.labels_mappings: Dict[str, LabelClass] = { }  # obj_name -> class_id
@@ -26,7 +26,7 @@ class ClassificationEngine:
 
         ret_data = dict()
         for ent_declaration in entity_data:
-            name = ent_declaration.entity_name
+            name = ent_declaration.obj_or_entity_name
             components = [ comp.obj_name for comp in ent_declaration.obj_names ]
             ret_data[name] = components
         return ret_data
@@ -109,6 +109,12 @@ class ClassificationEngine:
 
         return
 
+
+    def ignore_default_class(self) -> bool:
+        pass
+
+    def get_default_class(self) -> Union[None, LabelClass]:
+        pass
 
     @staticmethod
     def _sanitize_direct_mapping(mapping: ObjectLabel) -> bool:

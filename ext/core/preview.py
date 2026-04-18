@@ -3,7 +3,7 @@ from .generation import NoViewportUpdate
 from ..labeling.class_engine import ClassificationEngine
 
 from ..utils.logger import UniqueLogger
-from ..labeling.generator import BoundingBoxExtractor
+from ..labeling.generator import BoundingBoxExtractor2
 from ..labeling.conversions import convert_camera_centered_to_absolute_pixels_y_inverted
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -13,15 +13,21 @@ from ..utils.images import (draw_bounding_box, draw_bitmap_text, font_size_fit_b
                             estimate_text_pixel_height)
 
 from dataclasses import dataclass
-from typing import Dict, Any
+from typing import Dict, Any, Iterable
 import tempfile
 import os
 
 import bpy
 
-@dataclass
-class PreviewConfig:
 
+@dataclass
+class PreviewRenderData:
+
+    pass
+
+
+@dataclass
+class PreviewRenderData:
 
     pass
 
@@ -57,7 +63,7 @@ class PreviewGenerator:
         self.timings: Dict[str, float] = { 'compile': self.pipeline.get_compilation_time() }
         self.estimated_visibility: Dict[Any, float] = dict()
 
-        self.bbox_extractor = BoundingBoxExtractor(context=self.ctx)
+        self.bbox_extractor = BoundingBoxExtractor2(context=self.ctx)
         self.engine: ClassificationEngine = ClassificationEngine(self.ctx)
 
 
@@ -272,3 +278,11 @@ class PreviewGenerator:
         :return:
         """
         num_objects = len(self.visible_objects)
+
+    @staticmethod
+    def make_preview_render_data() -> Iterable[PreviewRenderData]:
+        """
+
+        :return:
+        """
+        pass
