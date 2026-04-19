@@ -1,7 +1,7 @@
 from .executable_pipeline import ExecutablePipeline
 from .orchestrator import LabelingOrchestrator
 from .configurations import LabelExtractionConfig, GenerationConfig, WritingConfig
-from .io import LabelWriter
+from .io import OutputWriter
 
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -26,11 +26,13 @@ class Executor:
         self.reporter = reporter
 
         self.pipeline: ExecutablePipeline = ExecutablePipeline(self.ctx, data, reporter)
-        self.writer = LabelWriter(write_params)
+        self.writer = OutputWriter(write_params)
         self.labeling_orchestrator: LabelingOrchestrator = LabelingOrchestrator(
-            self.ctx, reporter,
+            self.ctx,
             # Parameters which control the folder structure, labeling etc...
             label_params,
+            reporter,
+            # The orchestrator will assign the label serialization strategy to the writer
             writer=self.writer
         )
 
@@ -85,7 +87,7 @@ class Executor:
                                 depsgraph=self.ctx.evaluated_depsgraph_get()
                             )
 
-                            write_path = self.writer.get_image_path()
+                            write_path = self.writer.get_image_write_path()
 
                             # Renders
                             scene.render.filepath = write_path

@@ -18,7 +18,6 @@ class LabelExtractionConfig:
 
     format: str
     write_labels: bool
-    compute_labels: bool = True
 
     ray_casting_ratio: float = 0.1
     estimate_visibility: bool = True
@@ -27,14 +26,12 @@ class LabelExtractionConfig:
 @dataclass
 class WritingConfig:
 
-    folder_struct: str
-    split: str
-
     from_last: bool
     save_path: str
     prefix: str
     folder_structure: Literal["yolo"] = "yolo"
-    extension: str = ".png"
+    image_extension: str = ".png"
+    split: str = "train"
 
 @dataclass
 class PreviewRenderConfig:

@@ -1,5 +1,6 @@
 from .names import Labels
-from ..core.generation import GenerationConfig, Executor
+from ..core.configurations import PreviewRenderConfig, GenerationConfig, WritingConfig, LabelExtractionConfig
+from ..core.generation import Executor
 from ..core.preview import PreviewGenerator
 
 import traceback
@@ -23,6 +24,28 @@ class GenerateOperator(Operator):
         if amount <= 0:
             self.report({'ERROR'}, 'Cannot generate: invalid amount of images')
             return None
+        return GenerationConfig(scene.randomizer_seed, amount)
+
+    def validate_extract_label_config(self, context) -> Union[None, LabelExtractionConfig]:
+        """
+
+        :param context:
+        :return:
+        """
+        scene = context.scene
+        return LabelExtractionConfig(
+            scene.randomizer_label_format,
+            scene.randomizer_do_labelize
+        )
+
+    def validate_io_write_config(self, context) -> Union[None, WritingConfig]:
+        """
+
+        :param context:
+        :return:
+        """
+
+        scene = context.scene
         save_prefix = scene.randomizer_save_prefix
         if not save_prefix:
             self.report({'ERROR'}, 'Cannot generate: invalid save prefix')
@@ -31,19 +54,9 @@ class GenerateOperator(Operator):
         if not dest_path:
             self.report({'ERROR'}, 'Cannot generate: invalid destination path')
             return None
-
-        return GenerationConfig(
-            scene.randomizer_seed,
-            amount,
-            scene.randomizer_append_checkbox,
-            dest_path,
-            save_prefix,
-            scene.randomizer_label_format,
-            scene.randomizer_do_labelize
-        )
-
-    def validate_extract_label_config(self, context):
-        pass
+        from_last = scene.randomizer_append_checkbox
+        out_format = scene.render.image_settings.file_format
+        return WritingConfig(from_last, dest_path, save_prefix, image_extension=out_format)
 
     def execute(self, context):
         """
@@ -53,13 +66,22 @@ class GenerateOperator(Operator):
         """
         # Extract the data from the scene, e.g. the properties of the "Generate" panel which
         # include the number of images, the seed and saving options
-        params_or_error = self.validate_extract_gen_config(context)
-        if params_or_error is None:
-            return { 'CANCELLED'}
+        gen_config = self.validate_extract_gen_config(context)
+        label_config = self.validate_extract_label_config(context)
+        io_write_config = self.validate_io_write_config(context)
+
+        if gen_config is None or label_config is None or io_write_config is None:
+            return { 'CANCELLED' }
 
         pipeline = context.scene.pipeline_data
         # Deserialized all pipes only ones, preparing for thousands of generations poissbly.
-        executor = Executor(context, pipeline, params_or_error, reporter=self)
+        executor = Executor(
+            context, pipeline,
+            gen_params=gen_config,
+            label_params=label_config,
+            write_params=io_write_config,
+            reporter=self
+        )
 
         try:
             # Entrust the deserialization and execution of the pipeline to the executor object. Any exception
@@ -83,20 +105,14 @@ class PreviewOperator(Operator):
     bl_idname = Labels.PREVIEW_SAMPLE.value
     bl_label = "Generate Dataset"
 
-    def validate_data_extract(self, context) -> Union[None, GenerationConfig]:
+    def validate_data_extract(self, context) -> Union[None, PreviewRenderConfig]:
         """
 
         :param context:
         :return:
         """
-        scene = context.scene
         # No checks are required
-        return GenerationConfig(
-            scene.randomizer_seed,      scene.randomizer_amount,
-            scene.randomizer_save_prefix,   scene.randomizer_label_format,
-            scene.randomizer_append_checkbox,   scene.randomizer_destination_path,
-            scene.randomizer_do_labelize
-        )
+        return PreviewRenderConfig()
 
     def execute(self, context):
         """

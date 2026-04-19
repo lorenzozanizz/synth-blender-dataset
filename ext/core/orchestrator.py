@@ -1,7 +1,7 @@
 from .configurations import LabelExtractionConfig
-from .io import LabelWriter
+from .io import OutputWriter, SerializationStrategy, YoloFormatter
 
-from ..labeling.serialization import LabelData, Formatter, YoloFormatter
+from ..labeling.generator import LabelData
 from ..labeling.class_engine import ClassificationEngine
 from ..labeling.generator import Extractor, BoundingBoxExtractor, PolygonExtractor
 from ..labeling.raytracing import get_visible_objects_from_camera
@@ -11,7 +11,7 @@ from typing import Union, Dict, Tuple, Collection, Any
 
 class LabelingOrchestrator:
 
-    def __init__(self, context, config: LabelExtractionConfig, reporter, writer: LabelWriter):
+    def __init__(self, context, config: LabelExtractionConfig, reporter, writer: OutputWriter):
         self.config = config
         self.ctx = context
 
@@ -23,9 +23,10 @@ class LabelingOrchestrator:
 
         # Explicitly instantiate the label formatter and extractor based on the configuration
         self.extractor: Extractor = self._create_extractor()
-        self.formatter: Formatter = self._create_formatter()
+        self.formatter: SerializationStrategy = self._create_formatter()
 
-        self.writer = writer
+        self.writer: OutputWriter = writer
+        self.writer.set_strategy(self.formatter)
 
         self.label_data = None
 
@@ -55,7 +56,7 @@ class LabelingOrchestrator:
 
         # Compute the bbox/polygon/etc from the scene using the given camera and ray tracing
         self.classifier.classify_visible_objects(
-            self.visible_objects.values()
+            self.visible_objects.keys()
         )
 
         label_data = self.extractor.extract(
@@ -72,7 +73,7 @@ class LabelingOrchestrator:
 
         return
 
-    def _create_formatter(self) -> Formatter:
+    def _create_formatter(self) -> SerializationStrategy:
         return YoloFormatter()
 
     def _create_extractor(self):

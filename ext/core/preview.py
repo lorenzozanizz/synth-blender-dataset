@@ -1,5 +1,6 @@
 from .executable_pipeline import ExecutablePipeline
 from .generation import NoViewportUpdate
+from .configurations import PreviewRenderConfig
 from ..labeling.class_engine import ClassificationEngine
 
 from ..utils.logger import UniqueLogger
@@ -26,19 +27,13 @@ class PreviewRenderData:
     pass
 
 
-@dataclass
-class PreviewRenderData:
-
-    pass
-
-
 class PreviewGenerator:
     """
 
     """
     _preview_name = "randomizer_preview.png"
 
-    def __init__(self, context, data: PipelineData, parameters, reporter=None):
+    def __init__(self, context, data: PipelineData, parameters: PreviewRenderConfig, reporter=None):
         """
 
         :param context:

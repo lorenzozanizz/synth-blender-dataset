@@ -1,13 +1,16 @@
 from .configurations import WritingConfig
 
-from typing import Union, Literal
+from ..labeling.generator import LabelData
+
+from typing import Union, Collection, Tuple
 from pathlib import Path
 from os.path import join, dirname, isdir, isfile
 from os import makedirs, listdir
 from enum import Enum
+from abc import ABCMeta, abstractmethod
+
 
 import re
-
 
 class FolderStructure(Enum):
     """
@@ -19,64 +22,107 @@ class FolderStructure(Enum):
     KITTI_3D = "kitti_3d"           # image_2/, label_2/, calib/
 
 
-class LabelWriter:
+class SerializationStrategy(metaclass=ABCMeta):
+    """ Abstract base for output formats """
+
+    @abstractmethod
+    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+        """
+
+        :param label_data:
+        :return:
+        """
+        pass
+
+    @abstractmethod
+    def get_subdir(self, ext: str) -> str:
+        """
+
+        :param ext:
+        :return:
+        """
+        pass
+
+class YoloFormatter(SerializationStrategy):
 
     def __init__(self, write_config: WritingConfig):
-        self.config = write_config
+        pass
 
-        self.shot_idx: int = 0
+    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+        return ('.txt', "Jewish boy!"),
 
-    def get_write_path(self, filename: str) -> str:
+    def get_subdir(self, ext: str) -> str:
+        if 'txt' in ext:
+            return 'labels'
+        elif 'image' in ext:
+            return 'images'
+        return ""
 
-        """Map filename to actual path based on folder structure"""
-        subdir = ""
-        fs = self.config.folder_struct
-        # Note: if folder structure is YOLO, subdir remains "
-        if fs == FolderStructure.YOLO_SPLIT:
-            if filename.endswith('.txt'):
-                subdir = f"labels/{self.config.split}"
-            else:
-                subdir = f"images/{self.config.split}"
-        elif fs == FolderStructure.COCO_FLAT:
-            subdir = ""
-        elif fs == FolderStructure.KITTI_3D:
-            if "calib" in filename:
-                subdir = "calib"
-            elif "label" in filename:
-                subdir = "label_2"
-            else:
-                subdir = "image_2"
+class YoloSplitFormatter(SerializationStrategy):
 
+    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+        pass
+
+    def get_subdir(self, ext: str) -> str:
+        if 'image' in ext:
+            pass
+        else:
+            subdir = f"images/{self.config.split}"
+
+
+class CocoFormatter(SerializationStrategy):
+
+    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+        pass
+
+    def get_subdir(self, ext: str) -> str:
+        pass
+
+
+class OutputWriter:
+
+    def __init__(self, config: WritingConfig, strategy: SerializationStrategy = None):
+        self.config = config
+        self.strategy: SerializationStrategy = strategy
+        self.shot_idx = 0
+
+    def set_strategy(self, strategy: SerializationStrategy):
+        self.strategy = strategy
+
+    def set_shot_index(self, idx: int) -> None:
+        self.shot_idx = idx
+
+    def get_image_write_path(self) -> str:
+        """Get full path where image will be saved"""
+        filename = self._get_base_filename()
+        subdir = self.strategy.get_subdir("image")
         return join(self.config.save_path, subdir, filename)
 
     def get_image_folder(self) -> str:
-
-        """Map filename to actual path based on folder structure"""
-        subdir = ""
-        fs = self.config.folder_struct
-        if fs == FolderStructure.YOLO_SPLIT:
-                subdir = f"images/{self.config.split}"
-        elif fs == FolderStructure.COCO_FLAT:
-            subdir = ""
-        elif fs == FolderStructure.KITTI_3D:
-                subdir = "image_2"
+        """Get folder where images are stored"""
+        subdir = self.strategy.get_subdir("image")
         return join(self.config.save_path, subdir)
 
+    def write_label(self, files: Collection[Tuple[str, str]]) -> None:
+        """Format and write all label files for current shot"""
+        if not self.strategy:
+            return
 
-    def set_shot_index(self, shot_idx):
-        self.shot_idx = shot_idx
+        base_filename = self._get_base_filename()
 
-    def write_label(self, files):
+        for (extension, content) in files:
+            filename = f"{base_filename}{extension}"
+            subdir = self.strategy.get_subdir(extension)
+            path = join(self.config.save_path, subdir, filename)
 
-        for filename, content in files.items():
-            # Determine output path based on folder structure
-            path = self.get_write_path(filename)
             makedirs(dirname(path), exist_ok=True)
             with open(path, 'w') as f:
                 f.write(content)
 
-    def get_image_path(self) -> Union[str, Path]:
-        return self.get_write_path(f"{self.config.prefix}_{self.shot_idx}{self.config.extension}")
+    def _get_base_filename(self) -> str:
+        """Build base filename from prefix and shot index"""
+        return f"{self.config.prefix}_{self.shot_idx}"
+
 
     def compute_starting_index(self):
         prefix = self.config.prefix
@@ -88,8 +134,12 @@ class LabelWriter:
 
     @staticmethod
     def _analyze_folder_last_index(path_root: Union[str, Path], prefix) -> int:
-
-        files = [f for f in listdir(path_root) if isfile(join(path_root, f))]
+        # If the path does not exist yet, the index is simply 0.
+        try:
+            entries = listdir(path_root)
+        except FileNotFoundError:
+            return 0
+        files = [f for f in entries if isfile(join(path_root, f))]
 
         # Find all files matching "prefix_index" pattern
         pattern = re.compile(rf"{re.escape(prefix)}_(\d+)")
@@ -104,3 +154,4 @@ class LabelWriter:
         last_index = max(indices) if indices else -1
         next_index = last_index + 1
         return next_index
+

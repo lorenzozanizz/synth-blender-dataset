@@ -26,7 +26,7 @@ class ClassificationEngine:
 
         ret_data = dict()
         for ent_declaration in entity_data:
-            name = ent_declaration.obj_or_entity_name
+            name = ent_declaration.entity_name
             components = [ comp.obj_name for comp in ent_declaration.obj_names ]
             ret_data[name] = components
         return ret_data
