@@ -49,6 +49,10 @@ class PipeNames(Enum):
     POWER       = "Power"
     COLOR       = "Color"
 
+    # Camera
+    BEZIER_LOCK = "Bezier Lock"
+    SPHERE_LOCK = "Sphere Lock"
+
     # Constraints
     OVERLAP     = "Overlap"
     OCCLUSION   = "Occlusion"

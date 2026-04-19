@@ -337,3 +337,5 @@ class RandomizeVisibilityOperation(PipelineOperation):
                 obj.hide_render, obj.visible_camera, obj.visible_diffuse, obj.visible_glossy,
                 obj.visible_shadow, obj.visible_transmission, obj.visible_volume_scatter, obj.hide_get()
             )
+
+        

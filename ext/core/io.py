@@ -25,6 +25,9 @@ class FolderStructure(Enum):
 class SerializationStrategy(metaclass=ABCMeta):
     """ Abstract base for output formats """
 
+    def __init__(self, write_config: WritingConfig):
+        self.config = write_config
+
     @abstractmethod
     def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
         """
@@ -43,10 +46,24 @@ class SerializationStrategy(metaclass=ABCMeta):
         """
         pass
 
+    def mark_beginning(self) -> None:
+        """
+
+        :return:
+        """
+        pass
+
+    def mark_end(self) -> None:
+        """
+
+        :return:
+        """
+        pass
+
 class YoloFormatter(SerializationStrategy):
 
     def __init__(self, write_config: WritingConfig):
-        pass
+        super().__init__(write_config)
 
     def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
         return ('.txt', "Jewish boy!"),
@@ -60,6 +77,9 @@ class YoloFormatter(SerializationStrategy):
 
 class YoloSplitFormatter(SerializationStrategy):
 
+    def __init__(self, write_config: WritingConfig):
+        super().__init__(write_config)
+
     def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
         pass
 
@@ -71,6 +91,9 @@ class YoloSplitFormatter(SerializationStrategy):
 
 
 class CocoFormatter(SerializationStrategy):
+
+    def __init__(self, write_config: WritingConfig):
+        super().__init__(write_config)
 
     def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
         pass
@@ -85,6 +108,9 @@ class OutputWriter:
         self.config = config
         self.strategy: SerializationStrategy = strategy
         self.shot_idx = 0
+
+    def get_config(self) -> WritingConfig:
+        return self.config
 
     def set_strategy(self, strategy: SerializationStrategy):
         self.strategy = strategy

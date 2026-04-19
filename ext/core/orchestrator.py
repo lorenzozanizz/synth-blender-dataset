@@ -11,7 +11,7 @@ from typing import Union, Dict, Tuple, Collection, Any
 
 class LabelingOrchestrator:
 
-    def __init__(self, context, config: LabelExtractionConfig, reporter, writer: OutputWriter):
+    def __init__(self, context, config: LabelExtractionConfig, reporter, writer: Union[None, OutputWriter]):
         self.config = config
         self.ctx = context
 
@@ -67,14 +67,27 @@ class LabelingOrchestrator:
             estimate_visibility=self.config.estimate_visibility
         )
 
-        if self.config.write_labels:
+        if self.config.write_labels and self.writer is not None:
             files = self.formatter.format(label_data)
             self.writer.write_label(files)
 
         return
 
+    def begin_generation(self) -> None:
+        """
+
+        :return:
+        """
+        pass
+
+    def end_generation(self) -> None:
+        """
+
+        :return:
+        """
+
     def _create_formatter(self) -> SerializationStrategy:
-        return YoloFormatter()
+        return YoloFormatter(write_config=self.writer.get_config())
 
     def _create_extractor(self):
         return BoundingBoxExtractor(self.ctx)

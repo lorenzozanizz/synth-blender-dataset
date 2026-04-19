@@ -206,3 +206,11 @@ class RandomizeNodePropOperation(PipeDrawer):
         PropertyTargeter.draw(layout, context)
         OffsetMode.draw(layout, context)
         NodeDistributionSelector.draw(layout, context, dim = 1)
+
+
+@OperationDrawerRegistry.register(PipeNames.BEZIER_LOCK.value)
+class RingLockCameraOperation(PipeDrawer):
+
+    @staticmethod
+    def draw_editor(layout, context) -> None:
+        pass

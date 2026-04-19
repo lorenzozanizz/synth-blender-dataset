@@ -251,3 +251,15 @@ class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
             wsk.OFFSET.value: OffsetMode.extract_data(context)
         }
         return dic
+
+@PipeSchemaRegistry.register(PipeNames.BEZIER_LOCK.value)
+class RingLockCameraOperation(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        pass
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        pass
+

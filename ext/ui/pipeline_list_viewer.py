@@ -28,7 +28,11 @@ pipe_to_ico_mapping = {
 
     PipeNames.INTENSITY: "FORCE_TURBULENCE",
     PipeNames.LINE: "IPO_BACK",
-    PipeNames.BASE_COLOR: "COLOR"
+    PipeNames.BASE_COLOR: "COLOR",
+
+    PipeNames.BEZIER_LOCK: "IPO_BACK",
+    PipeNames.SPHERE_LOCK: "MATSPHERE"
+
 }
 
 class RegistrationPanel(Panel):
@@ -291,6 +295,11 @@ class AddCameraCategoryPipeMenu(Menu):
         layout = self.layout
         layout.label(text='Camera')
 
+        for name in (
+            PipeNames.BEZIER_LOCK, PipeNames.SPHERE_LOCK
+        ):
+            layout.operator(Labels.ADD_PIPE.value, text=name.value,
+                            icon=pipe_to_ico_mapping[name]).op_name = name.value
 
 # Submenu for material operations
 class AddMaterialCategoryPipeMenu(Menu):

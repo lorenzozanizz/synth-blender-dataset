@@ -121,6 +121,14 @@ class RoughnessValidator(PipeValidator):
         return False
 
 
+@ValidatorRegistry.register(PipeNames.ROUGHNESS.value)
+class CameraBezierLockValidator(PipeValidator):
+
+    @staticmethod
+    def validate(pipe: PipelineOperation, config: dict) -> bool:
+        pass
+
+
 class WidgetValidator(metaclass=ABCMeta):
     """
 
@@ -273,3 +281,4 @@ class ValueTargeterValidator(WidgetValidator):
     @staticmethod
     def validate(partial_config: dict) -> bool:
         pass
+
