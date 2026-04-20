@@ -209,7 +209,7 @@ class RandomizeNodePropOperation(PipeDrawer):
 
 
 @OperationDrawerRegistry.register(PipeNames.BEZIER_LOCK.value)
-class RingLockCameraOperation(PipeDrawer):
+class BezierLockCameraOperation(PipeDrawer):
 
     @staticmethod
     def draw_editor(layout, context) -> None:

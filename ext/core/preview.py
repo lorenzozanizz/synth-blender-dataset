@@ -4,7 +4,8 @@ from .configurations import PreviewRenderConfig
 from ..labeling.class_engine import ClassificationEngine
 
 from ..utils.logger import UniqueLogger
-from ..labeling.generator import BoundingBoxExtractor2
+from ..labeling.generator import BoundingBoxExtractor2, LabelData
+from ..labeling.bpy_properties import LabelClass
 from ..labeling.conversions import convert_camera_centered_to_absolute_pixels_y_inverted
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -14,7 +15,7 @@ from ..utils.images import (draw_bounding_box, draw_bitmap_text, font_size_fit_b
                             estimate_text_pixel_height)
 
 from dataclasses import dataclass
-from typing import Dict, Any, Iterable
+from typing import Dict, Any, Iterable, Literal, Union
 import tempfile
 import os
 
@@ -23,8 +24,21 @@ import bpy
 
 @dataclass
 class PreviewRenderData:
+    """
 
-    pass
+    """
+
+    obj_name: str
+    visibility: float
+    cls: LabelClass
+
+    geometry: Union[
+        tuple,  # bbox: (x, y, w, h)
+        list[tuple],  # polygon: [(x1,y1), (x2,y2), ...]
+        dict  # flexible structure
+    ]
+
+    type: Literal["bbox", "polygon"]  # "bbox", "polygon", "depth"
 
 
 class PreviewGenerator:
@@ -127,7 +141,7 @@ class PreviewGenerator:
     def display_and_render_preview(self,
                                    show_obj_name: bool = True,
                                    show_class_name_or_id: str = "id",
-                                   show_obj_boundaries: bool = True,
+                                   show_obj_geometry: bool = True,
                                    show_entity: bool = True,
                                    ignore_default_class: str = "",
                                    show_visibility: bool = True,
@@ -138,7 +152,7 @@ class PreviewGenerator:
         :param ignore_default_class:
         :param show_visibility:
         :param show_rendering_time:
-        :param show_obj_boundaries:
+        :param show_obj_geometry:
         :param show_obj_name:
         :param show_class_name_or_id:
         :return:
@@ -171,8 +185,8 @@ class PreviewGenerator:
             # Draw the information related to the object, conditional on the render flags and
             # the preview settings.
             self._render_object_info(img, obj.name, obj, xyxy, width, height, cls=match_class,
-                 show_class_name_or_id=show_class_name_or_id, show_bounding_boxes=show_obj_boundaries,
-                 show_visibility=show_visibility, show_obj_name=show_obj_name)
+                                     show_class_name_or_id=show_class_name_or_id, show_geometry=show_obj_geometry,
+                                     show_visibility=show_visibility, show_obj_name=show_obj_name)
 
         if show_entity:
 
@@ -187,7 +201,7 @@ class PreviewGenerator:
                     continue
                 self._render_object_info(img, entity, entity, xyxy, width, height, cls=match_class,
                                          show_class_name_or_id=show_class_name_or_id,
-                                         show_bounding_boxes=show_obj_boundaries,
+                                         show_geometry=show_obj_geometry,
                                          show_visibility=show_visibility, show_obj_name=show_obj_name)
 
         if show_rendering_time:
@@ -196,7 +210,7 @@ class PreviewGenerator:
     def _render_object_info(self, img, obj_name, obj_key, xyxy: tuple[float, float, float, float],
                             width: int, height: int, cls,
                             # Flags which are used to conditionally draw various elements in the object info
-                            show_bounding_boxes: bool = True, show_obj_name: bool = True,
+                            show_geometry: bool = True, show_obj_name: bool = True,
                             show_class_name_or_id: str = "id", show_visibility: bool = True,
                             show_unoccluded_bbox: bool = True) -> None:
         """
@@ -222,7 +236,7 @@ class PreviewGenerator:
 
         box_width = abs(new_xyxy[0] - new_xyxy[2])
         # Draw the bounding box first, so that the text is visible in all cases, hopefully.
-        if show_bounding_boxes:
+        if show_geometry:
             draw_bounding_box(img, color, p0, p1, y_grows_up_to_down=False, line_width=4)
         if show_unoccluded_bbox:
             pass
@@ -275,9 +289,13 @@ class PreviewGenerator:
         num_objects = len(self.visible_objects)
 
     @staticmethod
-    def make_preview_render_data() -> Iterable[PreviewRenderData]:
+    def make_preview_render_data(label_data: LabelData) -> Iterable[PreviewRenderData]:
         """
 
         :return:
         """
-        pass
+        return (
+            PreviewRenderData(label.obj_or_entity_name, label.visible_objects, label.cls,
+                label.geometry, label.annotation_type)
+            for label in label_data
+        )

@@ -253,13 +253,15 @@ class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
         return dic
 
 @PipeSchemaRegistry.register(PipeNames.BEZIER_LOCK.value)
-class RingLockCameraOperation(PipeSchema):
+class BezierLockCameraOperation(PipeSchema):
 
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
+        """ """
         pass
 
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:
+        """ """
         pass
 

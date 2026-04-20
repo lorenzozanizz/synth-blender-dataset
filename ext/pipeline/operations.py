@@ -10,6 +10,7 @@ from .context import *
 from ..constants import PipeNames, WidgetSerializationKeys
 from ..utils.logger import UniqueLogger
 from ..distribution.computation import SamplerCompiler
+from ..distribution.bezier import BezierDistribution, SphereDistribution, BezierCurve
 
 from typing import Any, List, Tuple
 from abc import ABCMeta, abstractmethod
@@ -24,7 +25,7 @@ class PipelineOperation(DoubleFramedPipe, metaclass=ABCMeta):
     operation_type: str  # "randomize_position", "randomize_rotation", etc.
 
     @abstractmethod
-    def compile(self, config: dict):
+    def compile(self, context, config: dict):
         """
 
         :param config:
@@ -96,9 +97,10 @@ class NumericRandomOperation(PipelineOperation, metaclass=ABCMeta):
         self.axis           = None
         self.targets        = None
 
-    def compile(self, config: dict):
+    def compile(self, context, config: dict):
         """
 
+        :param context:
         :param config:
         :return:
         """
@@ -215,7 +217,7 @@ class RandomizeMoveOperation(PipelineOperation):
     def get_global_context(self):
         return RandomizePositionOperation.PositionContext(self.targets)
 
-    def compile(self, config: dict):
+    def compile(self, context, config: dict):
         self.targets = config[wsk.OBJECT.value][wsk.OBJECT_NAMES.value]
         # The distribution will be compiled ( a bernoulli )
         self.distribution = SamplerCompiler.compile(config[wsk.NODE_DISTRIBUTION.value], dim=1)
@@ -269,7 +271,7 @@ class RandomizeVisibilityOperation(PipelineOperation):
     def get_frame_context(self):
         return RandomizeVisibilityOperation.VisibilityContext(self.targets)
 
-    def compile(self, config: dict):
+    def compile(self, context, config: dict):
         self.targets = config[wsk.OBJECT.value][wsk.OBJECT_NAMES.value]
         # The distribution will be compiled ( a bernoulli )
         self.distribution = SamplerCompiler.compile(config[wsk.NODE_DISTRIBUTION.value], dim=1)
@@ -338,4 +340,45 @@ class RandomizeVisibilityOperation(PipelineOperation):
                 obj.visible_shadow, obj.visible_transmission, obj.visible_volume_scatter, obj.hide_get()
             )
 
-        
+@OperationRegistry.register(PipeNames.BEZIER_LOCK.value)
+class BezierLockOperation(PipelineOperation):
+
+    def __init__(self):
+        self.target_camera = None
+        self.bezier_distribution = None
+
+    def compile(self, context, config: dict):
+        self.target_camera = context.scene.camera
+
+        curve = config[wsk.BEZIER.value][wsk.BEZIER_NAME.value]
+        curve_obj = bpy.data.objects[curve]
+        self.bezier_distribution = BezierDistribution(
+            BezierCurve.from_blender_curve(curve_obj),
+        )
+
+    def execute(self, context):
+
+        point = self.bezier_distribution.sample()
+        self.target_camera.location = point
+
+    def get_global_context(self):
+        return BezierLockOperation.BezierLockContext(self.target_camera)
+
+    def get_frame_context(self):
+        return None
+
+    class BezierLockContext(ContextManager):
+
+        def __init__(self, target):
+            self.target = target
+            self.constraint = None
+            self.initial_camera_pos = None
+
+        def __enter__(self):
+            self.constraint = self.target.constraints.new(type='TRACK_TO')
+            self.initial_camera_pos = self.target.location
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.target.constraints.remove(self.constraint)
+            self.target.location = self.initial_camera_pos
+

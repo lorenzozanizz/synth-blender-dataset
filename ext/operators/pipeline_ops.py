@@ -145,6 +145,8 @@ class CaptureObjectsOperator(Operator):
     bl_idname = Labels.CAPTURE_OBJECTS.value
     bl_label = "Capture Objects"
 
+    object_type: StringProperty(default="", description="")         # type: ignore
+
     def execute(self, context):
         scene = context.scene
         selected = context.selected_objects
@@ -155,6 +157,8 @@ class CaptureObjectsOperator(Operator):
 
         # Store names
         name_list = scene.targeted_objects_display
+
+
         name_list.clear()
         for obj in selected:
             nm = name_list.add()

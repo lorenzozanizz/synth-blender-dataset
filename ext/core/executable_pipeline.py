@@ -49,7 +49,7 @@ class ExecutablePipeline:
             # Get executor class
             try:
                 executor = OperationRegistry.get(op_type)
-                executor.compile(config)
+                executor.compile(self.ctx, config)
             except ValueError:
                 if self.reporter:
                     self.reporter.report({'ERROR'}, f"No executor found for operation {operation.name}")

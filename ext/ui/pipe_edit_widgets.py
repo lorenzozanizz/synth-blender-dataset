@@ -803,3 +803,58 @@ class ValueTargeter(EditorWidget):
             "material": scene.targeted_value_node.mat_name,
             "label": scene.targeted_value_node.node_label,
         }
+
+class BezierTargeter(EditorWidget):
+
+    @staticmethod
+    def draw(layout, context) -> None:
+        pass
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        pass
+
+    @staticmethod
+    def reset(context) -> None:
+        pass
+
+
+class LockPointTargeter(EditorWidget):
+    @staticmethod
+    def draw(layout, context) -> None:
+        pass
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        pass
+
+    @staticmethod
+    def reset(context) -> None:
+        pass
+
+
+class SphereTargeter(EditorWidget):
+
+    @staticmethod
+    def draw(layout, context) -> None:
+        pass
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        pass
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        pass
+
+    @staticmethod
+    def reset(context) -> None:
+        pass

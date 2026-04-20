@@ -1,9 +1,11 @@
+from .computation import CompiledSampler
+
 from typing import List, Dict
 from dataclasses import dataclass
-
 from mathutils import Vector
-
+from math import pi, sqrt, cos, sin
 from random import random, choices
+
 
 
 @dataclass
@@ -22,27 +24,36 @@ class Spline:
 
 
 @dataclass
-class Curve:
+class BezierCurve:
     """ """
     splines: list[Spline]
 
     @staticmethod
-    def from_blender_curve(bpy_curve) -> 'Curve':
+    def from_blender_curve(bpy_curve) -> 'BezierCurve':
         """
 
         :param bpy_curve: A Bezier Curve blender object
         :return:
         """
         spline_list = list()
-        curve = Curve(spline_list)
+        curve = BezierCurve(spline_list)
+
+        matrix = bpy_curve.matrix_world
+
         for spline in bpy_curve.data.splines:
+
+            if spline.type != 'BEZIER':
+                continue
 
             segments = list()
             for i in range(len(spline.bezier_points) - 1):
-                p0 = spline.bezier_points[i].co
-                handle_left = spline.bezier_points[i].handle_right
-                handle_right = spline.bezier_points[i + 1].handle_left
-                p1 = spline.bezier_points[i + 1].co
+                # We explicitly take into account the curve's world matrix to handle
+                # scales and rotations.
+                p0 =  matrix @ spline.bezier_points[i].co
+                handle_left =  matrix @ spline.bezier_points[i].handle_right
+                handle_right =  matrix @ spline.bezier_points[i + 1].handle_left
+                p1 =  matrix @ spline.bezier_points[i + 1].co
+
                 segments.append(Bezier2PSegment(
                     p0, handle_left, handle_right, p1))
             spline_list.append(Spline(segments))
@@ -114,7 +125,7 @@ def normalize_weights(weights: List[float]) -> None:
 
 class BezierDistribution:
 
-    def __init__(self, curve: Curve) -> None:
+    def __init__(self, curve: BezierCurve) -> None:
         """
 
         :param curve:
@@ -122,7 +133,7 @@ class BezierDistribution:
         self.curve = curve
 
         self.spline_weight = []
-        self.segment_mapped_weights: dict[Spline, list[float]] = dict()
+        self.segment_mapped_weights: dict[int, list[float]] = dict()
 
         self._compile()
 
@@ -181,11 +192,39 @@ class BezierDistribution:
         return [point[0], point[1], point[2]]
 
 
-if __name__ == '__main__':
-    import bpy
+class SphereDistribution(CompiledSampler):
 
-    curve = bpy.data.objects["BezierCurve"]
-    curve = Curve.from_blender_curve(curve)
+    def __init__(self, center, radius) -> None:
+        """ """
+        self.center = center
+        self.radius = radius
 
-    dis = BezierDistribution(curve)
-    print(dis.sample())
+    @property
+    def dimension(self) -> int:
+        """ """
+        # Again, we assume this to be 3.
+        return 3
+
+    def sample(self) -> List[float]:
+        """
+
+        :return:
+        """
+        x, y, z = self.center
+        # We use a standard ( a bit less than naive ) sampling technique for the sphere, to avoid
+        # oversampling near the poles. We sample the polar coordinates uniformly, then convert the
+        # point to a cartesian coordinate.
+        # Uniform longitude [0, 2π]
+        theta = 2 * pi * random()
+
+        # Uniform on sphere (not uniform in latitude!)
+        # cos(phi) uniform in [-1, 1] ensures uniform surface distribution
+        cos_phi = 2 * random() - 1
+        sin_phi = sqrt(1 - cos_phi ** 2)
+
+        # Convert to Cartesian
+        px = x + self.radius * sin_phi * cos(theta)
+        py = y + self.radius * sin_phi * sin(theta)
+        pz = z + self.radius * cos_phi
+
+        return [px, py, pz]

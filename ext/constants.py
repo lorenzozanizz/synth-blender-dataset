@@ -67,6 +67,9 @@ class PipeNames(Enum):
 class WidgetSerializationKeys(Enum):
 
 
+    BEZIER = "bezier"
+    BEZIER_NAME = "name"
+
     DIMENSION = "dimension"
 
     MATERIAL = "materials"

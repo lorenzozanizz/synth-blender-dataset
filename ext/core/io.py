@@ -46,6 +46,7 @@ class SerializationStrategy(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
     def mark_beginning(self) -> None:
         """
 
@@ -53,6 +54,7 @@ class SerializationStrategy(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
     def mark_end(self) -> None:
         """
 
@@ -60,7 +62,14 @@ class SerializationStrategy(metaclass=ABCMeta):
         """
         pass
 
+
 class YoloFormatter(SerializationStrategy):
+
+    def mark_beginning(self) -> None:
+        return
+
+    def mark_end(self) -> None:
+        return
 
     def __init__(self, write_config: WritingConfig):
         super().__init__(write_config)
@@ -91,6 +100,12 @@ class YoloSplitFormatter(SerializationStrategy):
 
 
 class CocoFormatter(SerializationStrategy):
+
+    def mark_beginning(self) -> None:
+        pass
+
+    def mark_end(self) -> None:
+        pass
 
     def __init__(self, write_config: WritingConfig):
         super().__init__(write_config)

@@ -1,22 +1,30 @@
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import Iterable, Any, Dict, Callable, List, Union
+from typing import Iterable, Any, Dict, Callable, List, Union, Literal
 
+from .bpy_properties import LabelClass
 from .raytracing import (get_visible_objects_from_camera, get_minimal_bounding_box_fast, estimate_visibility_3d,
                          union_bounding_boxes, compute_camera_space_boxes, compute_area_ratio)
-from ..utils.timer import TimingContext
 from .class_engine import ClassificationEngine
 
+from ..utils.timer import TimingContext
 
 @dataclass
 class Label:
-    """Single entity annotation"""
-    obj_or_entity_name: str
-    class_id: int
-    class_name: str
+    """ Single entity annotation """
 
-    bbox: tuple
+    obj_or_entity_name: str
+    cls: Union[None, LabelClass]
+
     visibility: float
+    # The annotation data — could be any shape
+    geometry: Union[
+        tuple,  # bbox: (x, y, w, h)
+        list[tuple],  # polygon: [(x1,y1), (x2,y2), ...]
+        dict  # flexible structure
+    ]
+
+    annotation_type: Literal["bbox", "polygon"]  # "bbox", "polygon", "depth"
 
 
 class LabelData:
@@ -103,7 +111,8 @@ class BoundingBoxExtractor(Extractor):
                     )
                 cls = classifier.map_obj(obj)
                 ret_data.add(
-                    Label(obj.name, cls.class_id, cls.name, bbox, visibility=self.estimated_visibility.get(obj))
+                    Label(obj.name, cls,
+                          geometry=bbox, visibility=self.estimated_visibility.get(obj), annotation_type="bbox")
                 )
             # If required, estimate visibility (No entity mode)
             if not entity_data:
@@ -143,7 +152,8 @@ class BoundingBoxExtractor(Extractor):
 
                 cls = classifier.map_obj(obj)
                 ret_data.add(
-                    Label(entity_name, cls.class_id, cls.name, bbox, visibility=self.estimated_visibility.get(entity_name))
+                    Label(entity_name, cls,
+                          geometry=bbox, visibility=self.estimated_visibility.get(entity_name), annotation_type="bbox")
                 )
 
         return ret_data
