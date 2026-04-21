@@ -17,9 +17,10 @@ except ImportError:
         return (start + step * i for i in range(num))
 
 from collections import defaultdict
-from math import sqrt
+from math import sqrt, degrees, atan2
 from mathutils import Vector
-from typing import Any, Set, Dict, Tuple, List, Union, Iterable
+from itertools import chain
+from typing import Any, Set, Dict, Tuple, List, Union, Iterable, Callable
 from dataclasses import dataclass
 
 import bpy
@@ -139,7 +140,8 @@ def normalized_center_coordinate_to_pixel(x, y, width, height):
     return pixel_x, pixel_y
 
 
-def estimate_visibility_3d(obj, camera, depsgraph, context, render, visible_bbox):
+def estimate_visibility_3d(obj, camera, depsgraph, context, render, visible_geometry,
+                           area_func: Callable):
     """Compare 3D bbox projected area vs actual visible bbox"""
 
 
@@ -147,7 +149,7 @@ def estimate_visibility_3d(obj, camera, depsgraph, context, render, visible_bbox
 
     bbox_3d_area = compute_bbox_area(camera_bbox)
     # Compute the actually visible area
-    bbox_visible_area = float(compute_bbox_area(visible_bbox))
+    bbox_visible_area = float(area_func(visible_geometry))
 
     occlusion = bbox_visible_area / bbox_3d_area if bbox_3d_area > 0 else 1.0
     return occlusion
@@ -167,7 +169,7 @@ def compute_camera_space_boxes(objects: Iterable[Any], camera, depsgraph, contex
              for obj in objects }
 
 
-def compute_area_ratio(xyxy1, xyxy2):
+def compute_area_ratio(xyxy1, xyxy2, area_func_1: Callable, area_func_2: Callable) -> float:
     """
 
     :param xyxy1:
@@ -275,3 +277,114 @@ def project_3d_point(camera: bpy.types.Object,
     p2 = Vector((p1.x / p1.w, p1.y / p1.w))
 
     return p2
+
+
+def compute_polygon_area(vertices: list[tuple[float, float]]) -> float:
+    """ Compute polygon area using the Shoelace formula.
+
+    Works for any simple polygon (convex or concave).
+    Vertices should be in order (clockwise or counterclockwise). Other functions
+    in the code base use a clockwise convention.
+
+    :param vertices:
+    :return:
+    """
+    if len(vertices) < 3:
+        return 0.0
+
+    area = 0.0
+    n = len(vertices)
+
+    for i in range(n):
+        x1, y1 = vertices[i]
+        x2, y2 = vertices[(i + 1) % n]  # Next vertex (wraps around)
+        area += x1 * y2 - x2 * y1
+
+    return abs(area) / 2.0
+
+
+
+def simplify_by_angle(points, min_angle=10.0):
+    """Remove points where the angle change is small"""
+
+    if len(points) < 3:
+        return points
+
+    def angle_between(p1, p2, p3):
+        """Calculate angle at p2"""
+        x1, y1 = p1
+        x2, y2 = p2
+        x3, y3 = p3
+
+        v1 = (x1 - x2, y1 - y2)
+        v2 = (x3 - x2, y3 - y2)
+
+        dot = v1[0] * v2[0] + v1[1] * v2[1]
+        det = v1[0] * v2[1] - v1[1] * v2[0]
+        ang = abs(degrees(atan2(det, dot)))
+
+        return min(ang, 180 - ang)
+
+    simplified = [points[0]]
+    for i in range(1, len(points) - 1):
+        angle = angle_between(points[i - 1], points[i], points[i + 1])
+        if angle > min_angle:
+            simplified.append(points[i])
+    simplified.append(points[-1])
+
+    return simplified
+
+
+def cross(o, a, b):
+    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+
+def compute_convex_hull(point_cloud: Union[ List[Tuple[int, int]], List[List]], merge: bool = False):
+    """Graham scan algorithm for convex hull"""
+
+    if merge:
+        # multiple
+        points = sorted(set(chain.from_iterable(point_cloud)))
+    else:
+        points = sorted(set(point_cloud))
+    if len(points) <= 1:
+        return points
+
+    # Build lower hull
+    lower = []
+    for p in points:
+        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
+            lower.pop()
+        lower.append(p)
+
+    # Build upper hull
+    upper = []
+    for p in reversed(points):
+        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
+            upper.pop()
+        upper.append(p)
+
+    return lower[:-1] + upper[:-1]
+
+
+Geometry = Union[ tuple[int, int, int, int], List[tuple[int, int]], dict]
+
+
+def geometry_bounds(geometry: Geometry) -> tuple:
+    """
+
+    :param geometry:
+    :return:
+    """
+    if isinstance(geometry, tuple):
+        # For a bbox geometry, the bounds are given by the geometry itself
+        return geometry
+    elif isinstance(geometry, list):
+        return get_minimal_bounding_box_fast(geometry)
+    else:
+        raise TypeError("geometry type not yet implemented for geometry bounds")
+
+def compute_geometry_area(geometry: Geometry) -> float:
+    pass
+
+
+

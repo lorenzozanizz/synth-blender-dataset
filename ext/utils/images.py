@@ -1,7 +1,5 @@
 from .fonts import EIGHT_BIT_BITMAP_FONT_HEIGHT, EIGHT_BIT_BITMAP_FONT
 from typing import Tuple, Union
-import math
-
 
 class DrawableCanvas:
     """
@@ -209,9 +207,6 @@ def fill_polygon(img, polygon, color):
     width, height = img.size
     pixels = list(img.pixels)
 
-    def to_index(p, w):
-        return (p[0] + p[1] * w) * 4
-
     def draw_pixel(x, y):
         if 0 <= x < width and 0 <= y < height:
             idx = to_index((x, y), width)
@@ -252,64 +247,40 @@ def fill_polygon(img, polygon, color):
     img.update()
 
 
-def convex_hull(points):
-    """Graham scan algorithm for convex hull"""
-    points = sorted(set(points))
-    if len(points) <= 1:
-        return points
-
-    # Build lower hull
-    lower = []
-    for p in points:
-        while len(lower) >= 2 and cross(lower[-2], lower[-1], p) <= 0:
-            lower.pop()
-        lower.append(p)
-
-    # Build upper hull
-    upper = []
-    for p in reversed(points):
-        while len(upper) >= 2 and cross(upper[-2], upper[-1], p) <= 0:
-            upper.pop()
-        upper.append(p)
-
-    return lower[:-1] + upper[:-1]
+def draw_thick_pixel(pixels, color, x: int, y: int, line_width: int, width:int, height: int, channels: int=4) -> None:
+    """Draw a pixel with thickness"""
+    for l_dx in range(-line_width // 2, (line_width + 1) // 2):
+        for l_dy in range(-line_width // 2, (line_width + 1) // 2):
+            if 0 < x + l_dx < width and 0< y + l_dy < height:
+                idx = to_index((x + l_dx, y + l_dy), width, channels=channels)
+                draw_color(pixels, color, idx)
 
 
-def draw_line(img, p0: tuple[int, int], p1: tuple[int, int],
-              color: tuple[float, float, float, float],
-              line_width: int = 1, channels: int = 4) -> None:
+def draw_line(pixels, p0: tuple[int, int], p1: tuple[int, int],
+              color: tuple[float, float, float, float], width, height,
+              line_width: int = 1, channels: int = 4, ) -> None:
     """
     Draw a line from p0 to p1 on an image using Bresenham's algorithm.
 
+    :param height:
+    :param width:
+    :param pixels:
     :param channels:
-    :param img: Blender image object
     :param p0: Starting point (x, y)
     :param p1: Ending point (x, y)
     :param color: RGBA color tuple (0.0 to 1.0)
     :param line_width: Line thickness in pixels
     """
-    width, height = img.size
-    pixels = list(img.pixels)
-
-
-    def draw_thick_pixel(x: int, y: int) -> None:
-        """Draw a pixel with thickness"""
-        for l_dx in range(-line_width // 2, (line_width + 1) // 2):
-            for l_dy in range(-line_width // 2, (line_width + 1) // 2):
-                if 0 < x + l_dx < width and 0< y + l_dy < height:
-                    idx = to_index((x + l_dx, y + l_dy), width, channels=channels)
-                    draw_color(pixels, color, idx)
 
     # Bresenham's line algorithm
+    # https://github.com/encukou/bresenham/blob/master/bresenham.py
     x0, y0 = int(p0[0]), int(p0[1])
     x1, y1 = int(p1[0]), int(p1[1])
 
     # Safety checks
     if x0 == x1 and y0 == y1:
         # Single point
-        draw_thick_pixel(x0, y0)
-        img.pixels[:] = pixels
-        img.update()
+        draw_thick_pixel(pixels, color, x0, y0, line_width, width, height, channels)
         return
 
     dx = abs(x1 - x0)
@@ -320,8 +291,11 @@ def draw_line(img, p0: tuple[int, int], p1: tuple[int, int],
 
     x, y = x0, y0
 
-    while True:
-        draw_thick_pixel(x, y)
+    # Prevent lock in from some strange error... who knows
+    safety_idx = 0
+    while True and safety_idx < max(2*width, 2*height):
+
+        draw_thick_pixel(pixels, color, x, y, line_width, width, height, channels)
 
         if x == x1 and y == y1:
             break
@@ -334,40 +308,37 @@ def draw_line(img, p0: tuple[int, int], p1: tuple[int, int],
             err += dx
             y += sy
 
+        safety_idx += 1
+
+
+def draw_polygon(img, vertices: list[tuple[int, int]],
+                 color: tuple[float, float, float, float],
+                 line_width: int = 1, channels: int = 4, draw_wireframe:bool = True) -> None:
+    """
+    Draw a polygon from a list of vertices on an image.
+
+    :param img: Blender image object
+    :param vertices: List of (x, y) tuples defining polygon vertices in order
+    :param color: RGBA color tuple (0.0 to 1.0)
+    :param line_width: Line thickness in pixels
+    :param channels: Number of color channels (default 4 for RGBA)
+    """
+    if len(vertices) < 2:
+        return
+
+    width, height = img.size
+    pixels = list(img.pixels)
+    # Draw lines between consecutive vertices, wrapping around to the first vertex.
+    # NOTE that like all other such functions, it is assumed that the points follow blender convention
+    # (e.g. the y=0 is at the bottom of the image)
+    for i in range(len(vertices)):
+        p0 = vertices[i]
+        if draw_wireframe:
+            draw_thick_pixel(pixels, color, p0[0], p0[1], line_width + 3, width, height, channels)
+
+        p1 = vertices[(i + 1) % len(vertices)]  # Wraps to first vertex, if list has only one
+        # point then this draws a point correctly (its handled inside draw_line)
+        draw_line(pixels, p0, p1, color, width, height, line_width, channels)
+
     img.pixels[:] = pixels
     img.update()
-
-
-def simplify_by_angle(points, min_angle=10.0):
-    """Remove points where the angle change is small"""
-
-    if len(points) < 3:
-        return points
-
-    def angle_between(p1, p2, p3):
-        """Calculate angle at p2"""
-        x1, y1 = p1
-        x2, y2 = p2
-        x3, y3 = p3
-
-        v1 = (x1 - x2, y1 - y2)
-        v2 = (x3 - x2, y3 - y2)
-
-        dot = v1[0] * v2[0] + v1[1] * v2[1]
-        det = v1[0] * v2[1] - v1[1] * v2[0]
-        angle = abs(math.degrees(math.atan2(det, dot)))
-
-        return min(angle, 180 - angle)
-
-    simplified = [points[0]]
-    for i in range(1, len(points) - 1):
-        angle = angle_between(points[i - 1], points[i], points[i + 1])
-        if angle > min_angle:
-            simplified.append(points[i])
-    simplified.append(points[-1])
-
-    return simplified
-
-
-def cross(o, a, b):
-    return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])

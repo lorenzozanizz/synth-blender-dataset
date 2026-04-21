@@ -4,7 +4,7 @@ from .io import OutputWriter, SerializationStrategy, YoloFormatter
 from ..labeling.generator import LabelData
 from ..labeling.class_engine import ClassificationEngine
 from ..labeling.generator import Extractor, BoundingBoxExtractor, PolygonExtractor
-from ..labeling.raytracing import get_visible_objects_from_camera
+from ..labeling.ray_casting import get_visible_objects_from_camera
 
 from typing import Union, Dict, Tuple, Collection, Any
 
@@ -23,10 +23,11 @@ class LabelingOrchestrator:
 
         # Explicitly instantiate the label formatter and extractor based on the configuration
         self.extractor: Extractor = self._create_extractor()
-        self.formatter: SerializationStrategy = self._create_formatter()
 
         self.writer: OutputWriter = writer
-        self.writer.set_strategy(self.formatter)
+        if self.writer:
+            self.formatter: SerializationStrategy = self._create_formatter()
+            self.writer.set_strategy(self.formatter)
 
         self.label_data = None
 
@@ -59,7 +60,7 @@ class LabelingOrchestrator:
             self.visible_objects.keys()
         )
 
-        label_data = self.extractor.extract(
+        self.label_data = self.extractor.extract(
             visible_objects=self.visible_objects,
             classifier=self.classifier,
             entity_data=entity_scene_data,
@@ -68,7 +69,7 @@ class LabelingOrchestrator:
         )
 
         if self.config.write_labels and self.writer is not None:
-            files = self.formatter.format(label_data)
+            files = self.formatter.format(self.label_data)
             self.writer.write_label(files)
 
         return
@@ -86,11 +87,13 @@ class LabelingOrchestrator:
         :return:
         """
 
-    def _create_formatter(self) -> SerializationStrategy:
+    def _create_formatter(self) -> Union[None, SerializationStrategy]:
+        if self.writer is None:
+            return None
         return YoloFormatter(write_config=self.writer.get_config())
 
     def _create_extractor(self):
-        return BoundingBoxExtractor(self.ctx)
+        return PolygonExtractor(self.ctx)
 
     def get_last_label_data(self) -> Union[None, LabelData]:
         return self.label_data

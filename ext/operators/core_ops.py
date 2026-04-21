@@ -114,6 +114,18 @@ class PreviewOperator(Operator):
         # No checks are required
         return PreviewRenderConfig()
 
+    def validate_extract_label_config(self, context) -> Union[None, LabelExtractionConfig]:
+        """
+
+        :param context:
+        :return:
+        """
+        scene = context.scene
+        return LabelExtractionConfig(
+            scene.randomizer_label_format,
+            scene.randomizer_do_labelize
+        )
+
     def execute(self, context):
         """
 
@@ -122,12 +134,15 @@ class PreviewOperator(Operator):
         """
         # Extract the data from the scene, e.g. the properties of the "Generate" panel which
         # include the number of images, the seed and saving options
-        params_or_error = self.validate_data_extract(context)
-        if params_or_error is None:
+        preview_config = self.validate_data_extract(context)
+        label_config = self.validate_extract_label_config(context)
+
+        if preview_config is None or label_config is None:
             return { 'CANCELLED' }
 
         pipeline = context.scene.pipeline_data
-        preview = PreviewGenerator(context, pipeline, params_or_error, reporter=self)
+        preview = PreviewGenerator(context, pipeline,
+            preview_config, label_config, reporter=self)
 
         # extract the default class
         default_class = context.scene.labeling_data.default_class

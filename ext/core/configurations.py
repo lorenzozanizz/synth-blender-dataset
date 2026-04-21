@@ -42,6 +42,7 @@ class PreviewRenderConfig:
     show_visibility: bool = True
     show_obj_name: bool = True
 
+    show_geometry: bool = True
     show_class_name_or_id: Literal["id", "none", "name"] = "id"
 
     show_timings: bool = True
