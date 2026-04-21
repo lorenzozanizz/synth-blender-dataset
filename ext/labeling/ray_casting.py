@@ -172,12 +172,14 @@ def compute_camera_space_boxes(objects: Iterable[Any], camera, depsgraph, contex
 def compute_area_ratio(xyxy1, xyxy2, area_func_1: Callable, area_func_2: Callable) -> float:
     """
 
+    :param area_func_2:
+    :param area_func_1:
     :param xyxy1:
     :param xyxy2:
     :return:
     """
-    area_1 = compute_bbox_area(xyxy1)
-    area_2 = compute_bbox_area(xyxy2)
+    area_1 = area_func_1(xyxy1)
+    area_2 = area_func_2(xyxy2)
     if abs(area_2) < 1e-4:
         return 0.0
     return area_1 / area_2

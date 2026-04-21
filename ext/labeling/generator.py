@@ -288,7 +288,7 @@ class PolygonExtractor:
 
                 total_convex_hull = compute_convex_hull(point_clouds, merge=True)
                 if merge_angle:
-                    convex_hull = simplify_by_angle(convex_hull, merge_angle)
+                    total_convex_hull = simplify_by_angle(total_convex_hull, merge_angle)
                 # Note: we are not deleting sub objects, the user may want to differentiate them! e.g. hands in a body
                 self.visible_entities[entity_name] = total_convex_hull
 

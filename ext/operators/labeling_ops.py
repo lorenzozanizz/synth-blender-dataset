@@ -137,7 +137,7 @@ class SelectEntityOperator(Operator):
         name="Entities",
         description="Select an entity to add",
         items= lambda self, ctx: [                          # type: ignore
-            (entity.obj_or_entity_name, entity.obj_or_entity_name, "")
+            (entity.entity_name, entity.entity_name, "")
             for entity in ctx.scene.labeling_data.entities
         ] or [("None", "No Entity defined", "")]
     )

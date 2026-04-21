@@ -804,7 +804,15 @@ class ValueTargeter(EditorWidget):
             "label": scene.targeted_value_node.node_label,
         }
 
-class BezierTargeter(EditorWidget):
+
+class ConditionalWidget(EditorWidget):
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        pass
+
+
+class CurveTargeter(EditorWidget):
 
     @staticmethod
     def draw(layout, context) -> None:
@@ -823,7 +831,8 @@ class BezierTargeter(EditorWidget):
         pass
 
 
-class LockPointTargeter(EditorWidget):
+class PointTargeter(EditorWidget):
+
     @staticmethod
     def draw(layout, context) -> None:
         pass

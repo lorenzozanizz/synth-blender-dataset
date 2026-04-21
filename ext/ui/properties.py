@@ -144,9 +144,9 @@ operation_properties = {
     "selected_position_index": IntProperty(default=0),
     "position_collection": CollectionProperty(type=ObjectPosition),
     "material_list": CollectionProperty(type=MaterialListItem),
-    "material_list_index": IntProperty(default=0)
+    "material_list_index": IntProperty(default=0),
 
-
+    "reusable_checkbox": BoolProperty()
 
 }
 

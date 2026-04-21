@@ -334,7 +334,7 @@ def draw_polygon(img, vertices: list[tuple[int, int]],
     for i in range(len(vertices)):
         p0 = vertices[i]
         if draw_wireframe:
-            draw_thick_pixel(pixels, color, p0[0], p0[1], line_width + 3, width, height, channels)
+            draw_thick_pixel(pixels, color, p0[0], p0[1], line_width + 4, width, height, channels)
 
         p1 = vertices[(i + 1) % len(vertices)]  # Wraps to first vertex, if list has only one
         # point then this draws a point correctly (its handled inside draw_line)
