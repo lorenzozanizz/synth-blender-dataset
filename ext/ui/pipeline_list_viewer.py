@@ -293,7 +293,6 @@ class AddCameraCategoryPipeMenu(Menu):
 
     def draw(self, context):
         layout = self.layout
-        layout.label(text='Camera')
 
         for name in (
             PipeNames.BEZIER_LOCK, PipeNames.SPHERE_LOCK

@@ -48,7 +48,11 @@ class Labels(Enum):
     # ( Capture the currently selected Image Texture shader node-editor node )
     CAPTURE_TEXTURE_NODE    = "randomizer.capture_texture"
     # ( Capture the currently selected objects, either a single one or a group )
-    CAPTURE_OBJECTS          = "randomizer.capture_objects"
+    CAPTURE_OBJECTS         = "randomizer.capture_objects"
+
+    TYPED_SINGLE_OBJ_CAPT   = "randomizer.typed_single_obj_capture"
+    # ( Select the position of the cursor )
+    ADD_CURSOR_POS          = "randomizer.select_cursor"
     # ( Edit the currently selected operation )
     EDIT_PIPE               = "randomizer.edit_operation"
     # ( Remove the currently selected operation )
@@ -92,7 +96,6 @@ class Labels(Enum):
     # ( Open the editor for the selected distribution in another workflow sidebar)
     OPEN_DISTRI_EDITOR      = "randomizer.open_distribution_editor"
 
-
     # ------------- Names inside labeling_ops.py ---------------
     # |
     # ( Add a new class to the available labels )
@@ -109,9 +112,9 @@ class Labels(Enum):
     REMOVE_LABEL_RULE       = "randomizer.remove_label_rule"
     # ( Capture the currently selected objects to be applied to the selected label assignment )
     CAPTURE_OBJECTS_LABEL   = "randomizer.capture_objects_label"
-
+    # ( Capture the objects for the entity )
     CAPTURE_OBJECTS_ENTITY  = "randomizer.capture_objects_entity"
-
+    # ( Let a label correspond to a multi-object entity )
     SELECT_ENTITY_LABEL     = "randomizer.select_entity_label"
     # ( Refresh the names assigned to labels in the pipeline, highlighting dead objects )
     REFRESH_LABEL_SETTINGS  = "randomizer.refresh_label_settings"

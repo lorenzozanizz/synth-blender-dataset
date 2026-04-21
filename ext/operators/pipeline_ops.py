@@ -5,11 +5,10 @@ from ..utils.logger import UniqueLogger
 from ..ui.pipe_schema import PipeSchemaRegistry, PipeSchema
 
 from bpy.types import Operator
-from bpy.props import IntProperty, StringProperty, BoolProperty, CollectionProperty
+from bpy.props import IntProperty, StringProperty
 import bpy
 
 from typing import Union
-from functools import reduce
 from json import dumps, loads
 
 class PipeAddOperator(Operator):
@@ -145,8 +144,6 @@ class CaptureObjectsOperator(Operator):
     bl_idname = Labels.CAPTURE_OBJECTS.value
     bl_label = "Capture Objects"
 
-    object_type: StringProperty(default="", description="")         # type: ignore
-
     def execute(self, context):
         scene = context.scene
         selected = context.selected_objects
@@ -167,6 +164,26 @@ class CaptureObjectsOperator(Operator):
         self.report({ 'INFO' }, f"Captured {len(selected)} objects")
         return { 'FINISHED' }
 
+
+class TypedSingleObjectTargeter(Operator):
+
+    bl_idname = Labels.TYPED_SINGLE_OBJ_CAPT.value
+    bl_label = "Selects a single object of given type"
+
+    select_type: StringProperty(default="")                   # type: ignore
+
+    def execute(self, context):
+
+        scene = context.scene
+        active_object = context.active_object
+
+        if self.select_type and active_object.type.lower() != self.select_type.lower():
+            self.report({ 'WARNING' }, "Selected object is not of type '{}'".format(self.select_type))
+            return { 'CANCELLED' }
+
+        scene.typed_object.obj_name = active_object.name
+
+        return { 'FINISHED' }
 
 def get_selected_node_and_material(reporter, context, node_name: Union[str, None]) -> tuple:
     """
@@ -243,6 +260,21 @@ class CaptureObjectPositionOperator(Operator):
 
         self.report({'INFO'}, f"Captured position from currently selected object.")
         return {'FINISHED'}
+
+
+class CaptureCursorPositionOperator(Operator):
+
+    bl_idname = Labels.ADD_CURSOR_POS.value
+    bl_label  = "Capture the position of the cursor"
+
+    def execute(self, context):
+        scene = context.scene
+        cursor_loc = scene.cursor.location
+
+        positions = context.scene.position_collection
+        new_op = positions.add()
+        new_op.pos = cursor_loc
+        return { 'FINISHED' }
 
 
 class ViewTargetSelectedOperator(Operator):

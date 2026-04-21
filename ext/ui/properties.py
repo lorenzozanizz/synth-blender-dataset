@@ -146,7 +146,8 @@ operation_properties = {
     "material_list": CollectionProperty(type=MaterialListItem),
     "material_list_index": IntProperty(default=0),
 
-    "reusable_checkbox": BoolProperty()
+    "reusable_checkbox": BoolProperty(),
+    "typed_object": PointerProperty(type=ObjectName),
 
 }
 

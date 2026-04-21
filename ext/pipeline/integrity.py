@@ -126,7 +126,12 @@ class CameraBezierLockValidator(PipeValidator):
 
     @staticmethod
     def validate(pipe: PipelineOperation, config: dict) -> bool:
-        pass
+
+        pos_ok = TypedObjectValidator.validate(config[wsk.TYPED_OBJ.value])
+        conditional = ConditionalValidator(PositionListSelectorValidator)
+        cur_ok = conditional.validate(partial_config=config[wsk.POSITION.value])
+
+        return pos_ok and cur_ok
 
 
 class WidgetValidator(metaclass=ABCMeta):
@@ -137,6 +142,35 @@ class WidgetValidator(metaclass=ABCMeta):
     @abstractmethod
     def validate(partial_config: dict) -> bool:
         pass
+
+
+class ConditionalValidator(WidgetValidator):
+
+    def __init__(self, target_cls):
+        self.target = target_cls
+
+    def validate(self, partial_config: dict) -> bool:
+        is_enabled = partial_config[wsk.ENABLED.value]
+        if is_enabled:
+            return self.target.validate(partial_config)
+        else:
+            return True
+
+class TypedObjectValidator(WidgetValidator):
+
+    @staticmethod
+    def validate(partial_config: dict) -> bool:
+        obj = partial_config[wsk.TYPED_OBJ_NAME.value]
+        # The pipe is not OK if it has no target. "OK" means useful and working.
+        if not obj:
+            return False
+        try:
+            obj = bpy.data.objects[obj]
+        except KeyError:
+            return False
+        if not obj:
+            return False
+        return True
 
 
 class AxisTargetValidator(WidgetValidator):

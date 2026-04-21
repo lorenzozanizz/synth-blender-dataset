@@ -66,6 +66,11 @@ class PipeNames(Enum):
 
 class WidgetSerializationKeys(Enum):
 
+    # Meta-name used for conditional widgets.
+    ENABLED = "enabled"
+
+    TYPED_OBJ = "typed_obj"
+    TYPED_OBJ_NAME = "name"
 
     BEZIER = "bezier"
     BEZIER_NAME = "name"

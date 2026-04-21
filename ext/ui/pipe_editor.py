@@ -213,6 +213,8 @@ class BezierLockCameraOperation(PipeDrawer):
 
     @staticmethod
     def draw_editor(layout, context) -> None:
-        scene = context.scene
-        CurveTargeter.draw(layout, context)
+        typed = TypedObjectTargeter(obj_type="CURVE")
+        typed.draw(layout, context)
         # If the user wants to lock the camera to a point, he must specify said point
+        conditional = ConditionalWidget(PositionListSelector, ask_text="Lock camera to point")
+        conditional.draw(layout, context)

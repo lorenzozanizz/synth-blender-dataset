@@ -698,6 +698,7 @@ class PositionListSelector(EditorWidget):
         col.operator(Labels.ADD_POSITION_POOL.value, icon='ADD', text='')
         col.operator(Labels.REMOVE_POSITION_POOL.value, icon='REMOVE', text='')
         col.operator(Labels.CAPTURE_OBJ_POSITION.value, icon='EYEDROPPER', text='')
+        col.operator(Labels.ADD_CURSOR_POS.value, icon='PIVOT_CURSOR', text='')
 
 #
 class MaterialSelector(EditorWidget):
@@ -807,63 +808,71 @@ class ValueTargeter(EditorWidget):
 
 class ConditionalWidget(EditorWidget):
 
-    @staticmethod
-    def setup_from_config(config: dict, context) -> None:
-        pass
+    def __init__(self, sub_widget: type[EditorWidget], ask_text: str) -> None:
+        self.widget = sub_widget
+        self.ask_text = ask_text
+
+    def draw(self, layout, context) -> None:
+        scene = context.scene
+        layout.prop(scene, 'reusable_checkbox', text=self.ask_text)
+        if scene.reusable_checkbox:
+            self.widget.draw(layout, context)
+
+    def extract_data(self, context) -> dict:
+        scene = context.scene
+        enabled = {
+            wsk.ENABLED.value : scene.reusable_checkbox
+        }
+        enabled.update(self.widget.extract_data(context))
+        return enabled
+
+    def reset(self, context) -> None:
+        scene = context.scene
+        scene.reusable_checkbox = False
+        self.widget.reset(context)
+
+    def setup_from_config(self, config: dict, context) -> None:
+        scene = context.scene
+        enabled = config[ wsk.ENABLED.value ]
+        scene.reusable_checkbox = enabled
+        if enabled:
+            self.widget.setup_from_config(config, context)
 
 
-class CurveTargeter(EditorWidget):
+class TypedObjectTargeter(EditorWidget):
 
-    @staticmethod
-    def draw(layout, context) -> None:
-        pass
+    def __init__(self, obj_type: str):
+        self.obj_type = obj_type
+
+    def draw(self, layout, context) -> None:
+        scene = context.scene
+        box = layout.box().row()
+        sub = box.row(align=True)
+        sub.scale_x = 0.5
+        sub.label(text="Target(s):")
+
+        # Concatenate the captured names together to get a string representation of the capture objects.
+        text_label = str(scene.typed_object.obj_name) if scene.typed_object.obj_name else "None"
+        box.label(text=text_label, icon='OBJECT_DATA')
+
+        box.operator(Labels.TYPED_SINGLE_OBJ_CAPT.value,
+                text=f"Capture {self.obj_type.title()}", icon='EYEDROPPER').select_type = self.obj_type
 
     @staticmethod
     def extract_data(context) -> dict:
-        pass
+        scene = context.scene
+        return {
+            wsk.TYPED_OBJ_NAME.value: scene.typed_object.obj_name
+        }
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:
-        pass
+        scene = context.scene
+        name = config[wsk.TYPED_OBJ_NAME.value]
+        scene.typed_object.obj_name = name
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        scene = context.scene
+        scene.typed_object.obj_name = ""
 
-
-class PointTargeter(EditorWidget):
-
-    @staticmethod
-    def draw(layout, context) -> None:
-        pass
-
-    @staticmethod
-    def extract_data(context) -> dict:
-        pass
-
-    @staticmethod
-    def setup_from_config(config: dict, context) -> None:
-        pass
-
-    @staticmethod
-    def reset(context) -> None:
-        pass
-
-
-class SphereTargeter(EditorWidget):
-
-    @staticmethod
-    def draw(layout, context) -> None:
-        pass
-
-    @staticmethod
-    def extract_data(context) -> dict:
-        pass
-
-    @staticmethod
-    def setup_from_config(config: dict, context) -> None:
-        pass
-
-    @staticmethod
-    def reset(context) -> None:
-        pass
