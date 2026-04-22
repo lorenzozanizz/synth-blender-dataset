@@ -347,11 +347,22 @@ class BezierLockOperation(PipelineOperation):
         self.target_camera = None
         self.bezier_distribution = None
 
+        self.enable_lock = False
+        self.lock_target = None
+
     def compile(self, context, config: dict):
         self.target_camera = context.scene.camera
 
-        curve = config[wsk.BEZIER.value][wsk.BEZIER_NAME.value]
+        self.enable_lock = config[wsk.OBJECT.value][wsk.ENABLED.value]
+
+        curve = config[wsk.TYPED_OBJ.value][wsk.TYPED_OBJ_NAME.value]
         curve_obj = bpy.data.objects[curve]
+
+        if self.enable_lock:
+            obj_names = config[wsk.OBJECT.value][wsk.OBJECT_NAMES.value]
+            first_obj = obj_names[0]
+            self.lock_target = bpy.data.objects[first_obj]
+
         self.bezier_distribution = BezierDistribution(
             BezierCurve.from_blender_curve(curve_obj),
         )
@@ -361,24 +372,34 @@ class BezierLockOperation(PipelineOperation):
         point = self.bezier_distribution.sample()
         self.target_camera.location = point
 
+
     def get_global_context(self):
-        return BezierLockOperation.BezierLockContext(self.target_camera)
+        return BezierLockOperation.BezierLockContext(self.target_camera, self.lock_target, do_lock=self.enable_lock)
 
     def get_frame_context(self):
         return None
 
     class BezierLockContext(ContextManager):
 
-        def __init__(self, target):
+        def __init__(self, target, virtual_obj, do_lock: bool):
             self.target = target
             self.constraint = None
+
+            self.do_lock = do_lock
+            self.virtual_object = virtual_obj
             self.initial_camera_pos = None
+            self.initial_camera_rot = None
 
         def __enter__(self):
-            self.constraint = self.target.constraints.new(type='TRACK_TO')
             self.initial_camera_pos = self.target.location
+            self.initial_camera_rot = self.target.rotation_euler
+            if self.do_lock:
+                self.constraint = self.target.constraints.new(type='TRACK_TO')
+                self.constraint.target = self.virtual_object
 
         def __exit__(self, exc_type, exc_val, exc_tb):
-            self.target.constraints.remove(self.constraint)
+            if self.do_lock:
+                self.target.constraints.remove(self.constraint)
             self.target.location = self.initial_camera_pos
+            self.target.rotation_euler = self.initial_camera_rot
 

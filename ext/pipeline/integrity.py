@@ -7,6 +7,8 @@ from typing import Union
 
 import bpy
 
+from ..utils.logger import UniqueLogger
+
 wsk = WidgetSerializationKeys
 
 class PipeValidator(metaclass=ABCMeta):
@@ -121,17 +123,17 @@ class RoughnessValidator(PipeValidator):
         return False
 
 
-@ValidatorRegistry.register(PipeNames.ROUGHNESS.value)
+@ValidatorRegistry.register(PipeNames.BEZIER_LOCK.value)
 class CameraBezierLockValidator(PipeValidator):
 
     @staticmethod
     def validate(pipe: PipelineOperation, config: dict) -> bool:
 
-        pos_ok = TypedObjectValidator.validate(config[wsk.TYPED_OBJ.value])
-        conditional = ConditionalValidator(PositionListSelectorValidator)
-        cur_ok = conditional.validate(partial_config=config[wsk.POSITION.value])
+        obj_ok = TypedObjectValidator.validate(config[wsk.TYPED_OBJ.value])
+        conditional = ConditionalValidator(ObjectTargeterValidator)
+        pos_ok = conditional.validate(partial_config=config[wsk.OBJECT.value])
 
-        return pos_ok and cur_ok
+        return obj_ok and pos_ok
 
 
 class WidgetValidator(metaclass=ABCMeta):
@@ -150,6 +152,7 @@ class ConditionalValidator(WidgetValidator):
         self.target = target_cls
 
     def validate(self, partial_config: dict) -> bool:
+        UniqueLogger.quick_log("Validate conditional" + partial_config.__str__())
         is_enabled = partial_config[wsk.ENABLED.value]
         if is_enabled:
             return self.target.validate(partial_config)
@@ -160,6 +163,8 @@ class TypedObjectValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
+        UniqueLogger.quick_log("Validate typed" + partial_config.__str__())
+
         obj = partial_config[wsk.TYPED_OBJ_NAME.value]
         # The pipe is not OK if it has no target. "OK" means useful and working.
         if not obj:

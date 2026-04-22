@@ -75,7 +75,17 @@ class YoloFormatter(SerializationStrategy):
         super().__init__(write_config)
 
     def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
-        return ('.txt', "Jewish boy!"),
+
+        # The label data is initially in the centered camera format. We need to transform it into
+        # the correct yolo format.
+        lines = []
+        for label in label_data:
+            cls = label.cls
+            bbox = label.geometry
+
+            pixel_space_coos = None
+
+        return ('.txt', ""),
 
     def get_subdir(self, ext: str) -> str:
         if 'txt' in ext:

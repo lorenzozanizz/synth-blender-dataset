@@ -258,10 +258,22 @@ class BezierLockCameraOperation(PipeSchema):
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
         """ """
-        pass
+        conditional = ConditionalWidget(ObjectTargeter)
+        dic = {
+            wsk.TYPED_OBJ.value: TypedObjectTargeter.extract_data(context),
+            wsk.OBJECT.value: conditional.extract_data(context),
+        }
+        return dic
 
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:
         """ """
-        pass
+        conditional = ConditionalWidget(ObjectTargeter)
+        if not config:
+            conditional.reset(context)
+            TypedObjectTargeter.reset(context)
+        else:
+            conditional.setup_from_config(config[wsk.OBJECT.value], context)
+            TypedObjectTargeter.setup_from_config(config[wsk.TYPED_OBJ.value], context )
+
 

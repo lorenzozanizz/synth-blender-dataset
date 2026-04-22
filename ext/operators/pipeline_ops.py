@@ -144,6 +144,8 @@ class CaptureObjectsOperator(Operator):
     bl_idname = Labels.CAPTURE_OBJECTS.value
     bl_label = "Capture Objects"
 
+    limit_obj: IntProperty(default=0)               # type: ignore
+
     def execute(self, context):
         scene = context.scene
         selected = context.selected_objects
@@ -155,11 +157,14 @@ class CaptureObjectsOperator(Operator):
         # Store names
         name_list = scene.targeted_objects_display
 
-
+        captured_amount = 0
         name_list.clear()
         for obj in selected:
             nm = name_list.add()
             nm.obj_name = obj.name
+            captured_amount += 1
+            if captured_amount >= self.limit_obj and self.limit_obj:
+                break
 
         self.report({ 'INFO' }, f"Captured {len(selected)} objects")
         return { 'FINISHED' }

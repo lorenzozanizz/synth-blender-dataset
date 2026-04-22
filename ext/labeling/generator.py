@@ -168,7 +168,8 @@ class BoundingBoxExtractor(Extractor):
 
                 ret_data.add(
                     Label(entity_name, cls,
-                          geometry=bbox, visibility=self.estimated_visibility.get(entity_name), annotation_type="bbox",
+                          geometry=total_visible_bbox,
+                          visibility=self.estimated_visibility.get(entity_name), annotation_type="bbox",
                           is_entity=True)
                 )
 
@@ -233,7 +234,6 @@ class PolygonExtractor:
         :param entity_data:
         :param camera:
         :param estimate_visibility:
-        :param kwargs:
         :return:
         """
         ret_data = LabelData()
@@ -346,3 +346,4 @@ class PolygonExtractor:
     def get_bbox_entities(self) -> Dict:
         """ Get the mappings from object to bounding boxes """
         return self.visible_entities
+

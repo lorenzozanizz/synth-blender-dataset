@@ -10,6 +10,8 @@ import bpy
 class LabelingFormats(Enum):
 
     YOLO = "Yolo"
+    YOLO_SPLIT = "Yolo Split"
+    COCO = "COCO"
 
     @staticmethod
     def from_string(s: str) -> Union[None, 'LabelingFormats']:

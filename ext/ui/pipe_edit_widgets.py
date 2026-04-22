@@ -1,3 +1,5 @@
+from typing import Union
+
 from ..operators.names import Labels
 from ..distribution.computation import Distribution
 from ..distribution.nodes import get_tree_dimensionality
@@ -808,9 +810,14 @@ class ValueTargeter(EditorWidget):
 
 class ConditionalWidget(EditorWidget):
 
-    def __init__(self, sub_widget: type[EditorWidget], ask_text: str) -> None:
+    def __init__(self, sub_widget: type[EditorWidget], ask_text: str = "Enable", *args, **kwargs) -> None:
+
         self.widget = sub_widget
         self.ask_text = ask_text
+
+        # This should be saved to be inputted to intermediate widget functions.
+        self._sub_init_args = args
+        self._sub_init_kwargs = kwargs
 
     def draw(self, layout, context) -> None:
         scene = context.scene
