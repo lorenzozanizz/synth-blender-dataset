@@ -5,4 +5,5 @@ from unittest.mock import MagicMock
 sys.modules['bpy'] = MagicMock()
 sys.modules['bpy.types'] = MagicMock()
 sys.modules['bpy.props'] = MagicMock()
+sys.modules['nodeitems_utils'] = MagicMock()
 sys.modules['mathutils'] = MagicMock()
