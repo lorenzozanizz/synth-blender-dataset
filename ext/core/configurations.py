@@ -50,3 +50,12 @@ class PreviewRenderConfig:
     # wish to disable it.
     ignore_default_class: bool = True
 
+@dataclass
+class RenderConfig:
+    """
+
+    """
+
+    width: int
+    height: int
+

@@ -66,6 +66,35 @@ def convert_camera_centered_to_absolute_pixels_y_inverted(
     y_max = height - y_max
     return x_min, y_min, x_max, y_max
 
+def convert_camera_centered_to_top_left_0_1(
+    ximn_ymin_xmax_ymax: tuple[float, float, float, float]
+):
+    """
+
+    :param ximn_ymin_xmax_ymax:
+    :return:
+    """
+    x_min = (ximn_ymin_xmax_ymax[0] + 1) / 2
+    y_min = (ximn_ymin_xmax_ymax[1] + 1) / 2
+    x_max = (ximn_ymin_xmax_ymax[2] + 1) / 2
+    y_max = (ximn_ymin_xmax_ymax[3] + 1) / 2
+    return x_min, y_min, x_max, y_max
+
+def convert_camera_centered_to_yolo(
+    ximn_ymin_xmax_ymax: tuple[float, float, float, float]
+):
+    """ Convert image-centered [-1, 1] bbox to YOLO [0, 1]
+
+    :param ximn_ymin_xmax_ymax: the camera-centered [-1, 1] bbox
+    :return: 4 numbers in YOLO format x_center, y_center and sizes.
+    """
+    x_min, y_min, x_max, y_max = ximn_ymin_xmax_ymax
+    x_center = ((x_min + x_max) / 2 + 1) / 2
+    y_center = ((y_min + y_max) / 2 + 1) / 2
+    width = abs(x_max - x_min) / 2
+    height = abs(y_max - y_min) / 2
+    return x_center, y_center, width, height
+
 
 def convert_camera_point_list_absolute_pixels_y_inverted(
     p_list: List[tuple[float, float]], width: int, height: int

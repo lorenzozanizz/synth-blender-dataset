@@ -73,10 +73,7 @@ def evaluate_bezier_segment(p0, h0_right, h1_left, p1, t) -> Vector:
     # From the definition of a (cubic) Bezièr curve.
     # https://en.wikipedia.org/wiki/B%C3%A9zier_curve
     mt = 1 - t
-    return (mt ** 3 * p0 +
-            3 * mt ** 2 * t * h0_right +
-            3 * mt * t ** 2 * h1_left +
-            t ** 3 * p1)
+    return mt ** 3 * p0 + 3 * mt ** 2 * t * h0_right + 3 * mt * t ** 2 * h1_left + t ** 3 * p1
 
 
 def evaluate_2p_bezier_seg(p: Bezier2PSegment, t) -> Vector:
@@ -89,10 +86,7 @@ def evaluate_2p_bezier_seg(p: Bezier2PSegment, t) -> Vector:
     # From the definition of a (cubic) Bezièr curve.
     # https://en.wikipedia.org/wiki/B%C3%A9zier_curve
     mt = 1 - t
-    return (mt ** 3 * p.p0 +
-            3 * mt ** 2 * t * p.right_handle +
-            3 * mt * t ** 2 * p.left_handle +
-            t ** 3 * p.p1)
+    return mt ** 3 * p.p0 + 3 * mt ** 2 * t * p.right_handle + 3 * mt * t ** 2 * p.left_handle + t ** 3 * p.p1
 
 
 def segment_length(p0, h0_right, h1_left, p1, samples=10):

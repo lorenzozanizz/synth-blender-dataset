@@ -1,10 +1,11 @@
-from .configurations import WritingConfig
+from .configurations import WritingConfig, RenderConfig
 
 from ..labeling.generator import LabelData
+from ..labeling.conversions import convert_camera_centered_to_yolo
 
 from typing import Union, Collection, Tuple
 from pathlib import Path
-from os.path import join, dirname, isdir, isfile
+from os.path import join, dirname, isfile
 from os import makedirs, listdir
 from enum import Enum
 from abc import ABCMeta, abstractmethod
@@ -29,9 +30,10 @@ class SerializationStrategy(metaclass=ABCMeta):
         self.config = write_config
 
     @abstractmethod
-    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+    def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
         """
 
+        :param render_config:
         :param label_data:
         :return:
         """
@@ -74,18 +76,18 @@ class YoloFormatter(SerializationStrategy):
     def __init__(self, write_config: WritingConfig):
         super().__init__(write_config)
 
-    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+    def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
 
         # The label data is initially in the centered camera format. We need to transform it into
         # the correct yolo format.
         lines = []
         for label in label_data:
-            cls = label.cls
+            cls_id = label.cls.class_id
             bbox = label.geometry
 
-            pixel_space_coos = None
-
-        return ('.txt', ""),
+            yolo_coos = convert_camera_centered_to_yolo(bbox)
+            lines.append(f"{cls_id} {yolo_coos[0]} {yolo_coos[1]} {yolo_coos[2]} {yolo_coos[3]}\n")
+        return ('.txt', "".join(lines)),
 
     def get_subdir(self, ext: str) -> str:
         if 'txt' in ext:
@@ -96,17 +98,17 @@ class YoloFormatter(SerializationStrategy):
 
 class YoloSplitFormatter(SerializationStrategy):
 
-    def __init__(self, write_config: WritingConfig):
-        super().__init__(write_config)
-
-    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+    def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
         pass
 
     def get_subdir(self, ext: str) -> str:
-        if 'image' in ext:
-            pass
-        else:
-            subdir = f"images/{self.config.split}"
+        pass
+
+    def mark_beginning(self) -> None:
+        pass
+
+    def mark_end(self) -> None:
+        pass
 
 
 class CocoFormatter(SerializationStrategy):
@@ -120,7 +122,7 @@ class CocoFormatter(SerializationStrategy):
     def __init__(self, write_config: WritingConfig):
         super().__init__(write_config)
 
-    def format(self, label_data: LabelData) -> Collection[Tuple[str, str]]:
+    def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
         pass
 
     def get_subdir(self, ext: str) -> str:

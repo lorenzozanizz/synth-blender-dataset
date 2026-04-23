@@ -206,7 +206,7 @@ class BoundingBoxExtractor(Extractor):
         return self.visible_entities
 
 
-class PolygonExtractor:
+class PolygonExtractor(Extractor):
 
     """Encapsulates bbox extraction logic"""
 

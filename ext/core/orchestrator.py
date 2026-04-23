@@ -1,4 +1,4 @@
-from .configurations import LabelExtractionConfig
+from .configurations import LabelExtractionConfig, RenderConfig
 from .io import OutputWriter, SerializationStrategy, YoloFormatter
 
 from ..labeling.generator import LabelData
@@ -44,6 +44,7 @@ class LabelingOrchestrator:
 
         # Step 1] Extract the entity data from the scene, which is to be used by the extractor to
         # compose together multi-object entities.
+        scene = self.ctx.scene
         entity_scene_data = self.classifier.extract_entity_data()
 
         # Step 2] Extract the visible entities which are going to be bound and classified by the
@@ -69,7 +70,8 @@ class LabelingOrchestrator:
         )
 
         if self.config.write_labels and self.writer is not None:
-            files = self.formatter.format(self.label_data)
+            render_config = RenderConfig(scene.render.resolution_x, scene.render.resolution_y)
+            files = self.formatter.format(self.label_data, render_config)
             self.writer.write_label(files)
 
         return
@@ -93,7 +95,7 @@ class LabelingOrchestrator:
         return YoloFormatter(write_config=self.writer.get_config())
 
     def _create_extractor(self):
-        return PolygonExtractor(self.ctx)
+        return BoundingBoxExtractor(self.ctx)
 
     def get_last_label_data(self) -> Union[None, LabelData]:
         return self.label_data
