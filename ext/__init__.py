@@ -22,26 +22,7 @@ Blender: 4.x
 License: MIT
 """
 
-from .constants import NODE_CATEGORIES_NAME
-
-from .ui import classes as ui_classes
-from .operators import operators as ops_classes
-from .distribution import classes as dist_classes
-from .distribution import node_categories
-from .pipeline import classes as pipe_classes
-from .labeling import classes as labeling_classes
-
-from .labeling import properties as labeling_properties
-from .pipeline import properties as pipeline_properties
-from .ui import register_handlers, unregister_handlers
-from .ui import properties as ui_properties
-
-from .utils.logger import UniqueLogger
-
-import bpy
-from nodeitems_utils import register_node_categories, unregister_node_categories
-
-bl_info  = {
+bl_info = {
     "name": "Random Dataset Generator",
     "author": "lorenzozanizz",
     "version": (1, 0, 0),
@@ -51,18 +32,43 @@ bl_info  = {
     "category": "Render",
 }
 
-registration_classes = (
-    *pipe_classes,
-    *dist_classes,
-    *ops_classes,
-    *ui_classes,
-    *labeling_classes
-)
+import sys
 
-# Construct a dictionary with all properties declarations across all modules
-properties = {}
-for properties_set in (ui_properties, pipeline_properties, labeling_properties):
-    properties.update(properties_set)
+# When testing we must not import all classes, because some ui classes are not stubbed and
+# at test time bpy is not present.
+if 'pytest' not in sys.modules:
+
+    from .constants import NODE_CATEGORIES_NAME
+
+    from .ui import classes as ui_classes
+    from .operators import operators as ops_classes
+    from .distribution import classes as dist_classes
+    from .distribution import node_categories
+    from .pipeline import classes as pipe_classes
+    from .labeling import classes as labeling_classes
+
+    from .labeling import properties as labeling_properties
+    from .pipeline import properties as pipeline_properties
+    from .ui import register_handlers, unregister_handlers
+    from .ui import properties as ui_properties
+
+    from .utils.logger import UniqueLogger
+
+    import bpy
+    from nodeitems_utils import register_node_categories, unregister_node_categories
+
+    registration_classes = (
+        *pipe_classes,
+        *dist_classes,
+        *ops_classes,
+        *ui_classes,
+        *labeling_classes
+    )
+
+    # Construct a dictionary with all properties declarations across all modules
+    properties = {}
+    for properties_set in (ui_properties, pipeline_properties, labeling_properties):
+        properties.update(properties_set)
 
 
 def register():
