@@ -2,9 +2,9 @@
 
 ## Overview
 
-This document describes the technical architecture of the Blender Random Dataset Generator extension. The extension enables procedural variation of 3D scenes through a pipeline-based operation system, supporting object transformations, material modifications, and batch rendering.
+This document describes the technical architecture of the extension. The extension enables procedural variation of 3D scenes through a pipeline-based operation system, supporting object transformations, material modifications, and batch rendering. There is also a preview functionality which allows the user to analyze the bounding boxes and output of the pipeline. 
 
-The codebase is organized into seven primary subsystems: core, pipeline, distribution, operators, UI, utilities, and entry points.
+The codebase is organized into eight primary subsystems: core, pipeline, distribution, labeling, operators, UI, utilities, and entry points.
 
 ---
 
@@ -49,7 +49,7 @@ flowchart TD;
 
 **Contents**:
 - **Naming conventions**: Panel name prefixes to avoid conflicts with other scene variables
-- **Pipe Keys** Each type of pipe in the pipeline is assigned a string type which is used as key in different  registries around the code. 
+- **Pipe Keys** Each type of pipe in the pipeline is assigned a string label which is used as key in different  registries around the code. 
  This happens inside **Enum - PipeNames**:
 
 ---
@@ -132,6 +132,7 @@ class PipelineData(PropertyGroup):
 - Enabled/disabled flag
 - Display name
 - Configuration JSON string
+- (In the future) Metadata regarding folder subdivision of pipeline
 
 **Attachment**: `pipeline_data` is attached to `bpy.types.Scene` at addon registration.
 
@@ -147,6 +148,8 @@ for operation in pipeline.operations:
 ---
 
 ### 4. Distribution System: `ext/distribution/`
+
+This section is currently incomplete and work in progress. The idea is to let the user specify arbitrarily complex and general distributions of random vectors using a node editor with basic building blocks being constants and standard distributions.
 
 The distribution system manages probability distributions via a custom node editor whenever the user needs a multimodal / customized 
 distribution to randomize a certain property.
@@ -181,11 +184,11 @@ NOTE: Custom polling methods ensure nodes only appear in Distribution editor
 
 ### 5. Operators System: `ext/operators/`
 
-Operators implement Blender's action system. They respond to UI interactions and execute modifications.
+Operators implement Blender's action system. They respond to UI interactions and execute modifications. 
 
 #### 5.1 Operator Registry: `names.py`
 
-**Purpose**: Centralize operator identifiers to safely reference them and dynamically register them. Whenever a UI elements wishes 
+**Purpose**: Centralize operator identifiers to safely reference them avoiding dangling references. Whenever a UI elements wishes 
 to import an operator, the label is extracted from the Labels enum so there cannot be any "wrong name" dangling references and changing an 
 operator label is centralized. 
 
@@ -199,6 +202,8 @@ class Labels(Enum):
 ```
 
 #### 5.2 Pipeline Operators: `pipeline_ops.py`
+
+The following listings of operators are not comprehensive and are intended to just give a general idea of operators in each folder. 
 
 **Core Operators**:
 
@@ -231,14 +236,14 @@ class Labels(Enum):
 - `LoadPipelineOperator`: Import pipeline from JSON file
 - `ApplyLogPathOperator`: Set logging directory
 - `OpenLogsOperator`: Open log files in system viewer
+- ... Some others involving serialization
 
 #### 5.5 Distribution Operators: `distribution_ops.py`
 
 **Distribution Management**:
 - `AddDistributionOperator`: Create new distribution graph
 - `RemoveDistributionOperator`: Delete distribution graph
-- `AddImagePathOperator`: Add texture to pool
-- `RemoveImagePathOperator`: Remove texture from pool
+- ... Some others
 
 ---
 
@@ -253,9 +258,10 @@ The UI layer renders panels, lists, and editors in Blender's interface.
 | Panel | Class | Purpose                                   | Order |
 |-------|-------|-------------------------------------------|-------|
 | Generator | `RandomizerPanel` | Main controls (destination, amount, seed) | 0 |
-| Pipeline Editor | `RegistrationPanel` | Pipeline operations list and editor       | 1 |
-| Settings | `SettingsPanel` | Logging and preferences          | 2 |
-| Info | `InfoPanel` | Version info and documentation links      | 3 |
+| Labels | `LabelingPanel` | Creation of label classes, multi-object entities and assignment of labels to objects with rule support| 0 |
+| Pipeline Editor | `RegistrationPanel` | Pipeline operations list and editor       | 2 |
+| Settings | `SettingsPanel` | Logging and preferences          | 3 |
+| Info | `InfoPanel` | Version info and documentation links      | 4 |
 
 #### 6.2 Pipeline Editor: `pipeline_list_viewer.py`
 
@@ -266,9 +272,9 @@ modes:
 
 **Operation Menus**: Hierarchical add menus to add different kinds of pipes.
    - `AddObjectCategoryPipeMenu`: Position, Rotation, Scale, Visibility, Move
-   - `AddMaterialCategoryPipeMenu`: Material, Texture, Metallic, Roughness, etc.
-   - `AddLightingCategoryPipeMenu`: Temperature, Power, Color
-   - `AddConstraintCategoryPipeMenu`: Overlap, Occlusion, Distance
+   - `AddMaterialCategoryPipeMenu`: Material, Texture, Metallic, Roughness, etc. (partially implemented)
+   - `AddLightingCategoryPipeMenu`: Temperature, Power, Color (not implemented yet)
+   - `AddConstraintCategoryPipeMenu`: Overlap, Occlusion, Distance (not implemented yet)
    - `AddCameraCategoryPipeMenu`: (placeholder)
    - `AddExperimentalCategoryPipeMenu`: (placeholder)
 
@@ -323,6 +329,8 @@ class PipeDrawer(ABC):
 ```
 
 **Example Implementation**:
+
+This example shows how editor can be composed of basic building widgets which can be reused to share properties. 
 ```python
 class ScalarPropertyDrawer(PipeDrawer):
     @staticmethod
@@ -437,7 +445,7 @@ ext_ui_properties = {
 
 #### 6.7 Event Handlers: `handlers.py`
 
-**Purpose**: Respond to scene changes asynchronously.
+**Purpose**: Respond to scene changes asynchronously. They are used to prompt for materials and other aspects of the current state of bpy.data.
 
 **Registered Handler**:
 ```python
@@ -638,9 +646,10 @@ config = schema.extract_config_from_ui(context, operation)
 
 ### 1. Decorator-Based Registry
 
-Three independent registries use decorators for self-registering classes:
+Four independent registries use decorators for self-registering classes:
 - Operation execution (`OperationRegistry`)
 - Operation UI drawing (`OperationDrawerRegistry`)
+- Operation validation (`ValidatorRegistry`)
 - Operation config serialization (`PipeSchemaRegistry`)
 
 **Benefit**: Adding a new operation type requires only defining classes with decorators; registration is automatic.
@@ -688,7 +697,19 @@ Each can evolve independently.
            pass
    ```
 
-2. **Define UI drawer** in `ext/ui/pipe_editor.py`:
+2. **Define Validator logic** in `ext/ui/integrity.py`:
+   ```python
+   
+    @ValidatorRegistry.register(PipeNames.ROUGHNESS.value)
+    class RoughnessValidator(PipeValidator):
+
+    @staticmethod
+    def validate(pipe: PipelineOperation, config: dict) -> bool:
+        return False
+
+   ```
+
+3. **Define UI drawer** in `ext/ui/pipe_editor.py`:
    ```python
    @OperationDrawerRegistry.register(PipeNames.MY_OP.value)
    class MyOperationDrawer(PipeDrawer):
@@ -698,7 +719,7 @@ Each can evolve independently.
            pass
    ```
 
-3. **Define config schema** in `ext/ui/pipe_schema.py`:
+4. **Define config schema** in `ext/ui/pipe_schema.py`:
    ```python
    @PipeSchemaRegistry.register(PipeNames.MY_OP.value)
    class MyOperationSchema(PipeSchema):
@@ -713,13 +734,13 @@ Each can evolve independently.
            pass
    ```
 
-4. **Add enum value** to `constants.py`:
+5. **Add enum value** to `constants.py`:
    ```python
    class PipeNames(Enum):
        MY_OP = "My Operation"
    ```
 
-5. **Add to menu** in `ext/ui/pipeline_list_viewer.py`:
+6. **Add to menu** in `ext/ui/pipeline_list_viewer.py`:
    ```python
    layout.operator(Labels.ADD_PIPE.value, text="My Operation",
                    icon=my_icon).op_name = PipeNames.MY_OP.value
@@ -740,17 +761,17 @@ Each can evolve independently.
 - `PipelineOperation`: Individual operation
 
 ### Operators (Actions)
-- 25+ operator classes responding to UI interactions
+- 50+ operator classes responding to UI interactions
 
 ### Node Trees (Custom Editor)
 - `DistributionNodeTree`: Distribution graph editor
-- 5 custom node types
+- 5 custom node types [Work in progress]
 
 ### Event Handlers
 - `sync_distribution_handler`: Keeps distribution list in sync
 
 ### Scene Properties
-- 30+ properties attached to `bpy.types.Scene` at registration
+- 50+ properties attached to `bpy.types.Scene` at registration
 
 ---
 
@@ -801,21 +822,21 @@ ext/
 
 | Component | Status | Notes |
 |-----------|--------|-------|
-| Data storage | ✓ Complete | PropertyGroup-based, persists with .blend |
-| Registries | ✓ Complete | Three independent registries (exec, UI, schema) |
-| UI panels | ✓ Complete | All main panels implemented |
-| Operation list | ✓ Complete | UIList with full editor |
-| Distribution editor | ✓ Complete | Custom node tree with 5 node types |
-| Operators | ✓ Complete | 25+ operators for UI interactions |
-| Operation execution | ⚠ Stubs | Abstract classes defined, execute() not implemented |
-| Config extraction | ⚠ Partial | Schema registry defined, implementations incomplete |
-| Dataset generation | ⚠ Placeholder | `core/generation.py` needs implementation |
+| Data storage | Complete | PropertyGroup-based, persists with .blend |
+| Registries | Complete | Four independent registries (exec, UI, validation, schema) |
+| UI panels | Complete | All main panels implemented |
+| Operation list | Complete (for some pipes) | UIList with full editor |
+| Distribution editor | Incomplete, work in progress | Custom node tree with 5 node types |
+| Operators | Expanding omplete | 50+ operators for UI interactions |
+| Operation execution | Complete | Abstract classes defined, execute() implemented |
+| Config extraction | Complete (for some pipes) | Schema registry defined, implementations incomplete |
+| Dataset generation | Complete for YOLO bboxes, partial for COCO polygons | `labeling/generation.py`  has extraction logic |
 
 ---
 
 ## Key Design Decisions
 
-1. **Three Parallel Registries**: Decouples execution, UI, and serialization concerns.
+1. **Four Parallel Registries**: Decouples execution, UI, and serialization concerns.
 2. **PropertyGroup Storage**: Automatic persistence with .blend files, no manual I/O.
 3. **JSON Config Strings**: Simple serialization, human-readable, version-compatible.
 4. **Custom Node Editor**: Distributoins modeled as visual graphs, not tables.
