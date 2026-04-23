@@ -1,3 +1,19 @@
+""" A small module containing an auxiliary timing module used throughout the code
+to monitor the rendering, labeling time in the preview and possibly in other places.
+
+Classes:
+    TimingContext: The main timing object, which allows to time the time it takes
+    to complete a python context and save the time under a label in a given dictionary.
+
+Example:
+
+    >>> from ext.utils.timer import TimingContext
+    >>> timings = {}
+    >>> with TimingContext(timings, 'timer_name'):
+    >>>     ex = None
+    >>> print("Time is", timings['timer_name'])
+"""
+
 from typing import Dict, SupportsIndex, Union
 from time import time
 

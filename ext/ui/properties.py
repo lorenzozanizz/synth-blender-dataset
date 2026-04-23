@@ -1,3 +1,13 @@
+"""Configuration of UI properties for the Blender randomization pipeline.
+
+Defines property groups used to control the main interface, pipeline operations,
+and distribution settings within the addon, using the Blender's property system.
+
+The properties are split into three kinds, ui properties, distribution properties and
+operation properties, respectively used for the main UI panel, the distribution settings and
+the pipe edit widgets.
+"""
+
 import os
 
 from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TextureNodeProperty
@@ -6,6 +16,7 @@ from bpy.props import (
     StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty, PointerProperty
 )
 
+# UI properties for the main panel, output panel and class panel.
 ext_ui_properties = {
     "pipeline_has_unsaved_changes": BoolProperty(default=False),
     "randomizer_pipeline_save_path": StringProperty(
@@ -65,8 +76,8 @@ ext_ui_properties = {
     )
 }
 
-
-
+# Properties which are to be used in the UI editor for pipes in the pipeline.
+# Note that some properties may be reused for multiple different widgets.
 operation_properties = {
 
     "use_distribution_tree": BoolProperty(
@@ -151,7 +162,8 @@ operation_properties = {
 
 }
 
-#
+# Properties which are particular to the distribution selection in the
+# distribution widget.
 distribution_settings = {
 
     # Scalars

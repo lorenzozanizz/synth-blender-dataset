@@ -1,3 +1,12 @@
+""" Utility math functions involving sampling and mathematic functions.
+Functions:
+    geometric: Samples a random variable from the geometric distribution, using the random module
+
+Example:
+    >>> from ext.utils.math_funcs import geometric
+    >>> n = geometric(0.5) # random var from Geometric(p)
+"""
+
 import random
 
 def geometric(p: float) -> int:

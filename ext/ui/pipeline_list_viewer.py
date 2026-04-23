@@ -1,3 +1,18 @@
+"""User interface panels and lists for managing the pipeline editor in Blender GUI.
+
+Defines UI components for displaying, editing, and organizing pipeline operations,
+including panels, lists, and categorized menus for adding new operations in the pipeline editor.
+
+Classes:
+    RegistrationPanel: Main panel for viewing and editing the pipeline.
+    PipelineOperationsList: UI list for displaying pipeline operations.
+    AddObjectCategoryPipeMenu: Menu for adding object-related operations.
+    AddCameraCategoryPipeMenu: Menu for adding camera-related operations.
+    AddMaterialCategoryPipeMenu: Menu for adding material-related operations.
+    AddLightingCategoryPipeMenu: Placeholder menu for lighting operations.
+    AddConstraintCategoryPipeMenu: Placeholder menu for constraint operations.
+
+"""
 from .pipe_editor import OperationDrawerRegistry
 
 from ..operators.names import Labels

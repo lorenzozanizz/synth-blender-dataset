@@ -1,6 +1,18 @@
+"""Bitmap font definitions for rendering text in pixel-based graphics.
+
+Provides two font dictionaries: a compact bitmap font and an extended 8-bit
+bitmap font, both representing characters as grids of binary strings. The current
+functions in /images/ only use the 8 bit bitmap font.
+
+Variables:
+    EIGHT_BIT_BITMAP_FONT: Extended bitmap font with variable character sizes.
+    BITMAP_FONT: Basic 5x5 bitmap font for simple text rendering.
+
+"""
+
 from typing import Dict, List
 
-#
+# 5x5 bitmap font
 BITMAP_FONT: Dict[str, List[str]] = {
 
     'A': ["01110", "10001", "11111", "10001", "10001"],
@@ -69,6 +81,7 @@ BITMAP_FONT: Dict[str, List[str]] = {
 
 EIGHT_BIT_BITMAP_FONT_HEIGHT = 8
 
+# 8x8 bitmap font for english letters, numbers and some alphanumeric characters
 EIGHT_BIT_BITMAP_FONT: Dict[str, List[str]] = {
 
     'A': ["00111000", "01000100", "10000010", "11111110", "10000010", "10000010", "10000010"],

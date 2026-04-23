@@ -1,6 +1,23 @@
+"""Schema definitions and registry for pipeline operation configurations.
+
+Provides a framework to register, extract, and apply configuration schemas
+for different pipeline operations, enabling serialization and UI synchronization.
+All pipes need to have a serialization and deserialization schema to dump and
+load from memory, either through a json file or through a blender property.
+
+Classes:
+    PipeSchemaRegistry: Manages registration and retrieval of operation schemas.
+    PipeSchema: Abstract base class for defining UI-to-config transformations.
+    ScalarPropertyDrawer: Base schema for scalar/vector-based operations.
+    ... other schema implementations
+
+Example:
+    >>> from ext.ui.pipe_schema import PipeSchemaRegistry
+    >>> PipeSchemaRegistry.register("pipe_name")
+    >>> class NewPipeSchema(PipeSchemaRegistry):
+    >>> pass
 """
 
-"""
 from .pipe_edit_widgets import *
 
 from ..constants import PipeNames
@@ -35,13 +52,6 @@ class PipeSchemaRegistry:
     def get_all_types(cls) -> list:
         """Get all available schemas types."""
         return list(cls._pipes_schema.keys())
-
-
-class ConfigExtractionUtils:
-    """
-
-    """
-    pass
 
 
 class PipeSchema(ABC):

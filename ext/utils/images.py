@@ -1,28 +1,36 @@
+"""Utility functions for drawing shapes and text on pixel-based images.
+
+Provides helpers to manipulate raster pixel arrays, including drawing lines,
+polygons, bounding boxes, and bitmap text using a simple 8-bit font system included in /utils/fonts.
+Note that in blender, images raster have y=0 on the <u>bottom</u> of the image!
+
+Functions:
+    draw_color: Set or invert pixel color values.
+    draw_line: Draw a line using Bresenham's algorithm.
+    draw_polygon: Render polygon outlines and vertices.
+    fill_polygon: Fill polygons using a scanline algorithm.
+    draw_bitmap_text: Render text using a bitmap font.
+    draw_bounding_box: Draw rectangular boxes on images.
+    compute_text_pixel_width: Estimate text width in pixels.
+
+Example:
+    >>> from ext.utils.images import draw_line
+    >>> pixels = list[...] # list of blender pixel objects
+    >>> draw_line(pixels, (0, 0), (10, 10), (1, 1, 1, 1), 100, 100)
+"""
+
 from .fonts import EIGHT_BIT_BITMAP_FONT_HEIGHT, EIGHT_BIT_BITMAP_FONT
-from typing import Tuple, Union, Optional
+from typing import Tuple, Union, Optional, Any
 
 
-class DrawableCanvas:
-    """
+def draw_color(pixel, color: Optional[Tuple[float, float, float, float]], index: int) -> None:
+    """ Draws a pixel on the pixel canvas array of the given color at the given index.
+    All fours channel are written.
+    If the color is None, the pixel is instead inverted for maximum contrast.
 
-    """
-
-    def __init__(self, image, height, width, major_offset_x, major_offset_y):
-        self.image = image
-        self.height = height
-        self.width = width
-
-    def reserve_section(self) -> None:
-        pass
-
-
-def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> None:
-    """
-
-    :param pixel:
-    :param color:
-    :param index:
-    :return:
+    :param pixel: the pixel raster
+    :param color: the color
+    :param index: the index in the unwrapped pixel raster
     """
     if color:
         pixel[index]     = color[0]
@@ -36,7 +44,14 @@ def draw_color(pixel, color: Tuple[float, float, float, float], index: int) -> N
         pixel[index + 2] = 1 - pixel[index + 2]
     return
 
-def to_index(p, w, channels: int = 4) -> int:
+def to_index(p: tuple, w: int, channels: int = 4) -> int:
+    """ Computes the index in the unwrapped pixel raster of the given channels.
+
+    :param p: point whose index is to be computed
+    :param w: the width of the canvas
+    :param channels: number of channels
+    :return: the unwrapped index.
+    """
     return (p[0] + p[1]*w)*channels
 
 
@@ -120,20 +135,31 @@ def draw_bounding_box(
 
 
 def font_size_fit_box_perc(text: str, max_width: int, ratio: float = 1.0) -> int:
-    """
+    """ Computes an estimate of the horizontal width so that a text occupies at most ratio% of the
+    max_width provided. Note that we assume the width to be constant per character, so that this function
+    may overshoot.
 
-    :return:
+    :param text: The target text
+    :param max_width: max reference width
+    :param ratio: the ratio desired
+    :return: estimate font size
     """
     # A generic reference size, assuming the text width is pretty much linear in the width.
     base_size = 3
-    base_width = estimate_text_pixel_width(text, base_size)
+    # this actually computes the real width, not the estimate: the estimate is the ratio below!
+    base_width = compute_text_pixel_width(text, base_size)
 
     scale = max_width / base_width
     font_size = max(2, int(base_size * scale * ratio))
     return font_size
 
-def estimate_text_pixel_width(text: str, size: int) -> int:
+def compute_text_pixel_width(text: str, size: int) -> int:
+    """ Computes the width for a given text with a given font size.
 
+    :param text: the text
+    :param size: the font size considered
+    :return: the width in pixels.
+    """
     width = 0
     for char in text:
         if char not in EIGHT_BIT_BITMAP_FONT:
@@ -145,6 +171,15 @@ def estimate_text_pixel_width(text: str, size: int) -> int:
 
 
 def estimate_text_pixel_height(_text: str, size: int) -> int:
+    """ Estimate the text height as the reference font height. Notice that the real
+    height is a bit higher potentially due to letters exceeding the regular height (l, q, p, t...)
+
+    We keep the _text as first argument for coherence with the other width estimation function.
+
+    :param _text: the (unused) reference text, or ""
+    :param size: the font size considered
+    :return: estimated font height
+    """
     return size*EIGHT_BIT_BITMAP_FONT_HEIGHT
 
 
@@ -152,15 +187,18 @@ def draw_bitmap_text(img, text: str, position: tuple[int, int] = (0, 0),
                      color: Optional[tuple[float, float, float, float]] = (1.0, 1.0, 1.0, 1.0),
                      size: int = 1,
                      channels: int = 4,
-                     crop_width=None) -> None:
-    """
+                     crop_width: int =None) -> None:
+    """ Draws the given text over the image from a bitmap font from the given position,
+    with the given color and with a given font size. The position is taken to be the upper-left
+    angle of the text box. The font is an 8BIT font defined in utils/fonts.py
 
-    :param img:
-    :param text:
-    :param position:
-    :param color:
-    :param size:
-    :param channels:
+    :param crop_width: Crop the text after this width
+    :param img: the pixel raster
+    :param text: the text to write
+    :param position: the upper left position
+    :param color: the given color
+    :param size: the size of the text, as multiples of the basic font size
+    :param channels: the number of channels
     """
 
     width, height = img.size
@@ -203,18 +241,18 @@ def draw_bitmap_text(img, text: str, position: tuple[int, int] = (0, 0),
     img.update()
 
 
-def fill_polygon(img, polygon, color):
-    """Fill a polygon using scanline algorithm"""
+def fill_polygon(img, polygon: list[tuple], color, channels: int = 4) -> None:
+    """ Fills a given polygon on a raster of pixels with the given color.
+    The polygon vertices have to be in clockwise direction. The scanline algorithm
+    is used.
+
+    :param channels: Number of channels
+    :param img: the pixel raster
+    :param polygon: a list of clockwise vertices
+    :param color: the color of the polygon
+    """
     width, height = img.size
     pixels = list(img.pixels)
-
-    def draw_pixel(x, y):
-        if 0 <= x < width and 0 <= y < height:
-            idx = to_index((x, y), width)
-            pixels[idx] = color[0]
-            pixels[idx + 1] = color[1]
-            pixels[idx + 2] = color[2]
-            pixels[idx + 3] = color[3]
 
     # For each scanline
     min_y = min(p[1] for p in polygon)
@@ -242,14 +280,25 @@ def fill_polygon(img, polygon, color):
                 x_start = int(intersections[i])
                 x_end = int(intersections[i + 1])
                 for x in range(x_start, x_end):
-                    draw_pixel(x, y)
+                    draw_color(pixels, color, to_index((x, y), width, channels=channels))
 
     img.pixels[:] = pixels
     img.update()
 
 
 def draw_thick_pixel(pixels, color, x: int, y: int, line_width: int, width:int, height: int, channels: int=4) -> None:
-    """Draw a pixel with thickness"""
+    """ Draws a "thick" pixel at the given point, drawing concentric squares to create a box of
+    side line_width at the center point represented by (x,y).
+
+    :param pixels: the pixels raster
+    :param color: color of the pixels
+    :param x: the x position
+    :param y: the y position
+    :param line_width: the line width
+    :param width: the width of the canvas
+    :param height: the height of the canvas
+    :param channels: the number of channels
+    """
     for l_dx in range(-line_width // 2, (line_width + 1) // 2):
         for l_dy in range(-line_width // 2, (line_width + 1) // 2):
             if 0 < x + l_dx < width and 0< y + l_dy < height:
@@ -257,16 +306,17 @@ def draw_thick_pixel(pixels, color, x: int, y: int, line_width: int, width:int, 
                 draw_color(pixels, color, idx)
 
 
-def draw_line(pixels, p0: tuple[int, int], p1: tuple[int, int],
+def draw_line(pixels: Union[list, Any], p0: tuple[int, int], p1: tuple[int, int],
               color: tuple[float, float, float, float], width, height,
               line_width: int = 1, channels: int = 4, ) -> None:
-    """
-    Draw a line from p0 to p1 on an image using Bresenham's algorithm.
+    """ Draw a line from p0 to p1 on an image using Bresenham's algorithm.
+    NOTE that like all other functions in this module, the points are taken to be
+    in the blender image convention, with the <u>bottom of the image having y==</u>
 
-    :param height:
-    :param width:
-    :param pixels:
-    :param channels:
+    :param height: The height of the canvas
+    :param width: the width of the canvas
+    :param pixels: the pixels list/blender object
+    :param channels: the number of channels for each pixel
     :param p0: Starting point (x, y)
     :param p1: Ending point (x, y)
     :param color: RGBA color tuple (0.0 to 1.0)
@@ -294,13 +344,11 @@ def draw_line(pixels, p0: tuple[int, int], p1: tuple[int, int],
 
     # Prevent lock in from some strange error... who knows
     safety_idx = 0
-    while True and safety_idx < max(2*width, 2*height):
-
+    while safety_idx < max(2*width, 2*height):
         draw_thick_pixel(pixels, color, x, y, line_width, width, height, channels)
 
         if x == x1 and y == y1:
             break
-
         e2 = 2 * err
         if e2 > -dy:
             err -= dy
@@ -315,9 +363,11 @@ def draw_line(pixels, p0: tuple[int, int], p1: tuple[int, int],
 def draw_polygon(img, vertices: list[tuple[int, int]],
                  color: tuple[float, float, float, float],
                  line_width: int = 1, channels: int = 4, draw_wireframe:bool = True) -> None:
-    """
-    Draw a polygon from a list of vertices on an image.
+    """ Draw a polygon from a list of vertices on an image. The vertices are not assumed to be
+    clockwise or counterclockwise, but they have to be ordered.
 
+    :param draw_wireframe: Whether to draw separately the points as "wireframe" of the
+        polygon
     :param img: Blender image object
     :param vertices: List of (x, y) tuples defining polygon vertices in order
     :param color: RGBA color tuple (0.0 to 1.0)

@@ -1,4 +1,16 @@
-"""Logging module for Random Dataset Generator addon."""
+""" A module containing a logger used throughout the code. This logger is to be used
+to analyze with fine-grained detail the outputs of the stochastic processes and the
+choices taken by the constraints, when those will be implemented
+
+Classes:
+    UniqueLogger: The main logger class which can define multiple sub logs sources
+
+Example:
+    >>> from ext.utils.logger import UniqueLogger
+    >>> ...
+    >>> UniqueLogger.initialize_logging(...)
+    >>> UniqueLogger.quick_log("This is a simple log")
+"""
 
 import logging
 import sys
@@ -28,7 +40,16 @@ class UniqueLogger:
 
     @staticmethod
     def initialize_logging(log_dir: str, file_level=logging.DEBUG, console_level=logging.INFO) -> Union[str, Path]:
-        """Initialize logging system once."""
+        """ Initialize the unique logger for all modules, generating the output file at the given
+        directory from the current time. This creates the file and console handler for the logger.
+
+        From the moment this function is called, UniqueLogger.initialized() will return True
+
+        :param log_dir: the directory for the new log file
+        :param file_level: the logging level
+        :param console_level: the console level
+        :return: the path to the new log file
+        """
 
         log_path = Path(log_dir)
         UniqueLogger._output_path = log_path
@@ -62,11 +83,17 @@ class UniqueLogger:
 
     @staticmethod
     def get_path() -> Union[str, Path]:
+        """ Get the path at which the logger will be initialized and will write """
         return UniqueLogger._output_path
 
     @staticmethod
     def get_logger(name: str) -> logging.Logger:
-        """Get or create logger for a module."""
+        """ Get the logger with the given name. If the logger has not
+        been previously initialized, it will be created and stored into the cache.
+
+        :param name:  name of the logger
+        :return: the logging.Logger object
+        """
 
         if name not in UniqueLogger._logger_cache:
             logger = logging.getLogger(name)
@@ -85,7 +112,7 @@ class UniqueLogger:
     @staticmethod
     @contextmanager
     def log_operation(name: str, category: str = None, logger: logging.Logger = None):
-        """Context manager for operation tracking with timing."""
+        """ Context manager for operation tracking with timing. """
 
         logger = logger or logging.getLogger(__name__)
         start = time.time()
@@ -101,7 +128,13 @@ class UniqueLogger:
             logger.info(f"Completed: {name} ({duration:.2f}s)")
 
     @staticmethod
-    def quick_log(text: str):
+    def quick_log(text: str) -> None:
+        """ Logs text content to the log file using the default logger. Can only
+        work properly if the logger has been previously initialized, otherwise
+        it refuses silently to log.
+
+        :param text: The text to be written to log file.
+2        """
         if not UniqueLogger.available():
             return
         logger = UniqueLogger.get_logger("default")
@@ -109,10 +142,12 @@ class UniqueLogger:
 
     @staticmethod
     def cleanup():
-        """Clean up logging on addon unload."""
+        """ Clean up logging on addon unload. """
 
         UniqueLogger._initialized = False
 
+        # Remove ach previously registered handler, close every file handler and
+        # any console handler.
         for logger in UniqueLogger._logger_cache.values():
             for handler in logger.handlers[:]:
                 handler.close()

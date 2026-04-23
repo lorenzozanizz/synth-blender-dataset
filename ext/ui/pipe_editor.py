@@ -1,5 +1,23 @@
-"""
+"""Registry and UI drawer implementations for pipeline operation editors.
 
+Provides a system to register and retrieve UI drawer classes associated with
+specific pipeline operation types, enabling modular and extensible editor UIs.
+When a new pipe is to be created, its editor must be added to the registry. The
+actual editors can use a series of widgets which enhance reusability and modularity.
+This enables reutilization of properties for multiple editors.
+
+Classes:
+    OperationDrawerRegistry: Manages registration and lookup of operation drawers.
+    PipeDrawer: Abstract base class for all operation UI drawers.
+    ScalarPropertyDrawer: Shared drawer for scalar/vector-based operations.
+    ... Implementations of pipe editors UI
+
+Example:
+    >>> # Adding a new drawer to the editor drawer registry
+    >>> from ext.ui.pipe_editor import OperationDrawerRegistry
+    >>> @OperationDrawerRegistry.register("pipe_ex_name")
+    >>> class NewPipe(PipeDrawer):
+    >>>    pass
 """
 
 # Import all the widgets that are used multiple times to facilitate the
@@ -8,7 +26,6 @@ from .pipe_edit_widgets import *
 
 from ..constants import PipeNames
 from ..distribution.computation import Distribution
-from ..utils.logger import UniqueLogger
 
 from abc import ABC
 
