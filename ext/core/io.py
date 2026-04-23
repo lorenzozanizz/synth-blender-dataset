@@ -86,7 +86,7 @@ class YoloFormatter(SerializationStrategy):
             bbox = label.geometry
 
             yolo_coos = convert_camera_centered_to_yolo(bbox)
-            lines.append(f"{cls_id} {yolo_coos[0]} {yolo_coos[1]} {yolo_coos[2]} {yolo_coos[3]}\n")
+            lines.append(f"{cls_id} {yolo_coos[0]:.2f} {yolo_coos[1]:.2f} {yolo_coos[2]:.2f} {yolo_coos[3]:.2f}\n")
         return ('.txt', "".join(lines)),
 
     def get_subdir(self, ext: str) -> str:

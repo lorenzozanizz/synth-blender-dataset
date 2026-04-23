@@ -4,7 +4,9 @@
 from enum import Enum
 
 
-prefix_ext_conflict_rename = lambda name: "synth_blender_dataset_" + name
+def prefix_ext_conflict_rename(name: str) -> str:
+    return "synth_blender_dataset_" + name
+
 panel_conflict_rename = lambda name: "VIEW3D_PT_" + name
 
 MAIN_PANEL_NAME = "Generator"
