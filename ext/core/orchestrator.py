@@ -6,12 +6,12 @@ from ..labeling.class_engine import ClassificationEngine
 from ..labeling.generator import Extractor, BoundingBoxExtractor, PolygonExtractor
 from ..labeling.ray_casting import get_visible_objects_from_camera
 
-from typing import Union, Dict, Tuple, Collection, Any
+from typing import Union, Dict, Tuple, Collection, Any, Optional
 
 
 class LabelingOrchestrator:
 
-    def __init__(self, context, config: LabelExtractionConfig, reporter, writer: Union[None, OutputWriter]):
+    def __init__(self, context, config: LabelExtractionConfig, reporter, writer: Optional[OutputWriter]):
         self.config = config
         self.ctx = context
 
@@ -89,7 +89,7 @@ class LabelingOrchestrator:
         :return:
         """
 
-    def _create_formatter(self) -> Union[None, SerializationStrategy]:
+    def _create_formatter(self) -> Optional[SerializationStrategy]:
         if self.writer is None:
             return None
         return YoloFormatter(write_config=self.writer.get_config())
@@ -97,7 +97,7 @@ class LabelingOrchestrator:
     def _create_extractor(self):
         return BoundingBoxExtractor(self.ctx)
 
-    def get_last_label_data(self) -> Union[None, LabelData]:
+    def get_last_label_data(self) -> Optional[LabelData]:
         return self.label_data
 
     def get_raw_visible_data(self) -> dict[Any, Collection]:

@@ -3,7 +3,7 @@ from ..constants import PipeNames, WidgetSerializationKeys, DISTRO_EDITOR_NAME
 
 from abc import ABCMeta, abstractmethod
 from enum import Enum
-from typing import Union
+from typing import Union, Optional
 
 import bpy
 
@@ -34,7 +34,7 @@ class ValidatorRegistry:
         return decorator
 
     @classmethod
-    def get(cls, operation_type: str) -> Union[PipeValidator, None]:
+    def get(cls, operation_type: str) -> Optional[PipeValidator]:
         """Get an operation instance by type."""
         if operation_type not in cls._operations:
             return None

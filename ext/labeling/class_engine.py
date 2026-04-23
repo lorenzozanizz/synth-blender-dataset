@@ -1,4 +1,4 @@
-from typing import Union, Any, Iterable, Dict, List
+from typing import Union, Any, Iterable, Dict, List, Optional
 from  .bpy_properties import LabelClass, ObjectLabel, LabelRule
 
 import bpy
@@ -51,7 +51,7 @@ class ClassificationEngine:
 
             names = label.obj_names
             label_cls = label.class_id
-            target_class: Union[None, LabelClass] = next((cls for cls in classes if str(cls.class_id) == str(label_cls)), None)
+            target_class: Optional[LabelClass] = next((cls for cls in classes if str(cls.class_id) == str(label_cls)), None)
             if target_class is None:
                 # There is a dangling reference. ignore (and report, maybe?)
                 continue
@@ -113,7 +113,7 @@ class ClassificationEngine:
     def ignore_default_class(self) -> bool:
         pass
 
-    def get_default_class(self) -> Union[None, LabelClass]:
+    def get_default_class(self) -> Optional[LabelClass]:
         pass
 
     @staticmethod
@@ -126,7 +126,7 @@ class ClassificationEngine:
         return True
 
     @staticmethod
-    def _sanitize_rule_mapping(mapping: LabelRule) -> Union[None, Any]:
+    def _sanitize_rule_mapping(mapping: LabelRule) -> Optional[Any]:
 
         relevant_data = True
         # Initially check that a mapping class is correclty provided.
@@ -158,7 +158,7 @@ class ClassificationEngine:
         else: return None
         return relevant_data
 
-    def map_obj(self, obj: Union[str, Any]) -> Union[None, LabelClass]:
+    def map_obj(self, obj: Union[str, Any]) -> Optional[LabelClass]:
         """
 
         :param obj:
@@ -171,7 +171,7 @@ class ClassificationEngine:
             return self.labels_mappings[name]
         return None
 
-    def map_entity(self, entity_name: str) -> Union[None, LabelClass]:
+    def map_entity(self, entity_name: str) -> Optional[LabelClass]:
         return self.entity_mappings.get(entity_name)
 
     def get_mapping(self) -> Dict[str, LabelClass]:

@@ -8,7 +8,7 @@ from bpy.types import Operator
 from bpy.props import IntProperty, StringProperty
 import bpy
 
-from typing import Union
+from typing import Union, Optional
 from json import dumps, loads
 
 class PipeAddOperator(Operator):
@@ -190,7 +190,7 @@ class TypedSingleObjectTargeter(Operator):
 
         return { 'FINISHED' }
 
-def get_selected_node_and_material(reporter, context, node_name: Union[str, None]) -> tuple:
+def get_selected_node_and_material(reporter, context, node_name: Optional[str]) -> tuple:
     """
 
     :param reporter:

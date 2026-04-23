@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Union
+from typing import Union, Optional
 
 from bpy.types import PropertyGroup
 from bpy.props import (EnumProperty, StringProperty, IntProperty, FloatVectorProperty,
@@ -14,7 +14,7 @@ class LabelingFormats(Enum):
     COCO = "COCO"
 
     @staticmethod
-    def from_string(s: str) -> Union[None, 'LabelingFormats']:
+    def from_string(s: str) -> Optional['LabelingFormats']:
         if s == "YOLO":
             return LabelingFormats.YOLO
         return None

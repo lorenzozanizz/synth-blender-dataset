@@ -1,5 +1,6 @@
 from .fonts import EIGHT_BIT_BITMAP_FONT_HEIGHT, EIGHT_BIT_BITMAP_FONT
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
+
 
 class DrawableCanvas:
     """
@@ -148,7 +149,7 @@ def estimate_text_pixel_height(_text: str, size: int) -> int:
 
 
 def draw_bitmap_text(img, text: str, position: tuple[int, int] = (0, 0),
-                     color: Union[None, tuple[float, float, float, float]] = (1.0, 1.0, 1.0, 1.0),
+                     color: Optional[tuple[float, float, float, float]] = (1.0, 1.0, 1.0, 1.0),
                      size: int = 1,
                      channels: int = 4,
                      crop_width=None) -> None:

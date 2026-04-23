@@ -6,7 +6,7 @@ from .pipe_edit_widgets import *
 from ..constants import PipeNames
 
 from abc import ABC, abstractmethod
-from typing import Union
+from typing import Union, Optional
 
 wsk = WidgetSerializationKeys
 
@@ -25,7 +25,7 @@ class PipeSchemaRegistry:
         return decorator
 
     @classmethod
-    def get(cls, operation_type: str) -> Union['PipeSchema', None]:
+    def get(cls, operation_type: str) -> Optional['PipeSchema']:
         """Get a schema instance by type."""
         if operation_type not in cls._pipes_schema:
             return None

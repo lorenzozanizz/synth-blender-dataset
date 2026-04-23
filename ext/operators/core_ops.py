@@ -4,7 +4,7 @@ from ..core.generation import Executor
 from ..core.preview import PreviewGenerator
 
 import traceback
-from typing import Union
+from typing import Union, Optional
 from bpy.types import Operator
 
 class GenerateOperator(Operator):
@@ -13,7 +13,7 @@ class GenerateOperator(Operator):
     bl_idname = Labels.GENERATE.value
     bl_label = "Generate Dataset"
 
-    def validate_extract_gen_config(self, context) -> Union[None, GenerationConfig]:
+    def validate_extract_gen_config(self, context) -> Optional[GenerationConfig]:
         """
 
         :param context:
@@ -26,7 +26,7 @@ class GenerateOperator(Operator):
             return None
         return GenerationConfig(scene.randomizer_seed, amount)
 
-    def validate_extract_label_config(self, context) -> Union[None, LabelExtractionConfig]:
+    def validate_extract_label_config(self, context) -> Optional[LabelExtractionConfig]:
         """
 
         :param context:
@@ -38,7 +38,7 @@ class GenerateOperator(Operator):
             scene.randomizer_do_labelize
         )
 
-    def validate_io_write_config(self, context) -> Union[None, WritingConfig]:
+    def validate_io_write_config(self, context) -> Optional[WritingConfig]:
         """
 
         :param context:
@@ -105,7 +105,7 @@ class PreviewOperator(Operator):
     bl_idname = Labels.PREVIEW_SAMPLE.value
     bl_label = "Generate Dataset"
 
-    def validate_data_extract(self, context) -> Union[None, PreviewRenderConfig]:
+    def validate_data_extract(self, context) -> Optional[PreviewRenderConfig]:
         """
 
         :param context:
@@ -114,7 +114,7 @@ class PreviewOperator(Operator):
         # No checks are required
         return PreviewRenderConfig()
 
-    def validate_extract_label_config(self, context) -> Union[None, LabelExtractionConfig]:
+    def validate_extract_label_config(self, context) -> Optional[LabelExtractionConfig]:
         """
 
         :param context:

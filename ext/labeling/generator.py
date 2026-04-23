@@ -9,14 +9,15 @@ from ..utils.timer import TimingContext
 
 from abc import ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import Iterable, Any, Dict, Callable, List, Union, Literal
+from typing import Iterable, Any, Dict, Callable, List, Union, Literal, Optional
+
 
 @dataclass
 class Label:
     """ Single entity annotation """
 
     obj_or_entity_name: str
-    cls: Union[None, LabelClass]
+    cls: Optional[LabelClass]
 
     # The annotation data — could be any shape
     geometry: Union[
