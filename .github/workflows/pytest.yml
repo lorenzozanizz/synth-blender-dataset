@@ -15,6 +15,9 @@ jobs:
         uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Install coverage and pytest
+        run: |
+          pip install pytest coverage
       - name: Test with pytest
         run: |
           coverage run -m pytest  -v -s
