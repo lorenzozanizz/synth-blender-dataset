@@ -6,6 +6,7 @@ Additionally, the extensions supports a preview functionality which allows to in
 The extensions is intended for low to medium sized computer vision products, wihch benefit more from ease of generation rather than the efficiency and generality of tools like Blenderproc. 
 
 ## Overview
+  ![Live Preview](./resources/live_preview.png)
 
 The Generator provides a building-block system for defining randomization pipelines within Blender. Users can specify how objects, materials, and lighting conditions should vary across multiple renders, then automatically output images with corresponding metadata suitable for computer vision training datasets.
 User can also specify named classes and assign classes to blender objects. Multiple objects can be grouped together to form multi-object entities which the extension will classify as a single object. 
@@ -26,7 +27,6 @@ User can also specify named classes and assign classes to blender objects. Multi
 - **Export Integration**: Export rendered datasets in formats compatible with computer vision frameworks (YOLO, COCO, etc.)
 
 - **Live Preview**: Allows the user to generate previews of the output of the blender directly inside Blender, including boundary boxes, labels and visibility statistics
-  ![Live Preview](./resources/live_preview.png)
 
 - **Logging system** (work in progress) Allows to analyze the results of single stochastic processes to inspect the generation and the outut of constraints solvers (work in progress)
 
