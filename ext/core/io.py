@@ -66,18 +66,31 @@ class SerializationStrategy(metaclass=ABCMeta):
 
 
 class YoloFormatter(SerializationStrategy):
+    """
+
+    """
+
+    def declare_classes(self) -> None:
+        pass
 
     def mark_beginning(self) -> None:
+        """ Yolo formatter has no need for a beginning of generation hooko"""
         return
 
     def mark_end(self) -> None:
+        """ Yolo formatter has no need for an end of generation hooko"""
         return
 
     def __init__(self, write_config: WritingConfig):
         super().__init__(write_config)
 
     def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
+        """
 
+        :param label_data:
+        :param render_config:
+        :return:
+        """
         # The label data is initially in the centered camera format. We need to transform it into
         # the correct yolo format.
         lines = []
@@ -90,6 +103,11 @@ class YoloFormatter(SerializationStrategy):
         return ('.txt', "".join(lines)),
 
     def get_subdir(self, ext: str) -> str:
+        """
+
+        :param ext:
+        :return:
+        """
         if 'txt' in ext:
             return 'labels'
         elif 'image' in ext:
@@ -113,14 +131,15 @@ class YoloSplitFormatter(SerializationStrategy):
 
 class CocoFormatter(SerializationStrategy):
 
+    def __init__(self, write_config: WritingConfig):
+        super().__init__(write_config)
+        self.json_intermediate = {}
+
     def mark_beginning(self) -> None:
         pass
 
     def mark_end(self) -> None:
         pass
-
-    def __init__(self, write_config: WritingConfig):
-        super().__init__(write_config)
 
     def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
         pass
@@ -128,6 +147,15 @@ class CocoFormatter(SerializationStrategy):
     def get_subdir(self, ext: str) -> str:
         pass
 
+    def _initialize_entries(self) -> None:
+        pass
+
+    def _fill_out_info(self) -> None:
+        """
+
+        :return:
+        """
+        pass
 
 class OutputWriter:
 

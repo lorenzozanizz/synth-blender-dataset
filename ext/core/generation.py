@@ -1,14 +1,13 @@
-from .executable_pipeline import ExecutablePipeline
-from .orchestrator import LabelingOrchestrator
-from .configurations import LabelExtractionConfig, GenerationConfig, WritingConfig
-from .io import OutputWriter
+import random
+import bpy
 
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
 
-import random
-
-import bpy
+from .executable_pipeline import ExecutablePipeline
+from .orchestrator import LabelingOrchestrator
+from .configurations import LabelExtractionConfig, GenerationConfig, WritingConfig
+from .io import OutputWriter
 
 
 class Executor:

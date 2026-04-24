@@ -65,6 +65,11 @@ class RegistrationPanel(Panel):
 
 
     def draw(self, context):
+        """
+
+        :param context:
+        :return:
+        """
         # Currently Empty
         layout = self.layout
         # === TAB BAR ===
@@ -94,7 +99,6 @@ class RegistrationPanel(Panel):
 
     def draw_list_view(self, context, pipeline):
         """Show list of operations with +/- buttons"""
-        scene = context.scene
         layout = self.layout
 
         # Load/Save buttons
@@ -156,7 +160,6 @@ class RegistrationPanel(Panel):
     def draw_edit_view(self, context, pipeline):
         """Show detailed editor for selected operation"""
         layout = self.layout
-        scene = context.scene
 
         if not pipeline.operations:
             layout.label(text='There are no operations.')
@@ -267,6 +270,8 @@ class PipelineOperationsList(UIList):
 
 # Submenu for lighting operations
 class AddLightingCategoryPipeMenu(Menu):
+    """ Menu category for lighting operations """
+
     bl_label = 'Lighting'
     bl_idname = 'AddLightingCategoryPipeMenu'
 
@@ -278,6 +283,8 @@ class AddLightingCategoryPipeMenu(Menu):
 
 # Submenu for constraint operations
 class AddConstraintCategoryPipeMenu(Menu):
+    """ Menu category for constraints operations """
+
     bl_label = 'Constraints'
     bl_idname = 'AddConstraintCategoryPipeMenu'
 
@@ -289,6 +296,8 @@ class AddConstraintCategoryPipeMenu(Menu):
 
 # Submenu for object operations
 class AddObjectCategoryPipeMenu(Menu):
+    """ Menu category for operations involving objects"""
+
     bl_label = 'Object'
     bl_idname = 'AddObjectCategoryPipeMenu'
 
@@ -303,6 +312,8 @@ class AddObjectCategoryPipeMenu(Menu):
 
 # Submenu for camera operations
 class AddCameraCategoryPipeMenu(Menu):
+    """ Menu category for camera operations """
+
     bl_label = 'Camera'
     bl_idname = 'AddCameraCategoryPipeMenu'
 
@@ -317,6 +328,8 @@ class AddCameraCategoryPipeMenu(Menu):
 
 # Submenu for material operations
 class AddMaterialCategoryPipeMenu(Menu):
+    """ Menu category for material operations """
+
     bl_label = 'Material'
     bl_idname = 'AddMaterialCategoryPipeMenu'
 
@@ -330,6 +343,7 @@ class AddMaterialCategoryPipeMenu(Menu):
                             icon=pipe_to_ico_mapping[name]).op_name = name.value
 
 class AddExperimentalCategoryPipeMenu(Menu):
+    """ Menu category for experimental/unstable operations """
 
     bl_label = 'Experimental'
     bl_idname = 'AddExperimentalCategoryPipeMenu'

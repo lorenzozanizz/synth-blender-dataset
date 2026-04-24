@@ -4,28 +4,32 @@ from typing import Literal
 
 @dataclass
 class GenerationConfig:
-    """
-
-    """
-
+    """ Set of configurations used to control the generation process. """
+    # python's "random" is seeded with this value for reproducibility.
     seed: int
     amount: int
 
 
 @dataclass
 class LabelExtractionConfig:
-    """ """
+    """ Set of configurations used to control the way labels are extracted, from their format
+     to whether they are written to memory using the writing configurations. """
 
     format: str
     write_labels: bool
 
+    # The precision of ray casting: a sample is selected every width * ratio pixels, height * ratio pixels
     ray_casting_ratio: float = 0.1
+    # If enabled, the extraction engine will also attempt to compute the estimated visibility:
+    # what this means depends on the type of geometry extracted!
     estimate_visibility: bool = True
 
 
 @dataclass
 class WritingConfig:
-
+    """ Set of configuration used to control the way the files are written,
+    from the write directory to the prefix to the subdirectory split.
+    """
     from_last: bool
     save_path: str
     prefix: str
@@ -52,10 +56,10 @@ class PreviewRenderConfig:
 
 @dataclass
 class RenderConfig:
+    """ Render configuration extracted from Blender's render config at generation time.
+    These are used to map camera-centered coordinates to pixel coordinates for certain
+    labeling strategies and to handle the preview.
     """
-
-    """
-
     width: int
     height: int
 

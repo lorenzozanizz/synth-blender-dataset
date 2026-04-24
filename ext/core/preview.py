@@ -26,7 +26,18 @@ import bpy
 @dataclass
 class PreviewRenderData:
     """
+    Data container representing a single annotated object in the preview render.
 
+    Stores all relevant information required to draw annotations such as bounding
+    boxes or polygons, including object identity, classification, geometry, and
+    visibility. LabelData is converted into a list of such objects before drawing.
+
+    :param obj_name: Name of the object or entity
+    :param visibility: Estimated visibility, if computed (0.0 to 1.0 as percentage)
+    :param cls: Associated label class
+    :param geometry: Geometry representation (bounding box, polygon, or some other structure)
+    :param is_entity: Whether the item represents an entity rather than a standard object
+    :param type: Type of annotation ("bbox" or "polygon")
     """
 
     obj_name: str
@@ -44,20 +55,27 @@ class PreviewRenderData:
 
 
 class PreviewGenerator:
+    """ Generates a visual preview of a rendered scene with overlaid labeling annotations,
+    class names and ids and estimated visibility.
+
+    This class functions both as executor (compiling and executing a pipeline)
+    and as a renderer, rendering the scene to a temporary image and overlaying annotation
+    data such as bounding boxes, polygons, class labels.
+    It also times statistics for debugging and visualization purposes.
     """
 
-    """
-    _preview_name = "randomizer_preview.png"
+    _preview_name = "__randomizer_preview.png"
 
     def __init__(self, context, data: PipelineData,
                  parameters: PreviewRenderConfig,
                  label_params: LabelExtractionConfig, reporter=None):
-        """
+        """ Initialize the preview generator with the given configurations and the
+        PipelineData Blender property.
 
-        :param context:
-        :param data:
-        :param parameters:
-        :param reporter:
+        :param context: the Blender context
+        :param data: the data property
+        :param parameters: configurations for the rendered preview
+        :param reporter: an object capable of GUI reporting
         """
 
         self.data = data
@@ -85,15 +103,25 @@ class PreviewGenerator:
         )
 
     def compile_contexts(self) -> NestedPipelineContext:
-        """
-        :return:
+        """ Obtains the context manager from the pipeline. The context manager has two
+        context levels: a full context which restores the total state before the execution, and
+        intermediate contexts which must restore state per-frame. For the preview, a single
+        frame is generated so that the full context is used.
+
+        :return: the NestedPipelineContext object with both frame and full context
         """
         full_context = self.pipeline.build_context_manager()
         return full_context
 
-    def execute(self):
+    def execute(self) -> None:
         """
+        Execute the preview generation process.
 
+        Runs the compiled pipeline within a controlled context, performs labeling
+        using the configured labeling orchestrator, and renders the scene to a
+        temporary file. Timing statistics for labeling and rendering are recorded.
+
+        :return: None
         """
 
         scene = self.ctx.scene
@@ -129,8 +157,10 @@ class PreviewGenerator:
         return
 
     def _open_render_f12_menu(self) -> None:
-        """
+        """ Open the Blender render view (F12) and load the generated preview image.
 
+        Ensures that any previously loaded preview image is removed before opening
+        the newly rendered image from the temporary file path.
         """
 
         # Opens the F12 render window and opens the newly temp rendered file. this file is later
@@ -203,12 +233,17 @@ class PreviewGenerator:
                             show_geometry: bool = True, show_obj_name: bool = True,
                             show_class_name_or_id: str = "id", show_visibility: bool = True,
                             show_unoccluded_bbox: bool = True) -> None:
-        """
+        """ Renders information (geometry, object name, class id, estimated visibility) ù
+        for a single object starting from its PreviewRanderData
 
-        :param img:
-        :param width:
-        :param height:
-        :return:
+        :param img: the blender img object
+        :param width: width of the canvas
+        :param height: height of the canvas
+        :param show_geometry: whether to show geometry of the object
+        :param show_obj_name: whether to show object name
+        :param show_class_name_or_id: whether to show class name or id
+        :param show_visibility: whether to show estimated visibility
+        :param show_unoccluded_bbox: whether to show unoccluded bbox
         """
         # new_xyxy is the bounding box in pixel integer space
         # We have to invert the ys, because blender image pixel API has the y values of the bottom row
@@ -255,9 +290,15 @@ class PreviewGenerator:
 
 
     def _render_bottom_left_time_stats(self, img, width: int) -> None:
-        """
+        """ Render timing statistics text in the bottom-left corner of the image.
 
-        :return:
+        Displays compilation, rendering, labeling, and annotation durations which are respectively
+        the time it takes to compile the pipeline, the time Blender took for rendering, the time
+        it took to generate labels for visible objects and the time it took to draw over the initial
+        render for preview.
+
+        :param img: The image object to draw onto
+        :param width: Width of the image in pixels
         """
 
         text = (f"Compiled in {self.timings['compile']:.2f}s, rendered in {self.timings['render']:.2f}s, "
@@ -271,15 +312,23 @@ class PreviewGenerator:
 
 
     def _render_bottom_right_statistics(self) -> None:
-        """
+        """ Placeholder for rendering additional statistics in the bottom-right corner.
 
-        :return:
+        !! Currently unused !! Intended for future extensions such as displaying object
+        counts or other metrics.
         """
         num_objects = len(self.visible_objects)
 
     @staticmethod
-    def _render_geometry(img, color, pixel_space_geometry, line_width: int =4):
+    def _render_geometry(img, color, pixel_space_geometry, line_width: int = 4) -> None:
+        """ Render annotations onto the image (e.g. polygons, bounding boxes etc...).
+        Supports both bounding boxes and polygon geometries in pixel space.
 
+        :param img: The image object to draw onto
+        :param color: RGBA color tuple
+        :param pixel_space_geometry: Geometry in pixel coordinates
+        :param line_width: Width of the drawn lines for the geometry
+        """
         # Bounding box
         if type(pixel_space_geometry) == tuple:
             new_xyxy = pixel_space_geometry
@@ -291,9 +340,11 @@ class PreviewGenerator:
 
     @staticmethod
     def make_preview_render_data(label_data: LabelData) -> Iterable[PreviewRenderData]:
-        """
+        """ Convert LabelData into preview render data structures. for easier consumption
+        during annotation rendering.
 
-        :return:
+        :param label_data: Iterable of label data objects
+        :return: Iterable of PreviewRenderData instances
         """
         return (
             PreviewRenderData(label.obj_or_entity_name, label.visibility, label.cls,
