@@ -36,6 +36,8 @@ class WritingConfig:
     folder_structure: Literal["yolo"] = "yolo"
     image_extension: str = ".png"
     split: str = "train"
+    # Zero pad the shot idx to fit the entire batch amount
+    zero_pad: bool = True
 
 @dataclass
 class PreviewRenderConfig:

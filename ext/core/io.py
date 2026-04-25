@@ -1,4 +1,4 @@
-from .configurations import WritingConfig, RenderConfig
+from .configurations import WritingConfig, RenderConfig, GenerationConfig
 
 from ..labeling.generator import LabelData
 from ..labeling.conversions import convert_camera_centered_to_yolo
@@ -10,7 +10,7 @@ from os import makedirs, listdir
 from enum import Enum
 from abc import ABCMeta, abstractmethod
 
-
+from datetime import datetime
 import re
 
 class FolderStructure(Enum):
@@ -64,6 +64,11 @@ class SerializationStrategy(metaclass=ABCMeta):
         """
         pass
 
+    @abstractmethod
+    def declare_classes(self) -> None:
+        """ For the COCO """
+        pass
+
 
 class YoloFormatter(SerializationStrategy):
     """
@@ -71,7 +76,9 @@ class YoloFormatter(SerializationStrategy):
     """
 
     def declare_classes(self) -> None:
-        pass
+        """ For the YOLO strategy this step is unnecessary, the class ids are specified
+        per label when each file is getting generated and there is no unique "class description" """
+        return
 
     def mark_beginning(self) -> None:
         """ Yolo formatter has no need for a beginning of generation hooko"""
@@ -116,6 +123,9 @@ class YoloFormatter(SerializationStrategy):
 
 class YoloSplitFormatter(SerializationStrategy):
 
+    def declare_classes(self) -> None:
+        pass
+
     def format(self, label_data: LabelData, render_config: RenderConfig) -> Collection[Tuple[str, str]]:
         pass
 
@@ -136,7 +146,13 @@ class CocoFormatter(SerializationStrategy):
         self.json_intermediate = {}
 
     def mark_beginning(self) -> None:
-        pass
+        """ Initializes the coco structure, maintaining a local json which will be
+        serialized at the end of the labeling session. """
+
+        # Note: the licences section is not written. It is up to the user to
+        # change it.
+        self._fill_out_info()
+        self._initialize_entries()
 
     def mark_end(self) -> None:
         pass
@@ -145,22 +161,47 @@ class CocoFormatter(SerializationStrategy):
         pass
 
     def get_subdir(self, ext: str) -> str:
-        pass
+        """
+
+        :param ext:
+        :return:
+        """
+        if 'json' in ext:
+            return 'annotations'
+        elif 'image' in ext:
+            return 'images'
+        return ""
 
     def _initialize_entries(self) -> None:
-        pass
+        """ Initialize the basic structure of a COCO file without storing it yet,
+        keeping it in memory in an intermediate json dictionary before finally
+        serializing it.
+        """
+        # Image files are stores into a separate section with id, name width and height
+        self.json_intermediate['images'] = []
+        # The same goes for annotations
+        self.json_intermediate['annotations'] = []
+        # The classes are instead filled out inside declare_classes()
 
     def _fill_out_info(self) -> None:
         """
 
         :return:
         """
-        pass
+        # Explicitly write out the information section for the coco file.
+        self.json_intermediate['info'] = {
+            "year": datetime.now().year,
+            "version": "1.0",
+            "date_created": datetime.now().isoformat(),
+            # Maybe add the contributor?
+        }
 
 class OutputWriter:
 
-    def __init__(self, config: WritingConfig, strategy: SerializationStrategy = None):
+    def __init__(self, config: WritingConfig, gen_config: GenerationConfig, strategy: SerializationStrategy = None):
         self.config = config
+        self.gen_config = gen_config
+
         self.strategy: SerializationStrategy = strategy
         self.shot_idx = 0
 

@@ -25,7 +25,7 @@ class Executor:
         self.reporter = reporter
 
         self.pipeline: ExecutablePipeline = ExecutablePipeline(self.ctx, data, reporter)
-        self.writer = OutputWriter(write_params)
+        self.writer = OutputWriter(write_params, gen_params)
         self.labeling_orchestrator: LabelingOrchestrator = LabelingOrchestrator(
             self.ctx,
             # Parameters which control the folder structure, labeling etc...

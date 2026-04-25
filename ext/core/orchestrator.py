@@ -29,6 +29,8 @@ class LabelingOrchestrator:
             self.formatter: SerializationStrategy = self._create_formatter()
             self.writer.set_strategy(self.formatter)
 
+            # Propagate the class information to the formatter through the declare_classes_interface()
+
         self.label_data = None
 
     def execute(self, camera, depsgraph) -> None:
@@ -81,6 +83,7 @@ class LabelingOrchestrator:
 
         :return:
         """
+        # Propagate the beginning of generation hook to the formatter.
         pass
 
     def end_generation(self) -> None:
@@ -88,6 +91,7 @@ class LabelingOrchestrator:
 
         :return:
         """
+        # Propagate the end of generation to the formatter.
 
     def _create_formatter(self) -> Optional[SerializationStrategy]:
         if self.writer is None:

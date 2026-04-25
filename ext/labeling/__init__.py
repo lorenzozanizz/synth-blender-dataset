@@ -1,5 +1,7 @@
 from .bpy_properties import *
 
+from .generator import *
+
 classes = (
     ObjectNameStr, Entity, LabelClass, LabelRule, ObjectLabel, LabelingData,
 )
