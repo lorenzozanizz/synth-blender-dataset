@@ -175,9 +175,11 @@ This is a user-focused addon. Bug reports and feature requests can be submitted 
 ## Documentation
 
 Some documentation and tutorials are (will be) available at:
-https://github.com/lorenzozanizz/synth-blender-dataset/docs
-https://github.com/lorenzozanizz/synth-blender-dataset/examples
+[https://github.com/lorenzozanizz/synth-blender-dataset/docs
+](https://github.com/lorenzozanizz/synth-blender-dataset/tree/main/docs)
 
+[https://github.com/lorenzozanizz/synth-blender-dataset/examples
+](https://github.com/lorenzozanizz/synth-blender-dataset/tree/main/examples)
 
 ## Support
 
