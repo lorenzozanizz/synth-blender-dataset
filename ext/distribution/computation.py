@@ -15,6 +15,7 @@ from abc import abstractmethod, ABCMeta
 from typing import List, Dict, Any, Callable
 
 import random
+import numpy as np
 
 import bpy
 
@@ -153,7 +154,7 @@ class PresetSampler(CompiledSampler):
 
     @staticmethod
     def _sample_binomial(params: Dict[str, Any], dim: int):
-        return [random.binomialvariate(params['n'], params['p']) for _ in range(dim)]
+        return [int(np.random.binomial(params['n'], params['p'])) for _ in range(dim)]
 
     @staticmethod
     def _sample_gaussian(params: Dict[str, Any], dim: int):
