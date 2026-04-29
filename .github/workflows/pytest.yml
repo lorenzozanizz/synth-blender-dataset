@@ -17,6 +17,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install coverage and pytest
         run: |
+          pip install numpy
           pip install pytest coverage
       - name: Test with pytest
         run: |
