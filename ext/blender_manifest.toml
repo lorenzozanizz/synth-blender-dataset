@@ -1,0 +1,9 @@
+schema_version = "1.0.0"
+id = "blender_synth"
+name = "Blendersynth"
+version = "1.0.0"
+tagline = "A blender extension to generate and label synthetic data for Computer Vision"
+maintainer = "lorenzozanizz"
+type = "add-on"
+license = ["SPDX:MIT"]
+blender_version_min = "4.5.0"
