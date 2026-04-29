@@ -9,12 +9,13 @@ the pipe edit widgets.
 """
 
 import os
-
-from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TextureNodeProperty
-from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS
 from bpy.props import (
     StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty, PointerProperty
 )
+
+from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TextureNodeProperty
+from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS
+from ..core.io.strategies import SupportedFormats
 
 # UI properties for the main panel, output panel and class panel.
 ext_ui_properties = {
@@ -61,7 +62,10 @@ ext_ui_properties = {
     default=True),
     "randomizer_label_format": EnumProperty(
         name="Format",
-        items=[("YOLO", "YOLO", "Export labels in YOLO format")]
+        items = lambda self, context: [  # type: ignore
+            (formatting.value, formatting.value, f"Use {formatting.value} format.")
+            for formatting in SupportedFormats
+        ]
     ),
     "randomizer_logging_path": StringProperty(
         name="Log Path",

@@ -4,11 +4,11 @@
 
 """
 
-# Abstract classes for formatter
-from .formatter import *
 # Writer interface for the orchestrator
 from .writer import *
+# IO strategy related to single labeling formats
+from .io_strategy import *
+from .strategies import *
 
-# Individual label formatting strategies
-from .coco_formatter import *
-from .yolo_formatter import *
+# Available formats registry.
+from .registry import *

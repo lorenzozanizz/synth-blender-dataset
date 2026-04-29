@@ -1,65 +1,135 @@
 from collections.abc import Collection
 from pathlib import Path
-from os.path import join, dirname, isfile
-from os import makedirs, listdir
+from os.path import join, isfile
+from os import listdir
 
 import re
 
-from ..configurations import WritingConfig, GenerationConfig
-from .formatter import SerializationStrategy
+from ...labeling import LabelData
+from ..configurations import WritingConfig, RenderConfig, BatchMetadata
+from .io_strategy import IOStrategy
 
 
 class OutputWriter:
 
-    def __init__(self, config: WritingConfig, gen_config: GenerationConfig, strategy: SerializationStrategy = None):
+    def __init__(self, config: WritingConfig,
+                 io_strategy: IOStrategy = None):
         self.config = config
-        self.gen_config = gen_config
+        self._batch_metadata = None
 
-        self.strategy: SerializationStrategy = strategy
+        self.io_strategy: IOStrategy = io_strategy
+        if self.io_strategy is not None:
+            self.spec = self.io_strategy.get_specification()
+        self.pending_annotations = []
+        # The index of the current shot being written. This influences the unique label/image name.
         self.shot_idx = 0
 
     def get_config(self) -> WritingConfig:
         return self.config
 
-    def set_strategy(self, strategy: SerializationStrategy):
-        self.strategy = strategy
+    def set_strategy(self, strategy: IOStrategy):
+        self.io_strategy = strategy
+        # This is information related to the kind of data that the strategy requires in order
+        # to correctly generate labels.
+        self.spec = self.io_strategy.get_specification()
 
     def set_shot_index(self, idx: int) -> None:
         self.shot_idx = idx
 
+    def begin_batch(self, batch_metadata: BatchMetadata) -> None:
+        """Called once before rendering begins"""
+        self._batch_metadata = batch_metadata
+
+        # Pre-generate directories
+        if self.io_strategy is not None:
+            self.io_strategy.ensure_directories(root_path=self.config.save_path)
+        #
+        # dirs = self.strategy.get_dirs()
+        # for directory in dirs:
+        #     makedirs(join(self.config.save_path, directory), exist_ok=True)
+
+    def write_shot(
+        self,
+        annotations: LabelData,
+        render_config: RenderConfig
+    ) -> None:
+        """Called per-shot. May not write immediately (e.g., COCO batches)"""
+        # Transform annotations to format-specific representation
+        transformed = [
+            self.io_strategy.transform_annotation(ann, self.shot_idx, render_config)
+            for ann in annotations
+        ]
+
+        # Store or write immediately depending on aggregation strategy
+        if self.spec.aggregation_strategy == "per_image":
+            # YOLO case: write immediately
+            self._write_image_labels(transformed)
+        else:
+            # COCO case: accumulate
+            self.pending_annotations.append((self.shot_idx, transformed))
+
+    def _write_image_labels(self, transformed: list[dict]) -> None:
+        """For per-image formats (YOLO)"""
+        # Serialize transformed data, the content contains information about
+        # file type (internal to the filesystem handler, extension and content)
+        serialized_items = self.io_strategy.serialize_image_labels(transformed)
+        self._write_serialized_content(serialized_items)
+
+    def end_batch(self) -> None:
+        """Called once after all shots rendered"""
+
+        if self.spec.aggregation_strategy in ["per_batch", "global"]:
+            # Aggregate all pending annotations
+            aggregated = self.io_strategy.aggregate_batch(
+                self._flatten_pending(),
+                self._batch_metadata
+            )
+
+            # Finalize (compute derived fields, wrap in JSON, etc.)
+            finalized_content = self.io_strategy.finalize(aggregated)
+
+            self._write_serialized_content(finalized_content)
+
+    def _write_serialized_content(self, serialized_content: Collection[tuple[str, str, str]]) -> None:
+        """
+
+        :param serialized_content:
+        :return:
+        """
+
+        for (file_type, ext, file_content) in serialized_content:
+            # Ensure that the extension is properly formatted.
+            if not ext.startswith("."):
+                ext = f".{ext}"
+
+            name = self.io_strategy.get_filename_for(self.shot_idx, f_type=file_type)
+            path = self.io_strategy.get_subdir_for(self.shot_idx, f_type=file_type)
+
+            write_dir = join(self.config.save_path, path, name) + ext
+            with open(write_dir, 'w') as f:
+                f.write(file_content)
+
+    def _flatten_pending(self) -> list[dict]:
+        """Flatten accumulated annotations for batch strategies"""
+        return [ann for _, anns in self.pending_annotations for ann in anns]
+
     def get_image_write_path(self) -> str:
         """Get full path where image will be saved"""
-        filename = self._get_base_filename()
-        subdir = self.strategy.get_subdir("image")
-        return join(self.config.save_path, subdir, filename)
+        filename = self.io_strategy.get_filename_for(self.shot_idx, "image")
+        return join(self.get_image_folder(), filename)
 
     def get_image_folder(self) -> str:
         """Get folder where images are stored"""
-        subdir = self.strategy.get_subdir("image")
+        subdir = self.io_strategy.get_subdir_for(self.shot_idx, "image")
         return join(self.config.save_path, subdir)
 
-    def write_label(self, files: Collection[tuple[str, str]]) -> None:
-        """Format and write all label files for current shot"""
-        if not self.strategy:
-            return
+    def compute_starting_index(self) -> int:
+        """ A function which computes the starting index at which the new files
+        have to be offset, e.g. if the from_last setting has been set the new generated data
+        will continue counting from the last value
 
-        base_filename = self._get_base_filename()
-
-        for (extension, content) in files:
-            filename = f"{base_filename}{extension}"
-            subdir = self.strategy.get_subdir(extension)
-            path = join(self.config.save_path, subdir, filename)
-
-            makedirs(dirname(path), exist_ok=True)
-            with open(path, 'w') as f:
-                f.write(content)
-
-    def _get_base_filename(self) -> str:
-        """Build base filename from prefix and shot index"""
-        return f"{self.config.prefix}_{self.shot_idx}"
-
-
-    def compute_starting_index(self):
+        :return: the new index
+        """
         prefix = self.config.prefix
         if self.config.from_last:
             # We have to inspect the data folder, if there are already fils with the same root and
@@ -69,6 +139,13 @@ class OutputWriter:
 
     @staticmethod
     def _analyze_folder_last_index(path_root: str | Path, prefix) -> int:
+        """ Analyze the given folder searching for all files with the correct name schema.
+        This extracts the file with the biggest index, and starts counting from that index.
+
+        :param path_root: The path at which the files are examined
+        :param prefix: the prefix of the file
+        :return: the last index
+        """
         # If the path does not exist yet, the index is simply 0.
         try:
             entries = listdir(path_root)

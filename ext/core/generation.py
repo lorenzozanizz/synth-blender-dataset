@@ -6,8 +6,9 @@ from ..pipeline.context import NestedPipelineContext
 
 from .executable_pipeline import ExecutablePipeline
 from .orchestrator import LabelingOrchestrator
-from .configurations import LabelExtractionConfig, GenerationConfig, WritingConfig
-from .io import OutputWriter
+from .configurations import LabelExtractionConfig, GenerationConfig, WritingConfig, RenderConfig, BatchMetadata
+from .io import OutputWriter, IOStrategy
+from .io import LabelingFormatRegistry
 
 
 class Executor:
@@ -22,10 +23,14 @@ class Executor:
         self.data = data
         self.ctx = context
         self.parameters: GenerationConfig = gen_params
+        self.write_params = write_params
         self.reporter = reporter
 
         self.pipeline: ExecutablePipeline = ExecutablePipeline(self.ctx, data, reporter)
-        self.writer = OutputWriter(write_params, gen_params)
+        # Create the writer and assign the correct file handler
+        io_strategy = self._get_strategy(label_params)
+        self.writer = OutputWriter(write_params, io_strategy=io_strategy)
+
         self.labeling_orchestrator: LabelingOrchestrator = LabelingOrchestrator(
             self.ctx,
             # Parameters which control the folder structure, labeling etc...
@@ -68,6 +73,9 @@ class Executor:
         try:
             with update_viewport:
 
+                # Hint the labeling orchestrator that generation is commencing
+                self.labeling_orchestrator.begin_generation(self.parameters)
+
                 full_context = self.compile_contexts()
                 with full_context:
 
@@ -80,9 +88,15 @@ class Executor:
                             # Execute pipeline
                             self.pipeline.execute()
 
-                            # Run generation pipeline (handles extraction + formatting)
-                            self.labeling_orchestrator.execute(
+                            render_cfg = RenderConfig(
+                                height=scene.render.resolution_x,
+                                width=scene.render.resolution_y,
+                                image_ext=scene.render.image_settings.file_format,
                                 camera=default_camera,
+                            )
+                            # Run generation pipeline (handles extraction + formatting)
+                            self.labeling_orchestrator.process_shot(
+                                render_cfg,
                                 depsgraph=self.ctx.evaluated_depsgraph_get()
                             )
 
@@ -97,11 +111,22 @@ class Executor:
                         wm.progress_update(shot_idx-start_idx)
 
                     # ^ Global contexts exit here—restores global state
+                # Instruct the orchestrator to end labeling. This may trigger I/O operations for
+                # formats which require aggregating data over multiple frames.
+                self.labeling_orchestrator.end_generation()
+
         finally:
             wm.progress_end()
 
         return {'FINISHED'}
 
+    def _get_strategy(self, label_params: LabelExtractionConfig) -> IOStrategy:
+        lbl_type = label_params.format
+        strat = LabelingFormatRegistry.get_strategy(lbl_type)
+        if strat is None:
+            raise RuntimeError(f"No I/O strategy found for {lbl_type}, the generation could not happen.")
+        strat_instance = strat(self.write_params, label_params.format_cfg)
+        return strat_instance
 
 
 class NoViewportUpdate:

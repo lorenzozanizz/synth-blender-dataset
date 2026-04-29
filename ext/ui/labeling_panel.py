@@ -5,12 +5,20 @@ from bpy.types import UIList, PropertyGroup, Panel
 class LabelClassesUIList(UIList):
 
     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+        scene = context.scene
+
         row = layout.row(align=True)
         sub = row.column(align=True)
         sub.scale_x = 0.3
         sub.prop(item, 'color', text='')
         row.separator()
         row.prop(item, 'name', text='', emboss=False)
+        if scene.labeling_data.do_superclasses:
+            # Display the class superclass
+            row.serarator()
+            id = item.parent_id
+            # Search for another class with the parent id.
+            # row.prop(item, 'parent_id')
         row.separator()
         row.prop(item, 'class_id', emboss=False, text="")
 

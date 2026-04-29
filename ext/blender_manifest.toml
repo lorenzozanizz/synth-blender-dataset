@@ -1,9 +1,17 @@
 schema_version = "1.0.0"
+
 id = "blender_synth"
-name = "Blendersynth"
 version = "1.0.0"
+name = "Blendersynth"
 tagline = "A blender extension to generate and label synthetic data for Computer Vision"
 maintainer = "lorenzozanizz"
 type = "add-on"
-license = ["SPDX:MIT"]
+
+website = "https://github.com/lorenzozanizz/blender-synth"
+tags = ["Data Generation", "Computer Vision", "Render", "Utility"]
 blender_version_min = "4.5.0"
+
+license = ["SPDX:MIT"]
+
+[permissions]
+files = "Load/save synthetic datasets, store configuration and logs"

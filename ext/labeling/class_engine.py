@@ -109,6 +109,9 @@ class ClassificationEngine:
 
         return
 
+    def get_classes(self) -> List[LabelClass]:
+        label_data = self.ctx.scene.labeling_data
+        return label_data.label_classes
 
     def ignore_default_class(self) -> bool:
         pass

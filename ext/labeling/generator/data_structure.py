@@ -11,18 +11,17 @@ class Label:
     obj_or_entity_name: str
     cls: Optional[LabelClass]
 
-    # The annotation data — could be any shape
-    geometry: Union[
-        tuple,  # bbox: (x, y, w, h)
-        list[tuple],  # polygon: [(x1,y1), (x2,y2), ...]
-        dict  # flexible structure
-    ]
-
     annotation_type: Literal["bbox", "polygon"]  # "bbox", "polygon", "depth"
 
     # Whether a label belongs to a single object or to a composite multi-mesh entity
     is_entity: bool
     visibility: float = 0.0
+
+    is_crowd: bool = False
+
+    bbox: tuple[float, float, float, float] = None
+    polygon: list[tuple[float, float]] = None
+    segmentation: list[int] = None # run length encoding
 
 
 class LabelData:

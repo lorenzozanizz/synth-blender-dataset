@@ -63,7 +63,7 @@ class PolygonExtractor(Extractor):
                     )
                 ret_data.add(
                     Label(obj.name, cls,
-                          geometry=convex_hull, visibility=self.estimated_visibility.get(obj), annotation_type="polygon",
+                          polygon=convex_hull, visibility=self.estimated_visibility.get(obj), annotation_type="polygon",
                           is_entity=False)
                 )
             if not entity_data:
@@ -112,9 +112,9 @@ class PolygonExtractor(Extractor):
 
                 ret_data.add(
                     Label(entity_name, cls,
-                          geometry=total_convex_hull,
-                          visibility=self.estimated_visibility.get(entity_name), annotation_type="polygon",
-                          is_entity=True)
+                        polygon=total_convex_hull,
+                        visibility=self.estimated_visibility.get(entity_name), annotation_type="polygon",
+                        is_entity=True)
                 )
 
         return ret_data

@@ -35,7 +35,8 @@ bl_info = {
 import sys
 
 # When testing we must not import all classes, because some ui classes are not stubbed and
-# at test time bpy is not present.
+# at test time bpy is not present. We prevent registration by checking that our test library
+# was not imported.
 if 'pytest' not in sys.modules:
 
     from .constants import NODE_CATEGORIES_NAME
@@ -101,3 +102,6 @@ def unregister():
 
     UniqueLogger.cleanup()
     unregister_handlers()
+
+def uninstall():
+    print("Uninstalling extension...")

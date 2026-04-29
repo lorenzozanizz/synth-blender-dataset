@@ -35,6 +35,7 @@ class GenerateOperator(Operator):
         scene = context.scene
         return LabelExtractionConfig(
             scene.randomizer_label_format,
+            dict(),
             scene.randomizer_do_labelize
         )
 
@@ -123,6 +124,7 @@ class PreviewOperator(Operator):
         scene = context.scene
         return LabelExtractionConfig(
             scene.randomizer_label_format,
+            dict(),
             scene.randomizer_do_labelize
         )
 

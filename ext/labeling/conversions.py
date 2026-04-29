@@ -96,6 +96,37 @@ def convert_camera_centered_to_yolo(
     return x_center, y_center, width, height
 
 
+def convert_camera_centered_to_coco(
+    ximn_ymin_xmax_ymax: tuple[float, float, float, float],
+    width: int,
+    height: int
+) -> tuple[float, float, float, float]:
+    """ Convert image-centered [-1, 1] bbox to COCO [x, y, width, height] in pixels.
+
+    COCO format: [x, y, width, height] where x,y is top-left corner in pixels.
+
+    :param ximn_ymin_xmax_ymax: the camera-centered [-1, 1] bbox
+    :param width: width of the frame
+    :param height: height of the frame
+    :return: 4 numbers in COCO format [x_pixel, y_pixel, width_pixel, height_pixel]
+    """
+    x_min, y_min, x_max, y_max = ximn_ymin_xmax_ymax
+
+    # Convert from [-1, 1] to [0, 1]. the -1..1 range is used initially with
+    # frustum-center coordinates. this converts to left-upper corner coordinates
+    x_min_norm = (x_min + 1) / 2
+    x_max_norm = (x_max + 1) / 2
+    y_min_norm = (y_min + 1) / 2
+    y_max_norm = (y_max + 1) / 2
+
+    # Convert from [0, 1] to pixel coordinates
+    x_pixel = x_min_norm * width
+    y_pixel = y_min_norm * height
+    width_pixel = abs(x_max_norm - x_min_norm) * width
+    height_pixel = abs(y_max_norm - y_min_norm) * height
+
+    return x_pixel, y_pixel, width_pixel, height_pixel
+
 def convert_camera_point_list_absolute_pixels_y_inverted(
     p_list: List[tuple[float, float]], width: int, height: int
 ) -> list[tuple[int, int]]:

@@ -60,7 +60,7 @@ class BoundingBoxExtractor(Extractor):
                     )
                 ret_data.add(
                     Label(obj.name, cls,
-                          geometry=bbox, visibility=self.estimated_visibility.get(obj), annotation_type="bbox",
+                          bbox=bbox, visibility=self.estimated_visibility.get(obj), annotation_type="bbox",
                           is_entity=False)
                 )
             # If required, estimate visibility (No entity mode)
@@ -107,7 +107,7 @@ class BoundingBoxExtractor(Extractor):
 
                 ret_data.add(
                     Label(entity_name, cls,
-                          geometry=total_visible_bbox,
+                          bbox=total_visible_bbox,
                           visibility=self.estimated_visibility.get(entity_name), annotation_type="bbox",
                           is_entity=True)
                 )

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, Any
 
 
 @dataclass
@@ -11,11 +11,20 @@ class GenerationConfig:
 
 
 @dataclass
+class BatchMetadata:
+    """Context about the full batch being written"""
+
+    num_images: int
+    classes: list[Any]
+
+
+@dataclass
 class LabelExtractionConfig:
     """ Set of configurations used to control the way labels are extracted, from their format
      to whether they are written to memory using the writing configurations. """
 
     format: str
+    format_cfg: dict
     write_labels: bool
 
     # The precision of ray casting: a sample is selected every width * ratio pixels, height * ratio pixels
@@ -64,4 +73,9 @@ class RenderConfig:
     """
     width: int
     height: int
+    # Taken from the blender render settings for the current scene.
+    image_ext: str
 
+    # The blender camera object which captured the scene. May be selected dynamically
+    # in some way.
+    camera: Any

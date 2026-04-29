@@ -34,6 +34,7 @@ class LabelClass(PropertyGroup):
     """ """
     name: StringProperty(default="Unnamed")                     # type: ignore
     class_id: IntProperty(default=0)                            # type: ignore
+    parent_id: IntProperty(default=-1)                          # type: ignore
     color: FloatVectorProperty(subtype='COLOR',                 # type: ignore
         default=(0.2, 0.4, 0.8, 1.0),  # RGBA: mid-gray, fully opaque
         size=4,
@@ -101,8 +102,9 @@ class LabelRule(PropertyGroup):
         name="Class Name"
     )
 
-class LabelingData(PropertyGroup):
+class LabelingPropData(PropertyGroup):
 
+    do_superclasses: BoolProperty(default=False)                # type: ignore
     label_classes: CollectionProperty(type=LabelClass)          # type: ignore
     class_active_index: IntProperty(default=0)                  # type: ignore
 
@@ -126,6 +128,6 @@ class LabelingData(PropertyGroup):
 
 label_properties = {
     "labeling_data": PointerProperty(
-        type=LabelingData
+        type=LabelingPropData
     )
 }

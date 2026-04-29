@@ -1,12 +1,12 @@
-from .configurations import LabelExtractionConfig, RenderConfig
-from .io import OutputWriter, SerializationStrategy, YoloFormatter
+from .configurations import LabelExtractionConfig, RenderConfig, GenerationConfig, BatchMetadata
+from .io import OutputWriter
 
 from ..labeling.generator import LabelData
 from ..labeling.class_engine import ClassificationEngine
-from ..labeling.generator import Extractor, BoundingBoxExtractor, PolygonExtractor
+from ..labeling.generator import Extractor, BoundingBoxExtractor
 from ..labeling.ray_casting import get_visible_objects_from_camera
 
-from typing import Union, Dict, Tuple, Collection, Any, Optional
+from typing import Dict, Collection, Any, Optional
 
 
 class LabelingOrchestrator:
@@ -18,25 +18,21 @@ class LabelingOrchestrator:
         # To report issues and errors in the generation
         self.reporter = reporter
 
-        self.classifier = ClassificationEngine(self.ctx )
+        self.classifier = ClassificationEngine(self.ctx)
         self.visible_objects = None
 
         # Explicitly instantiate the label formatter and extractor based on the configuration
         self.extractor: Extractor = self._create_extractor()
 
         self.writer: OutputWriter = writer
-        if self.writer:
-            self.formatter: SerializationStrategy = self._create_formatter()
-            self.writer.set_strategy(self.formatter)
-
-            # Propagate the class information to the formatter through the declare_classes_interface()
 
         self.label_data = None
 
-    def execute(self, camera, depsgraph) -> None:
+    def process_shot(self, render_cfg: RenderConfig, depsgraph) -> None:
         """
 
-        :param camera:
+        :param render_cfg: The configuration of the rendered shot, including camera, width, height,
+            etc...
         :param depsgraph:
         :return:
         """
@@ -46,7 +42,6 @@ class LabelingOrchestrator:
 
         # Step 1] Extract the entity data from the scene, which is to be used by the extractor to
         # compose together multi-object entities.
-        scene = self.ctx.scene
         entity_scene_data = self.classifier.extract_entity_data()
 
         # Step 2] Extract the visible entities which are going to be bound and classified by the
@@ -55,7 +50,7 @@ class LabelingOrchestrator:
         res_x = int(self.ctx.scene.render.resolution_x * self.config.ray_casting_ratio)
         res_y = int(self.ctx.scene.render.resolution_y * self.config.ray_casting_ratio)
         self.visible_objects = get_visible_objects_from_camera(
-            self.ctx.scene, depsgraph, camera,
+            self.ctx.scene, depsgraph, render_cfg.camera,
             resolution_x=res_x, resolution_y=res_y, compute_mapping=True)
 
         # Compute the bbox/polygon/etc from the scene using the given camera and ray tracing
@@ -63,40 +58,40 @@ class LabelingOrchestrator:
             self.visible_objects.keys()
         )
 
-        self.label_data = self.extractor.extract(
+        self.label_data: LabelData = self.extractor.extract(
             visible_objects=self.visible_objects,
             classifier=self.classifier,
             entity_data=entity_scene_data,
-            camera=camera,
+            camera=render_cfg.camera,
             estimate_visibility=self.config.estimate_visibility
         )
 
         if self.config.write_labels and self.writer is not None:
-            render_config = RenderConfig(scene.render.resolution_x, scene.render.resolution_y)
-            files = self.formatter.format(self.label_data, render_config)
-            self.writer.write_label(files)
+            # files = self.formatter.format(self.label_data, render_config)
+            self.writer.write_shot(self.label_data, render_cfg)
 
         return
 
-    def begin_generation(self) -> None:
+    def begin_generation(self, gen_cfg: GenerationConfig) -> None:
         """
 
         :return:
         """
-        # Propagate the beginning of generation hook to the formatter.
-        pass
+        # Propagate the beginning of generation hook to the writer.
+        # the batch config is used to aggregate the data at the end of generation
+        batch_metadata = BatchMetadata(
+            gen_cfg.amount,
+            self.classifier.get_classes()
+        )
+        self.writer.begin_batch(batch_metadata)
 
     def end_generation(self) -> None:
         """
 
         :return:
         """
-        # Propagate the end of generation to the formatter.
-
-    def _create_formatter(self) -> Optional[SerializationStrategy]:
-        if self.writer is None:
-            return None
-        return YoloFormatter(write_config=self.writer.get_config())
+        # Propagate the end of generation to the writer.
+        self.writer.end_batch()
 
     def _create_extractor(self):
         return BoundingBoxExtractor(self.ctx)
@@ -110,18 +105,6 @@ class LabelingOrchestrator:
         :return:
         """
         return self.visible_objects
-
-    def get_visible_amount(self) -> Tuple[int, int, int]:
-        """
-
-        :return:
-        """
-        match_amt = tuple((0, 0, 0))
-
-        # Just ensure they really are the sum, TBR
-        assert match_amt[0] == match_amt[1] + match_amt[2]
-        return match_amt
-
 
     # ----- A set of timing routines to provide an interface to display them in the preview -----
 

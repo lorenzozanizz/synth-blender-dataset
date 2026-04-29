@@ -1,9 +1,8 @@
 from .executable_pipeline import ExecutablePipeline
 from .generation import NoViewportUpdate
-from .configurations import PreviewRenderConfig, LabelExtractionConfig
+from .configurations import PreviewRenderConfig, LabelExtractionConfig, RenderConfig
 from .orchestrator import LabelingOrchestrator
 
-from ..utils.logger import UniqueLogger
 from ..labeling.generator import LabelData
 from ..labeling.bpy_properties import LabelClass
 from ..labeling.conversions import convert_geometry_camera_to_absolute_y_inverted
@@ -141,9 +140,16 @@ class PreviewGenerator:
                     self.reporter.report({'WARNING'}, "No default camera was set, no labels preview could be generated")
                 else:
                     self.used_camera = default_camera
+                    render_cfg = RenderConfig(
+                        height=scene.render.resolution_x,
+                        width=scene.render.resolution_y,
+                        image_ext=scene.render.image_settings.file_format,
+                        camera=default_camera,
+                    )
+
                     with TimingContext(self.timings, 'labeling'):
-                        self.labeling_orchestrator.execute(
-                            camera=default_camera,
+                        self.labeling_orchestrator.process_shot(
+                            render_cfg=render_cfg,
                             depsgraph=self.ctx.evaluated_depsgraph_get()
                         )
 
@@ -317,7 +323,7 @@ class PreviewGenerator:
         !! Currently unused !! Intended for future extensions such as displaying object
         counts or other metrics.
         """
-        num_objects = len(self.visible_objects)
+        num_objects = len(self.labeling_orchestrator.visible_objects)
 
     @staticmethod
     def _render_geometry(img, color, pixel_space_geometry, line_width: int = 4) -> None:
@@ -346,8 +352,14 @@ class PreviewGenerator:
         :param label_data: Iterable of label data objects
         :return: Iterable of PreviewRenderData instances
         """
-        return (
-            PreviewRenderData(label.obj_or_entity_name, label.visibility, label.cls,
-                label.geometry, label.is_entity, label.annotation_type)
-            for label in label_data
-        )
+        render_data = []
+        for label in label_data:
+            geometry = None
+            if label.annotation_type.startswith("polygon"):
+                geometry = label.geometry
+            elif label.annotation_type.startswith("bbox"):
+                geometry = label.bbox
+
+            render_data.append(PreviewRenderData(label.obj_or_entity_name, label.visibility, label.cls,
+                geometry, label.is_entity, label.annotation_type))
+        return render_data
