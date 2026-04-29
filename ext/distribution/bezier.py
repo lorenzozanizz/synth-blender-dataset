@@ -112,8 +112,8 @@ def spline_length(spl: Spline):
 
 def normalize_weights(weights: List[float]) -> None:
     tot = sum(weights)
-    for w in weights:
-        w /= tot
+    for i in range(len(weights)):
+        weights[i] /= tot
     return
 
 
@@ -185,40 +185,3 @@ class BezierDistribution:
 
         return [point[0], point[1], point[2]]
 
-
-class SphereDistribution(CompiledSampler):
-
-    def __init__(self, center, radius) -> None:
-        """ """
-        self.center = center
-        self.radius = radius
-
-    @property
-    def dimension(self) -> int:
-        """ """
-        # Again, we assume this to be 3.
-        return 3
-
-    def sample(self) -> List[float]:
-        """
-
-        :return:
-        """
-        x, y, z = self.center
-        # We use a standard ( a bit less than naive ) sampling technique for the sphere, to avoid
-        # oversampling near the poles. We sample the polar coordinates uniformly, then convert the
-        # point to a cartesian coordinate.
-        # Uniform longitude [0, 2π]
-        theta = 2 * pi * random()
-
-        # Uniform on sphere (not uniform in latitude!)
-        # cos(phi) uniform in [-1, 1] ensures uniform surface distribution
-        cos_phi = 2 * random() - 1
-        sin_phi = sqrt(1 - cos_phi ** 2)
-
-        # Convert to Cartesian
-        px = x + self.radius * sin_phi * cos(theta)
-        py = y + self.radius * sin_phi * sin(theta)
-        pz = z + self.radius * cos_phi
-
-        return [px, py, pz]

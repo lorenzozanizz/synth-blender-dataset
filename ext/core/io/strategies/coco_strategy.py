@@ -200,3 +200,11 @@ class COCOFormatter(IOStrategy):
         coco_json = json.dumps(self.coco_data, indent=2)
 
         return (("instances", ".json", coco_json),)
+
+@LabelingFormatRegistry.register_strategy(SupportedFormats.COCO_SEGMENTATION.value)
+class COCOSegmentation(IOStrategy):
+    pass
+
+@LabelingFormatRegistry.register_strategy(SupportedFormats.COCO_LANDMARKS.value)
+class COCOLandmarks(IOStrategy):
+    pass

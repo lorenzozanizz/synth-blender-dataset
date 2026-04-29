@@ -59,6 +59,11 @@ class IOStrategy(metaclass=ABCMeta):
         self,
         transformed: list[dict]
     ) -> Collection[tuple[file_type, extension, str]]:
+        """
+
+        :param transformed:
+        :return:
+        """
         pass
 
     @abstractmethod
@@ -107,7 +112,7 @@ class IOStrategy(metaclass=ABCMeta):
 
     @abstractmethod
     def ensure_directories(self, root_path: str) -> None:
-        """Create needed directories"""
+        """ Create needed directories """
         pass
 
     @staticmethod

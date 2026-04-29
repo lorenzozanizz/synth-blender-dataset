@@ -8,9 +8,9 @@ extraction of data can happen without interrogating the bpy data component every
 from .nodes import NodeDistributionSerializer
 from ..constants import WidgetSerializationKeys, DISTRO_EDITOR_NAME
 from ..utils.math_funcs import geometric
-from ..utils.logger import UniqueLogger
 
 from enum import Enum
+from math import pi, sqrt, cos, sin
 from abc import abstractmethod, ABCMeta
 from typing import List, Dict, Any, Callable
 
@@ -36,7 +36,6 @@ class Distribution(Enum):
     CATEGORICAL_UNIFORM             = "Categorical Uniform"
 
     UNIFORM_SPHERE                  = "Uniform Sphere"
-    UNIFORM_RING                    = "Uniform Ring"
     MULTIVARIATE_UNIFORM            = "Multivariate Uniform"
     MULTIVARIATE_GAUSSIAN           = "Multivariate Gaussian"
     MULTIVARIATE_ISOTROPIC_GAUSSIAN = "Multivariate Isotropic Gaussian"
@@ -69,6 +68,43 @@ class CompiledSampler(metaclass=ABCMeta):
         """Sample a vector of shape (dimension,)"""
         pass
 
+
+class SphereDistribution(CompiledSampler):
+
+    def __init__(self, params: dict, dim: int = 3) -> None:
+        """ """
+        self.center = params['center']
+        self.radius = params['radius']
+
+    @property
+    def dimension(self) -> int:
+        """ """
+        # Again, we assume this to be 3.
+        return 3
+
+    def sample(self) -> List[float]:
+        """
+
+        :return:
+        """
+        x, y, z = self.center
+        # We use a standard ( a bit less than naive ) sampling technique for the sphere, to avoid
+        # oversampling near the poles. We sample the polar coordinates uniformly, then convert the
+        # point to a cartesian coordinate.
+        # Uniform longitude [0, 2π]
+        theta = 2 * pi * random.random()
+
+        # Uniform on sphere (not uniform in latitude!)
+        # cos(phi) uniform in [-1, 1] ensures uniform surface distribution
+        cos_phi = 2 * random.random() - 1
+        sin_phi = sqrt(1 - cos_phi ** 2)
+
+        # Convert to Cartesian
+        px = x + self.radius * sin_phi * cos(theta)
+        py = y + self.radius * sin_phi * sin(theta)
+        pz = z + self.radius * cos_phi
+
+        return [px, py, pz]
 
 class ConstantSampler(CompiledSampler):
     def __init__(self, value: float):
@@ -124,6 +160,11 @@ class PresetSampler(CompiledSampler):
         return [random.normalvariate(params['mean'], params['std']) for _ in range(dim)]
 
     @staticmethod
+    def _sample_uniform_sphere(params: Dict[str, Any], dim: int):
+        dis = SphereDistribution(params['center'], params['radius'])
+        return dis.sample()
+
+    @staticmethod
     def _sample_multivariate_uniform(params: Dict[str, Any], dim: int):
         max_vect = params['max_vec']
         min_vect = params['min_vec']
@@ -158,8 +199,10 @@ class PresetSampler(CompiledSampler):
             d.GEOMETRIC:                        PresetSampler._sample_geometric,
             d.BINOMIAL:                         PresetSampler._sample_binomial,
             d.GAUSSIAN:                         PresetSampler._sample_gaussian,
+            d.CATEGORICAL_UNIFORM:              PresetSampler._sample_categorical_uniform,
             d.MULTIVARIATE_UNIFORM:             PresetSampler._sample_multivariate_uniform,
             d.MULTIVARIATE_GAUSSIAN:            PresetSampler._sample_multivariate_gaussian,
+            d.UNIFORM_SPHERE:                   PresetSampler._sample_uniform_sphere,
             d.MULTIVARIATE_ISOTROPIC_GAUSSIAN:  PresetSampler._sample_isotropic_gaussian
         }[type_e]
 
@@ -187,7 +230,11 @@ class PresetSampler(CompiledSampler):
 
         :return:
         """
-        self.type = Distribution[self.config['preset']]
+        try:
+            self.type = Distribution[self.config['preset']]
+        except KeyError:
+            self.type = None
+            return
         self.discretize = self.config.get("do_discretize")
         if self.config.get("do_clamp"):
             self.clamp = tuple(self.config["clamping_factors"])
@@ -204,6 +251,8 @@ class PresetSampler(CompiledSampler):
 
         :return:
         """
+        if self.type is None or self.type == Distribution.NONE:
+            return [0]*self.dim
         sampler = PresetSampler._get_sampler(self.type)
         values =  sampler(dim=self.dim, params=self.params)
         if self.discretize:
