@@ -22,7 +22,7 @@ class ColorSampler(metaclass=ABCMeta):
 class UniformColorSampler(ColorSampler):
 
     @staticmethod
-    def sample_color(use_alpha: bool = False, **kwargs) -> tuple[float, float, float] | tuple[float, float, float, float]:
+    def sample_color(use_alpha: bool = False, **kwargs) -> Union[rgba_color, rgba_color]:
         rng = (random(), random(), random())
         if use_alpha:
             return rng[0], rng[1], rng[2], random()

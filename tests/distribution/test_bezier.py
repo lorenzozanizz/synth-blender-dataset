@@ -1,10 +1,10 @@
 import pytest
-from typing import Sequence
+from typing import Sequence, Union
 
 from ext.distribution.bezier import *
 
 
-def equality_with_tolerance(vec_1: Vector | Sequence, vec_2: Vector | Sequence, dims: int = 3, tol=1e-5) -> bool:
+def equality_with_tolerance(vec_1: Union[Vector, Sequence], vec_2: Union[Vector, Sequence], dims: int = 3, tol=1e-5) -> bool:
     """Check for equality between two vectors of dimension dims of numeric type
     within a certain tolerance.
 
