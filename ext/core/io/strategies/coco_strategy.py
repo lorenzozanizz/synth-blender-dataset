@@ -81,19 +81,6 @@ class COCOFormatter(IOStrategy):
             # Single annotation file for all images
             return "instances"
 
-    def ensure_directories(self, root_path: str) -> None:
-        """Create image and label directories"""
-        directories = []
-
-        # Images directory
-        images_dir = root_path
-        if self.split:
-            images_dir = f"{root_path}/{self.split}"
-        images_dir = f"{images_dir}/images"
-        directories.append(images_dir)
-
-        self._make_dirs(directories)
-
     def transform_annotation(
         self,
         label: Label,

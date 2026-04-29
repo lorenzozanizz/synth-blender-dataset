@@ -5,7 +5,7 @@ from .orchestrator import LabelingOrchestrator
 
 from ..labeling.generator import LabelData
 from ..labeling.bpy_properties import LabelClass
-from ..labeling.conversions import convert_geometry_camera_to_absolute_y_inverted
+from ..labeling.conversions import convert_geometry_camera_to_absolute_y_inverted, convert_camera_centered_to_absolute_pixels
 from ..labeling.ray_casting import geometry_bounds
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -51,6 +51,8 @@ class PreviewRenderData:
 
     is_entity: bool
     type: Literal["bbox", "polygon"]  # "bbox", "polygon", "depth"
+
+    ideal_bbox: tuple[float, float, float, float] = None
 
 
 class PreviewGenerator:
@@ -272,7 +274,8 @@ class PreviewGenerator:
         if show_geometry:
             self._render_geometry(img, color, line_width=4, pixel_space_geometry=pixel_geo)
         if show_unoccluded_bbox:
-            pass
+            unoccluded_pixel_geo = convert_camera_centered_to_absolute_pixels(data.ideal_bbox, width, height)
+            self._render_geometry(img, color, line_width=2, pixel_space_geometry=unoccluded_pixel_geo)
         if show_obj_name or (show_class_name_or_id != "none"):
 
             text = f"" if show_class_name_or_id == "none" else \
@@ -361,5 +364,5 @@ class PreviewGenerator:
                 geometry = label.bbox
 
             render_data.append(PreviewRenderData(label.obj_or_entity_name, label.visibility, label.cls,
-                geometry, label.is_entity, label.annotation_type))
+                geometry, label.is_entity, label.annotation_type, ideal_bbox=label.ideal_bbox))
         return render_data

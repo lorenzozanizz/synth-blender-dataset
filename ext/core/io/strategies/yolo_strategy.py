@@ -55,11 +55,6 @@ class YoloFormatter(IOStrategy):
     def get_filename_for(self, shot_id: int, f_type: file_type | Literal["image"]) -> str:
         return f"{self.write_cfg.prefix}_{shot_id}"
 
-    def ensure_directories(self, root_path: str) -> None:
-        directories = []
-        # Use the parent preset function to create the directories.
-        self._make_dirs(directories)
-
     def transform_annotation(self, label: Label, shot_idx: int, shot_config: RenderConfig) -> dict[str, Any]:
         if not label.annotation_type == "bbox":
             raise RuntimeError("Wrong annotation type in YOLO formatter!")

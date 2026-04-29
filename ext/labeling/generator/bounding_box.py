@@ -53,15 +53,15 @@ class BoundingBoxExtractor(Extractor):
                 if not cls:
                     continue
 
+                orig_bbox = None
                 if estimate_visibility:
-                    self.estimated_visibility[obj] = float(
-                        estimate_visibility_3d(
-                            obj, camera, deps, self.ctx, self.ctx.scene.render, bbox, area_func=compute_bbox_area)
-                    )
+                    vis, orig_bbox = estimate_visibility_3d(
+                        obj, camera, deps, self.ctx, self.ctx.scene.render, bbox, area_func=compute_bbox_area)
+                    self.estimated_visibility[obj] = float(vis)
                 ret_data.add(
                     Label(obj.name, cls,
                           bbox=bbox, visibility=self.estimated_visibility.get(obj), annotation_type="bbox",
-                          is_entity=False)
+                          is_entity=False, ideal_bbox=orig_bbox)
                 )
             # If required, estimate visibility (No entity mode)
             if not entity_data:

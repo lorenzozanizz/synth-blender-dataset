@@ -56,15 +56,15 @@ class PolygonExtractor(Extractor):
                 convex_hull = compute_convex_hull(point_cloud, merge=False)
                 if merge_angle:
                     convex_hull = simplify_by_angle(convex_hull, merge_angle)
+                orig_bbox = None
                 if estimate_visibility:
-                    self.estimated_visibility[obj] = float(
-                        estimate_visibility_3d(
-                            obj, camera, deps, self.ctx, self.ctx.scene.render, convex_hull, area_func=compute_polygon_area)
-                    )
+                    vis, orig_bbox = estimate_visibility_3d(
+                        obj, camera, deps, self.ctx, self.ctx.scene.render, convex_hull, area_func=compute_polygon_area)
+                    self.estimated_visibility[obj] = float(vis)
                 ret_data.add(
                     Label(obj.name, cls,
                           polygon=convex_hull, visibility=self.estimated_visibility.get(obj), annotation_type="polygon",
-                          is_entity=False)
+                          is_entity=False, ideal_bbox=orig_bbox)
                 )
             if not entity_data:
                 return ret_data

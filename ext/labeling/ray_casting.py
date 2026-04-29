@@ -152,7 +152,7 @@ def estimate_visibility_3d(obj, camera, depsgraph, context, render, visible_geom
     bbox_visible_area = float(area_func(visible_geometry))
 
     occlusion = bbox_visible_area / bbox_3d_area if bbox_3d_area > 0 else 1.0
-    return occlusion
+    return occlusion, camera_bbox
 
 def compute_camera_space_boxes(objects: Iterable[Any], camera, depsgraph, context, render) \
         -> Dict[Any, Tuple[float, float, float, float]]:

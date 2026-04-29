@@ -10,7 +10,8 @@ from .context import *
 from ..constants import PipeNames, WidgetSerializationKeys
 from ..utils.logger import UniqueLogger
 from ..distribution.computation import SamplerCompiler
-from ..distribution.bezier import BezierDistribution, SphereDistribution, BezierCurve
+from ..distribution.bezier import BezierDistribution, BezierCurve
+from ..distribution.computation import SphereDistribution
 
 from typing import Any, List, Tuple
 from abc import ABCMeta, abstractmethod

@@ -5,6 +5,9 @@ from os import makedirs
 
 from ...labeling.generator.data_structure import *
 from ..configurations import RenderConfig, BatchMetadata, WritingConfig
+
+# This is requierd here for typing purposes, for some reason pycharm does not detect
+# the dataclasses below with the reimport
 from dataclasses import dataclass
 
 
@@ -108,11 +111,6 @@ class IOStrategy(metaclass=ABCMeta):
 
     @abstractmethod
     def get_filename_for(self, shot_id: int, f_type: file_type | Literal["image"]) -> str:
-        pass
-
-    @abstractmethod
-    def ensure_directories(self, root_path: str) -> None:
-        """ Create needed directories """
         pass
 
     @staticmethod

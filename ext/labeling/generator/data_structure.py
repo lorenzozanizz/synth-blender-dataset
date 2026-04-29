@@ -19,6 +19,8 @@ class Label:
 
     is_crowd: bool = False
 
+    # Bounding box for the mesh object in ideal space
+    ideal_bbox: tuple[float, float, float, float] = None
     bbox: tuple[float, float, float, float] = None
     polygon: list[tuple[float, float]] = None
     segmentation: list[int] = None # run length encoding

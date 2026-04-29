@@ -66,6 +66,20 @@ def convert_camera_centered_to_absolute_pixels_y_inverted(
     y_max = height - y_max
     return x_min, y_min, x_max, y_max
 
+
+def convert_camera_centered_to_absolute_pixels(
+    ximn_ymin_xmax_ymax: tuple[float, float, float, float], width: int, height: int
+) -> tuple[int, int, int, int]:
+    """
+
+    :param ximn_ymin_xmax_ymax:
+    :param width:
+    :param height:
+    :return:
+    """
+    x_min, y_min, x_max, y_max = convert_camera_centered_to_absolute_pixels_0y_top(ximn_ymin_xmax_ymax, width, height)
+    return x_min, y_min, x_max, y_max
+
 def convert_camera_centered_to_top_left_0_1(
     ximn_ymin_xmax_ymax: tuple[float, float, float, float]
 ):
@@ -126,6 +140,55 @@ def convert_camera_centered_to_coco(
     height_pixel = abs(y_max_norm - y_min_norm) * height
 
     return x_pixel, y_pixel, width_pixel, height_pixel
+
+
+def convert_camera_centered_to_pascal_voc(
+    bbox_camera_centered: tuple[float, float, float, float],
+    width: int,
+    height: int
+) -> tuple[int, int, int, int]:
+    """
+    Convert camera-centered [-1, 1] bounding box to Pascal VOC format.
+
+    Pascal VOC format: [xmin, ymin, xmax, ymax] in pixel coordinates (integers)
+    where (xmin, ymin) is top-left corner and (xmax, ymax) is bottom-right corner.
+
+    Camera-centered format: [x_min, y_min, x_max, y_max] in [-1, 1] range,
+    where center of image is (0, 0).
+
+    :param bbox_camera_centered: Tuple of (x_min, y_min, x_max, y_max) in [-1, 1]
+    :param width: width of the frame
+    :param height: height of the frame
+    :return: Tuple of (xmin, ymin, xmax, ymax) in pixel coordinates
+    """
+    x_min, y_min, x_max, y_max = bbox_camera_centered
+
+    # Convert from [-1, 1] to [0, 1]
+    x_min_norm = (x_min + 1) / 2
+    x_max_norm = (x_max + 1) / 2
+    y_min_norm = (y_min + 1) / 2
+    y_max_norm = (y_max + 1) / 2
+
+    # Convert from [0, 1] to pixel coordinates
+    xmin_pixel = x_min_norm * width
+    xmax_pixel = x_max_norm * width
+    ymin_pixel = y_min_norm * height
+    ymax_pixel = y_max_norm * height
+
+    # Ensure xmin < xmax and ymin < ymax
+    xmin = int(min(xmin_pixel, xmax_pixel))
+    xmax = int(max(xmin_pixel, xmax_pixel))
+    ymin = int(min(ymin_pixel, ymax_pixel))
+    ymax = int(max(ymin_pixel, ymax_pixel))
+
+    # Clamp to image bounds
+    xmin = max(0, min(xmin, width - 1))
+    xmax = max(1, min(xmax, width))
+    ymin = max(0, min(ymin, height - 1))
+    ymax = max(1, min(ymax, height))
+
+    return xmin, ymin, xmax, ymax
+
 
 def convert_camera_point_list_absolute_pixels_y_inverted(
     p_list: List[tuple[float, float]], width: int, height: int

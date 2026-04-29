@@ -38,15 +38,8 @@ class OutputWriter:
 
     def begin_batch(self, batch_metadata: BatchMetadata) -> None:
         """Called once before rendering begins"""
+        # Store the batch metadata for the end of generation callback.
         self._batch_metadata = batch_metadata
-
-        # Pre-generate directories
-        if self.io_strategy is not None:
-            self.io_strategy.ensure_directories(root_path=self.config.save_path)
-        #
-        # dirs = self.strategy.get_dirs()
-        # for directory in dirs:
-        #     makedirs(join(self.config.save_path, directory), exist_ok=True)
 
     def write_shot(
         self,
