@@ -6,6 +6,7 @@ Generates COCO-formatted JSON with image metadata and annotations.
 import json
 from typing import Any, Collection, Literal
 from datetime import datetime
+from os.path import join
 
 from .. import file_type, StorageSpec, extension
 from ....labeling.conversions import convert_camera_centered_to_coco
@@ -22,6 +23,10 @@ class COCOFormatter(IOStrategy):
     COCO format implementation for bounding box detection.
     Generates a single JSON file per batch with all images and annotations.
     """
+
+    def ensure_directories(self) -> None:
+        image_dir = join(self.write_cfg.save_path, (self.split + "/" if self.split else "") + "images/")
+        self._make_dirs([image_dir])
 
     def __init__(self, write_config: WritingConfig, config: dict):
         super().__init__(write_config, config)
@@ -192,6 +197,6 @@ class COCOFormatter(IOStrategy):
 class COCOSegmentation(IOStrategy):
     pass
 
-@LabelingFormatRegistry.register_strategy(SupportedFormats.COCO_LANDMARKS.value)
+@LabelingFormatRegistry.register_strategy(SupportedFormats.COCO_KEYPOINTS.value)
 class COCOLandmarks(IOStrategy):
     pass

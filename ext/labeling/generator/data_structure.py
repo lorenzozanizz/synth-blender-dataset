@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Optional, Literal, Union, Dict
+from typing import Optional, Literal, Union, Dict, Any
 
 from ..bpy_properties import LabelClass
 
@@ -25,6 +25,8 @@ class Label:
     polygon: list[tuple[float, float]] = None
     segmentation: list[int] = None # run length encoding
 
+    # e.g. for CVAT formats
+    attributes: dict[str, Any] =  None
 
 class LabelData:
     """Container for all annotations in a frame"""

@@ -5,6 +5,7 @@ Generates one XML annotation file per image.
 
 from typing import Any, Collection, Literal
 from xml.etree.ElementTree import Element, SubElement, tostring
+from os.path import join
 import xml.dom.minidom
 
 from .. import file_type, StorageSpec, extension
@@ -22,6 +23,11 @@ class PascalVOCFormatter(IOStrategy):
     Pascal VOC format implementation for bounding box detection.
     Generates one XML file per image with annotations.
     """
+
+    def ensure_directories(self) -> None:
+        image_dir = join(self.write_cfg.save_path, (self.split + "/" if self.split else "") + "images/")
+        label_dir = join(self.write_cfg.save_path, (self.split + "/" if self.split else "") + "annotations/")
+        self._make_dirs([image_dir, label_dir])
 
     def __init__(self, write_config: WritingConfig, config: dict):
         super().__init__(write_config, config)
@@ -196,20 +202,14 @@ class PascalVOCFormatter(IOStrategy):
         Not used for per-image format.
         Pascal VOC creates one file per image, no aggregation needed.
         """
-        raise NotImplementedError(
-            "Pascal VOC uses per-image serialization via serialize_image_labels(), "
-            "not batch aggregation. aggregate_batch() should not be called."
-        )
+        return { }
 
     def finalize(self, aggregated: dict[str, Any]) -> Collection[tuple[file_type, extension, str]]:
         """
         Not used for per-image format.
         Pascal VOC creates one file per image, no finalization needed.
         """
-        raise NotImplementedError(
-            "Pascal VOC uses per-image serialization via serialize_image_labels(), "
-            "not batch finalization. finalize() should not be called."
-        )
+        return ()
 
     @staticmethod
     def _prettify_xml(element: Element) -> str:

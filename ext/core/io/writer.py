@@ -40,6 +40,8 @@ class OutputWriter:
         """Called once before rendering begins"""
         # Store the batch metadata for the end of generation callback.
         self._batch_metadata = batch_metadata
+        # create all required subdirectories.
+        self.io_strategy.ensure_directories()
 
     def write_shot(
         self,
@@ -70,18 +72,19 @@ class OutputWriter:
 
     def end_batch(self) -> None:
         """Called once after all shots rendered"""
+        # Note: this is executed independently of the aggregation type, formats which
+        # require no aggregation will simply do nothing in their implementations.
+        # Aggregate all pending annotations
+        aggregated = self.io_strategy.aggregate_batch(
+            self._flatten_pending(),
+            self._batch_metadata
+        )
 
-        if self.spec.aggregation_strategy in ["per_batch", "global"]:
-            # Aggregate all pending annotations
-            aggregated = self.io_strategy.aggregate_batch(
-                self._flatten_pending(),
-                self._batch_metadata
-            )
-
-            # Finalize (compute derived fields, wrap in JSON, etc.)
-            finalized_content = self.io_strategy.finalize(aggregated)
-
-            self._write_serialized_content(finalized_content)
+        # Finalize (compute derived fields, wrap in JSON, etc.)
+        finalized_content = self.io_strategy.finalize(aggregated)
+        if not finalized_content:
+            return
+        self._write_serialized_content(finalized_content)
 
     def _write_serialized_content(self, serialized_content: Collection[tuple[str, str, str]]) -> None:
         """

@@ -13,7 +13,7 @@ from dataclasses import dataclass
 
 @dataclass
 class StorageSpec:
-    """Declares how files are organized on disk (independent of format)"""
+    """ Declares how files are organized on disk (independent of format) """
 
     # Organization
     single_file_per_image: bool  # YOLO style vs COCO style
@@ -62,7 +62,7 @@ class IOStrategy(metaclass=ABCMeta):
         self,
         transformed: list[dict]
     ) -> Collection[tuple[file_type, extension, str]]:
-        """
+        """ This functions is called when serializing per-image labels.
 
         :param transformed:
         :return:
@@ -76,7 +76,7 @@ class IOStrategy(metaclass=ABCMeta):
         shot_idx: int,
         shot_config: RenderConfig
     ) -> dict[str, Any]:
-        """Transform canonical annotation to format-specific dict"""
+        """ Transform canonical annotation to format-specific dict """
         pass
 
     @abstractmethod
@@ -111,6 +111,11 @@ class IOStrategy(metaclass=ABCMeta):
 
     @abstractmethod
     def get_filename_for(self, shot_id: int, f_type: file_type | Literal["image"]) -> str:
+        pass
+
+    @abstractmethod
+    def ensure_directories(self) -> None:
+        """ Create all the required directories for the given IO strategy """
         pass
 
     @staticmethod

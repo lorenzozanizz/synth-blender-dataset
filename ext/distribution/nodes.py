@@ -1,3 +1,10 @@
+"""
+
+
+
+
+"""
+
 from ..constants import DISTRO_EDITOR_NAME
 
 from bpy.types import Node, NodeTree, NodeSocket
@@ -30,17 +37,17 @@ class DistributionNodeTree(NodeTree):
     bl_label = 'Distribution Editor'
     bl_icon = 'NODETREE'
 
-
 class DistributionRootNode(Node):
     bl_idname = "DistributionRootNode"
     bl_label = "Root"
     bl_icon = "NODETREE"
 
-    dimension: IntProperty( # type: ignore
+    dimension: IntProperty(         # type: ignore
         name="Dimension",
         default=1,
         min=1,
-        max=3
+        max=3,
+        update=lambda self, context: self._update_socket_dimension()
     )
 
     @classmethod
@@ -49,6 +56,11 @@ class DistributionRootNode(Node):
 
     def init(self, context):
         self.inputs.new("DistributionSocket", "Out")
+        self._update_socket_dimension()
+
+    def _update_socket_dimension(self):
+        if self.inputs:
+            self.inputs[0].dimension = self.dimension
 
     def draw_buttons(self, context, layout):
         layout.prop(self, 'dimension', text='Dim')
@@ -67,6 +79,11 @@ class DistributionConstantNode(Node):
 
     def init(self, context):
         self.outputs.new("DistributionSocket", "Out")
+        # self.use_custom_color = True
+        # self.color = (0.2, 0.5, 0.8)  # Blue RGB
+
+    def draw_buttons(self, context, layout):
+        layout.prop(self, 'value', text='Value')
 
 
 class DistributionSelectorNode(Node):
