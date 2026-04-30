@@ -246,7 +246,7 @@ class NodeDistributionSelectorValidator(WidgetValidator):
 
         use_tree = partial_config['use_tree']
         if use_tree:
-            name = partial_config['distribution]']
+            name = partial_config['distribution']
             tree = next(
                 (ng for ng in bpy.data.node_groups
                  if ng.bl_idname == DISTRO_EDITOR_NAME and ng.name == name),

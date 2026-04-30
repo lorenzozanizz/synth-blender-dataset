@@ -89,8 +89,8 @@ class Executor:
                             self.pipeline.execute()
 
                             render_cfg = RenderConfig(
-                                height=scene.render.resolution_x,
-                                width=scene.render.resolution_y,
+                                width=scene.render.resolution_x,
+                                height=scene.render.resolution_y,
                                 image_ext=scene.render.image_settings.file_format,
                                 camera=default_camera,
                             )

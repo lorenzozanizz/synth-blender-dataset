@@ -106,11 +106,11 @@ class IOStrategy(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_subdir_for(self, shot_id: int, f_type: file_type | Literal["image"]) -> str:
+    def get_subdir_for(self, shot_id: Union[int, ], f_type: file_type | Literal["image"]) -> str:
         pass
 
     @abstractmethod
-    def get_filename_for(self, shot_id: int, f_type: file_type | Literal["image"]) -> str:
+    def get_filename_for(self, shot_id: Union[int,  ], f_type: file_type | Literal["image"]) -> str:
         pass
 
     @abstractmethod

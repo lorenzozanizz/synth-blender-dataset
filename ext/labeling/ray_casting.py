@@ -92,7 +92,7 @@ def get_visible_objects_from_camera(scene, depsgraph,
             pixel_vector = Vector((x, y, z_dir))
             # rotate that vector according to camera rotation
             pixel_vector.rotate(camera_quaternion)
-            pixel_vector.normalized()
+            pixel_vector.normalize()
 
             is_hit, _, _, _, hit_obj, _ = scene.ray_cast(depsgraph, camera_translation, pixel_vector)
 
