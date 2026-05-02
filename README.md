@@ -137,30 +137,6 @@ Pipelines can be saved and loaded as JSON, enabling:
 ## JSON Configuration Format
 
 Pipelines are stored as JSON for reproducibility and sharing across .blend files:
-```json
-{
-  "version": "1.0.0",
-  "operations": [
-    {
-      "type": "Position",
-      "target_objects": ["Cube"],
-      "distribution": "position_distribution",
-      "enabled": true
-    }
-  ],
-  "distributions": [
-    {
-      "name": "position_distribution",
-      "type": "continuous",
-      "parameters": {"mean": 0.0, "sigma": 1.0}
-    }
-  ],
-  "output": {
-    "format": "PNG",
-    "directory": "/path/to/output"
-  }
-}
-```
 
 ## Limitations
 
