@@ -121,6 +121,10 @@ class PreviewOperator(Operator):
         :param context:
         :return:
         """
+
+        # Extraction the labeling config.
+
+
         scene = context.scene
         return LabelExtractionConfig(
             scene.randomizer_label_format,

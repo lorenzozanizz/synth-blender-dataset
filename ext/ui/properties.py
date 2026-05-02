@@ -13,6 +13,7 @@ from bpy.props import (
     StringProperty, IntProperty, BoolProperty, EnumProperty, FloatProperty, FloatVectorProperty, CollectionProperty, PointerProperty
 )
 
+from .formatting_config import LabelConfigDataProperty
 from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TextureNodeProperty
 from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS
 from ..core.io.strategies import SupportedFormats
@@ -163,6 +164,8 @@ operation_properties = {
 
     "reusable_checkbox": BoolProperty(),
     "typed_object": PointerProperty(type=ObjectName),
+
+    "labeling_config": PointerProperty(type=LabelConfigDataProperty),
 
 }
 

@@ -17,8 +17,8 @@ def panel_conflict_rename(name: str) -> str:
 MAIN_PANEL_NAME = "Generator"
 PANEL_CATEGORY  = "Synthetic"
 
-REPO_URL = "https://github.com/lorenzozanizz/synth-blender-dataset"
-DOCU_URL = "https://github.com/lorenzozanizz/synth-blender-dataset/docs"
+REPO_URL = "https://github.com/lorenzozanizz/blender-synth"
+DOCU_URL = "https://github.com/lorenzozanizz/blender-synth/docs"
 
 VERSION        = "1.0.0"
 TARGET_VERSION = "4.5.0"
@@ -58,10 +58,12 @@ class PipeNames(Enum):
     TEMPERATURE = "Temperature"
     POWER       = "Power"
     COLOR       = "Color"
+    SPHERICAL   = "Spherical Lighting"
 
     # Camera
     BEZIER_LOCK = "Bezier Lock"
     SPHERE_LOCK = "Sphere Lock"
+    FOCAL_LEN   = "Focal Length"
 
     # Constraints
     OVERLAP     = "Overlap"

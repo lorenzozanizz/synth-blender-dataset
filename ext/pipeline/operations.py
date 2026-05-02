@@ -341,6 +341,37 @@ class RandomizeVisibilityOperation(PipelineOperation):
                 obj.visible_shadow, obj.visible_transmission, obj.visible_volume_scatter, obj.hide_get()
             )
 
+@OperationRegistry.register(PipeNames.LINE.value)
+class MoveLineOperation(PipelineOperation):
+
+    def compile(self, context, config: dict):
+        pass
+
+    def execute(self, context):
+        pass
+
+    def get_frame_context(self):
+        pass
+
+    def get_global_context(self):
+        pass
+
+
+@OperationRegistry.register(PipeNames.FOCAL_LEN.value)
+class FocalLengthOperation(PipelineOperation):
+    def compile(self, context, config: dict):
+        pass
+
+    def execute(self, context):
+        pass
+
+    def get_global_context(self):
+        pass
+
+    def get_frame_context(self):
+        pass
+
+
 @OperationRegistry.register(PipeNames.BEZIER_LOCK.value)
 class BezierLockOperation(PipelineOperation):
 
