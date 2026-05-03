@@ -265,7 +265,8 @@ class PipelineOperationsList(UIList):
 
         row = layout.row(align=True)
         row.operator(Labels.OPEN_FOLDER.value, icon="RIGHTARROW", text='')
-        row.label(text="Folder")
+        row.label(text="└ Folder")
+
 
 
 # Submenu for lighting operations

@@ -3,6 +3,8 @@ from ..core.configurations import PreviewRenderConfig, GenerationConfig, Writing
 from ..core.generation import Executor
 from ..core.preview import PreviewGenerator
 
+from ..ui.formatting_config import LabelingConfigRegistry
+
 import traceback
 from typing import Union, Optional
 from bpy.types import Operator
@@ -33,9 +35,11 @@ class GenerateOperator(Operator):
         :return:
         """
         scene = context.scene
+        labeling_cfg = LabelingConfigRegistry.get(scene.randomizer_label_format)
         return LabelExtractionConfig(
             scene.randomizer_label_format,
-            dict(),
+            # Extract the configuration for the labeling
+            labeling_cfg.extract(context),
             scene.randomizer_do_labelize
         )
 
@@ -123,12 +127,13 @@ class PreviewOperator(Operator):
         """
 
         # Extraction the labeling config.
-
-
         scene = context.scene
+
+        labeling_cfg = LabelingConfigRegistry.get(scene.randomizer_label_format)
         return LabelExtractionConfig(
             scene.randomizer_label_format,
-            dict(),
+            # Extract the configuration for the labeling
+            labeling_cfg.extract(context),
             scene.randomizer_do_labelize
         )
 

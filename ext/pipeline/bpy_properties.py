@@ -15,6 +15,7 @@ class PipelineOperation(PropertyGroup):
 
 class PipelineData(PropertyGroup):
     """Container for all operations"""
+
     operations: CollectionProperty(type=PipelineOperation)                  # type: ignore
     active_operation_index: IntProperty(default=0)                          # type: ignore
 

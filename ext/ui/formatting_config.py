@@ -78,16 +78,16 @@ class LabelConfigDrawer:
 
 
 @LabelingConfigRegistry.register(SupportedFormats.ULTRALYTICS_YOLO.value)
-class UltralyticsYoloConfigHandler:
-    pass
+class UltralyticsYoloConfigHandler(LabelConfigHandler):
 
-@LabelingConfigRegistry.register(SupportedFormats.ULTRALYTICS_YOLO.value)
-class UltralyticsYoloConfigHandler:
-    pass
+    @staticmethod
+    def draw(context, layout) -> None:
+        pass
 
-@LabelingConfigRegistry.register(SupportedFormats.ULTRALYTICS_YOLO.value)
-class UltralyticsYoloConfigHandler:
-    pass
+    @staticmethod
+    def extract(context) -> dict:
+        pass
+
 
 class LabelConfigDataProperty(PropertyGroup):
     """
