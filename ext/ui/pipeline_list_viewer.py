@@ -322,7 +322,8 @@ class AddCameraCategoryPipeMenu(Menu):
         layout = self.layout
 
         for name in (
-            PipeNames.BEZIER_LOCK, PipeNames.SPHERE_LOCK
+            PipeNames.BEZIER_LOCK, PipeNames.SPHERE_LOCK, PipeNames.FOCAL_LEN, PipeNames.JITTER, PipeNames.DISTANCE,
+            PipeNames.POV
         ):
             layout.operator(Labels.ADD_PIPE.value, text=name.value,
                             icon=pipe_to_ico_mapping[name]).op_name = name.value

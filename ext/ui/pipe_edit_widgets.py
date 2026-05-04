@@ -678,7 +678,7 @@ class PositionListSelector(EditorWidget):
     def extract_data(context) -> dict:
         scene = context.scene
         return {
-            "positions": [ tuple(item.pos) for item in scene.position_collection ]
+            wsk.POSITION_LIST.value: [ tuple(item.pos) for item in scene.position_collection ]
         }
 
     @staticmethod

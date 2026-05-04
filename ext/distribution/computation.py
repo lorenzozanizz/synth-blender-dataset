@@ -321,6 +321,31 @@ class SamplerCompiler:
             return SamplerCompiler._compile_simple_config(config, dim)
 
     @staticmethod
+    def make_distribution(op_type: str, dim: int, **kwargs):
+        # n
+        """
+                try:
+            self.type = Distribution[self.config['preset']]
+        except KeyError:
+            self.type = None
+            return
+        self.discretize = self.config.get("do_discretize")
+        if self.config.get("do_clamp"):
+            self.clamp = tuple(self.config["clamping_factors"])
+
+        self.params = self.config.get("parameters")
+
+        :param dim:
+        :param op_type:
+        :param kwargs:
+        :return:
+        """
+        return PresetSampler({
+            'preset': op_type,
+            **kwargs,
+        }, dim)
+
+    @staticmethod
     def _compile_simple_config(config: Dict[str, Any], dim: int = 1) -> CompiledSampler:
         """Compile simple preset distribution"""
         return PresetSampler(config, dim = dim)

@@ -1,13 +1,13 @@
 schema_version = "1.0.0"
 
-id = "blender_synth"
+id = "gensynth"
 version = "1.0.0"
-name = "Blendersynth"
+name = "Gensynth"
 tagline = "A blender extension to generate and label synthetic data for Computer Vision"
 maintainer = "lorenzozanizz"
 type = "add-on"
 
-website = "https://github.com/lorenzozanizz/blender-synth"
+website = "https://github.com/lorenzozanizz/gensynth"
 tags = ["Data Generation", "Computer Vision", "Render", "Utility"]
 blender_version_min = "4.5.0"
 

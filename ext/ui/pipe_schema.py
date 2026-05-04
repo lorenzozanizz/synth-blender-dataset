@@ -154,8 +154,8 @@ class MoveSchema(PipeSchema):
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
         dic = {
-            "target": ObjectTargeter.extract_data(context),
-            "positions": PositionListSelector.extract_data(context)
+            wsk.OBJECT.value: ObjectTargeter.extract_data(context),
+            wsk.POSITION.value: PositionListSelector.extract_data(context)
         }
         return dic
 

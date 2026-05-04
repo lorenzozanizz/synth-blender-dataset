@@ -17,8 +17,8 @@ def panel_conflict_rename(name: str) -> str:
 MAIN_PANEL_NAME = "Generator"
 PANEL_CATEGORY  = "Synthetic"
 
-REPO_URL = "https://github.com/lorenzozanizz/blender-synth"
-DOCU_URL = "https://github.com/lorenzozanizz/blender-synth/docs"
+REPO_URL = "https://github.com/lorenzozanizz/gensynth"
+DOCU_URL = "https://github.com/lorenzozanizz/gensynth/docs"
 
 VERSION        = "1.0.0"
 TARGET_VERSION = "4.5.0"
@@ -40,40 +40,43 @@ class PipeNames(Enum):
 
     SCALE       = "Scale"
     ROTATION    = "Rotation"
-    MOVE        = "Move"
+    MOVE        = "Move"            # (x)
     POSITION    = "Position"
     VISIBILITY  = "Visibility"
-    LINE        = "Line"
+    LINE        = "Line"            # (x)
+    SELECT      = "Select"          # (x)
+    SPHERICAL   = "Sphere"          # (x)
 
     # Material
-    MATERIAL    = "Material"
-    TEXTURE     = "Texture"
-    INTENSITY   = "Intensity"
-    METALLIC    = "Metallic"
-    ROUGHNESS   = "Roughness"
-    NODE_PROP   = "Node Property"
-    BASE_COLOR  = "Base Color"
+    MATERIAL    = "Material"        # (x)
+    TEXTURE     = "Texture"         # (x)
+    INTENSITY   = "Intensity"       # (x)
+    METALLIC    = "Metallic"        # (x)
+    ROUGHNESS   = "Roughness"       # (x)
+    NODE_PROP   = "Node Property"   # (x)
+    BASE_COLOR  = "Base Color"      # (x)
 
     # Lighting
-    TEMPERATURE = "Temperature"
-    POWER       = "Power"
-    COLOR       = "Color"
-    SPHERICAL   = "Spherical Lighting"
+    TEMPERATURE = "Temperature"     # (x)
+    POWER       = "Power"           # (x)
+    COLOR       = "Color"           # (x)
 
     # Camera
-    BEZIER_LOCK = "Bezier Lock"
-    SPHERE_LOCK = "Sphere Lock"
-    FOCAL_LEN   = "Focal Length"
+    BEZIER_LOCK = "Bezier Lock"     # (x)
+    SPHERE_LOCK = "Sphere Lock"     # (x)
+    FOCAL_LEN   = "Focal Length"    # (x)
+    JITTER      = "Camera Jitter"   # (x)
+    POV         = "Change POVs"     # (x)
 
     # Constraints
-    OVERLAP     = "Overlap"
-    OCCLUSION   = "Occlusion"
-    DISTANCE    = "Distance"
-    BOUND       = "Bound"
-    GROUND      = "Ground"
+    OVERLAP     = "Overlap"         # (x)
+    OCCLUSION   = "Occlusion"       # (x)
+    DISTANCE    = "Distance"        # (x)
+    BOUND       = "Bound"           # (x)
+    GROUND      = "Ground"          # (x)
 
     # Noise
-    MOTION_BLUR = "Motion Blur"
+    MOTION_BLUR = "Motion Blur"     # (x)
 
 
 class WidgetSerializationKeys(Enum):

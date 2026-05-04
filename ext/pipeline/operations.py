@@ -9,9 +9,8 @@ from .context import *
 
 from ..constants import PipeNames, WidgetSerializationKeys
 from ..utils.logger import UniqueLogger
-from ..distribution.computation import SamplerCompiler
+from ..distribution.computation import SamplerCompiler, Distribution
 from ..distribution.bezier import BezierDistribution, BezierCurve
-from ..distribution.computation import SphereDistribution
 
 from typing import Any, List, Tuple
 from abc import ABCMeta, abstractmethod
@@ -211,6 +210,7 @@ class RandomizeMoveOperation(PipelineOperation):
 
         self.distribution   = None
         self.targets        = None
+        self.positions      = None
 
     def get_frame_context(self):
         return RandomizePositionOperation.PositionContext(self.targets)
@@ -220,15 +220,20 @@ class RandomizeMoveOperation(PipelineOperation):
 
     def compile(self, context, config: dict):
         self.targets = config[wsk.OBJECT.value][wsk.OBJECT_NAMES.value]
-        # The distribution will be compiled ( a bernoulli )
-        self.distribution = SamplerCompiler.compile(config[wsk.NODE_DISTRIBUTION.value], dim=1)
+        # The distribution will be compiled ( a discrete uniform )
+        self.positions = config[wsk.POSITION.value][wsk.POSITION_LIST.value]
+        self.distribution = SamplerCompiler.make_distribution(
+        Distribution.CATEGORICAL_UNIFORM.value, 1)
 
     def execute(self, context):
-        # One dimensional result, a bernoulli
+        # One dimensional result, a discrete uniform variable
+        result = min(max(0, self.distribution.sample()[0]), len(self.targets))
 
-        result = self.distribution.sample()[0]
+        # Extract a position randomly:
+        position = self.positions[result]
         for item in self.targets:
             obj = bpy.data.objects[item]
+            obj.location = position
 
 
 @OperationRegistry.register(PipeNames.ROTATION.value)
