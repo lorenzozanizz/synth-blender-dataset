@@ -1,4 +1,4 @@
-# Blendersynth
+# Gensynth
 
 A Blender extension for generating synthetic datasets through procedural randomization and batch rendering. This addon enables users to create diverse image datasets with controlled variations in object placement, material properties, lighting conditions, and scene parameters.
 Additionally, the extensions supports a preview functionality which allows to inspect the output of the pipeline and the computed labels directly inside Blender.
