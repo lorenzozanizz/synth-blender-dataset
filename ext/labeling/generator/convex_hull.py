@@ -1,3 +1,9 @@
+"""Polygon-based label extraction for 3D objects and entities.
+
+Provides convex hull computation and visibility estimation for scene objects,
+with support for multi-component entity reconciliation in camera space.
+"""
+
 from typing import Dict, Any, List, Union, Callable
 from collections.abc import Iterable
 
@@ -9,10 +15,17 @@ from .extractor import Extractor
 from .data_structure import *
 
 class PolygonExtractor(Extractor):
+    """ Extracts polygon-based labels (convex hulls) from 3D objects and entities in a scene.
 
-    """Encapsulates bbox extraction logic"""
+    This class handles the computation of 2D convex hull projections for visible objects and
+    multi-component entities, with optional visibility estimation in camera space. It manages
+    the reconciliation of multi-object entities by computing unified convex hulls from their
+    constituent components without requiring explicit polygon union operations.
+    """
+
 
     def __init__(self, context):
+        """ Initialize the polygon extractor """
         self.ctx = context
 
         self.timings: Dict[str, float] = dict()
@@ -28,16 +41,25 @@ class PolygonExtractor(Extractor):
         camera,
         estimate_visibility: bool = True, merge_angle: float = 3.0
     ) -> LabelData:
+        """ Extract polygon labels from visible objects and entities in the scene.
+        Computes convex hull polygons for each visible object and groups them into
+        multi-component entities. Optionally estimates visibility by projecting 3D
+        bounding boxes to camera space and computing area ratios.
+        NOTE: Convex hulls, unlike alpha shapes, do not compute the smallest simple shape comprising
+        the data, rather a convex shape.!
+
+        :param visible_objects: Mapping from objects to their 3D point cloud representations.
+        :param classifier: Classification engine for mapping objects and entities to semantic labels.
+        :param entity_data: Dictionary defining multi-object entities as collections of component names.
+        :param camera: Camera object used for visibility estimation and coordinate transformations.
+        :param estimate_visibility: If True, compute visibility ratios via camera-space projections.
+                Defaults to True.
+        :param merge_angle: Angle threshold (in degrees, NOT radians) for simplifying convex hull vertices.
+                If 0 or falsy, no simplification is applied. Defaults to 3.0 angle.
+
+        :return LabelData: Container of Label objects with polygon geometries
         """
 
-        :param merge_angle:
-        :param visible_objects:
-        :param classifier:
-        :param entity_data:
-        :param camera:
-        :param estimate_visibility:
-        :return:
-        """
         ret_data = LabelData()
 
         with (TimingContext(self.timings, 'labeling')):
@@ -124,6 +146,7 @@ class PolygonExtractor(Extractor):
         return self.estimated_visibility
 
     def get_visible_entities(self):
+        """ Get a collection of the entities which are visible in the scene. """
         return self.visible_entities.keys()
 
     def get_labeling_time(self) -> float:

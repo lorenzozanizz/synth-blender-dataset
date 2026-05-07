@@ -1,3 +1,7 @@
+"""
+
+"""
+
 from typing import Dict, Any, List, Iterable, Callable
 
 from ...utils.timer import TimingContext
@@ -9,7 +13,7 @@ from .extractor import Extractor
 from .data_structure import *
 
 class BoundingBoxExtractor(Extractor):
-    """Encapsulates bbox extraction logic"""
+    """ Encapsulates bbox extraction logic """
 
     def __init__(self, context):
         self.ctx = context

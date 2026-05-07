@@ -1,3 +1,11 @@
+""" A module containing the interface for the extractor, which is the interface designed
+to extract and pack geometry data for objects and entities from the scene. Geometry is unified
+into a single Label interface.
+
+Classes: Extractor
+"""
+
+
 from abc import abstractmethod, ABCMeta
 from typing import Any, Dict, Callable
 from collections.abc import Iterable
@@ -5,6 +13,10 @@ from collections.abc import Iterable
 from .data_structure import *
 
 class Extractor(metaclass=ABCMeta):
+    """
+    The main interface for geometry extractors from the render scene, which use ray casting
+    inside the camera frustum to generate labels, grouping points reached by rays and imputing them
+    to objects and entities. Different extractors may extract different geometries in general.  """
 
     @abstractmethod
     def extract(self,             visible_objects,
@@ -12,8 +24,12 @@ class Extractor(metaclass=ABCMeta):
             entity_data,
             camera,
                 estimate_visibility: bool = True, **kwargs) -> LabelData:
-        """
+        """ Extract the geometry of the identified objects and label from the scene, the data is
+        then packed into LabelData objects which are iterables over a list of labels including geometry data,
+        class data.
 
+        Note: LabelData is not specific to the format, but different formats may decide to employ
+        different extractors to reduce the computational burden of finding the geometry from the scene
         :return:
         """
         pass
@@ -24,7 +40,12 @@ class Extractor(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_visible_entities(self):
+    def get_visible_entities(self) -> Iterable[Any]:
+        """ Get the entities which are visible in the scene, e.g. those which are
+        reachable by ray-casting inside the camera frustum.
+
+        :returns: An iterable over the visible Blender objects
+        """
         pass
 
     def get_labeling_time(self) -> float:
