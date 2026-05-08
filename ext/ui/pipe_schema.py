@@ -25,6 +25,8 @@ from ..constants import PipeNames
 from abc import ABC, abstractmethod
 from typing import Union, Optional
 
+from ..pipeline import PipelineOperation
+
 wsk = WidgetSerializationKeys
 
 class PipeSchemaRegistry:
@@ -240,7 +242,7 @@ class RoughnessSchema(MaterialSimplePropertySchema):
     pass
 
 @PipeSchemaRegistry.register(PipeNames.INTENSITY.value)
-class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
+class RandomizeNodeIntensitySchema(MaterialSimplePropertySchema):
 
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:
@@ -263,7 +265,7 @@ class RandomizeNodeIntensityOperation(MaterialSimplePropertySchema):
         return dic
 
 @PipeSchemaRegistry.register(PipeNames.BEZIER_LOCK.value)
-class BezierLockCameraOperation(PipeSchema):
+class BezierLockCameraSchema(PipeSchema):
 
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
@@ -286,9 +288,26 @@ class BezierLockCameraOperation(PipeSchema):
             conditional.setup_from_config(config[wsk.OBJECT.value], context)
             TypedObjectTargeter.setup_from_config(config[wsk.TYPED_OBJ.value], context )
 
+@PipeSchemaRegistry.register(PipeNames.FOCAL_LEN.value)
+class FocalLengthSchema(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            wsk.NODE_DISTRIBUTION.value: NodeDistributionSelector.extract_data(context)
+        }
+        return dic
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            NodeDistributionSelector.reset(context)
+        else:
+            NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
+
 
 @PipeSchemaRegistry.register(PipeNames.LINE.value)
-class MoveAlongLineOperation(PipeSchema):
+class MoveAlongLineSchema(PipeSchema):
 
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
@@ -306,3 +325,4 @@ class MoveAlongLineOperation(PipeSchema):
         else:
             ObjectTargeter.setup_from_config(config[wsk.OBJECT.value], context)
             TypedObjectTargeter.setup_from_config(config[wsk.TYPED_OBJ.value], context)
+

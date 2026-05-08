@@ -408,17 +408,40 @@ class RandomizeVisibilityOperation(PipelineOperation):
 @OperationRegistry.register(PipeNames.FOCAL_LEN.value)
 class FocalLengthOperation(PipelineOperation):
 
+    def __init__(self):
+        self.distribution = None
+        self.camera = None
+
     def compile(self, context, config: dict):
-        pass
+        scene = context.scene
+        # Get the current scene camera
+        self.camera = scene.camera
+        self.distribution = SamplerCompiler.compile(config[wsk.NODE_DISTRIBUTION.value], dim=1)
 
     def execute(self, context):
-        pass
+        """ Execute the focal length operation, which rnadomizes the focal length of the scene
+        camera. """
+        # Sample a scalar value, then assign the camera focal length.
+        value = self.distribution.sample()
+        self.camera.lens = value
+
+    class CameraFocalLengthContext(ContextManager):
+
+        def __init__(self, camera):
+            self.camera = camera
+            self.initial_focal = self.camera.lens
+
+        def __enter__(self):
+            self.initial_focal = self.camera.lens
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.camera.lens = self.initial_focal
 
     def get_global_context(self):
-        pass
+        return FocalLengthOperation.CameraFocalLengthContext(self.camera)
 
     def get_frame_context(self):
-        pass
+        return FocalLengthOperation.CameraFocalLengthContext(self.camera)
 
 
 @OperationRegistry.register(PipeNames.BEZIER_LOCK.value)

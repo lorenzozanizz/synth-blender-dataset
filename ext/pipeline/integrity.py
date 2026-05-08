@@ -152,6 +152,15 @@ class MoveAlongLineValidator(PipeValidator):
 
         return obj_ok and tar_ok
 
+@ValidatorRegistry.register(PipeNames.FOCAL_LEN.value)
+class FocalLengthValidator(PipeValidator):
+
+    @staticmethod
+    def validate(pipe: PipelineOperation, config: dict) -> bool:
+        # Just check that the distribution is fine
+        dis_ok = NodeDistributionSelectorValidator.validate(partial_config=config[wsk.SIMPLE.value])
+        return dis_ok
+
 
 class WidgetValidator(metaclass=ABCMeta):
     """
