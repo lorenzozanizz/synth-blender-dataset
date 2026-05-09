@@ -241,7 +241,7 @@ class CaptureTextureOperator(Operator):
 
         # Store name
         lab = selected.label
-        mat_prop = scene.targeted_material_display
+        mat_prop = scene.targeted_texture_node
         mat_prop.node_label = lab
         mat_prop.mat_name = mat_name
 

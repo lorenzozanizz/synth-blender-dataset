@@ -338,11 +338,11 @@ class PathListSelector(EditorWidget):
     @staticmethod
     def extract_data(context) -> dict:
         scene = context.scene
-        ret = { "use_folder": scene.use_folder_mode }
+        ret = { wsk.PATH_USE_FOLDER.value: scene.use_folder_mode }
         if scene.use_folder_mode:
-            ret["folder"] = scene.image_folder
+            ret[wsk.PATH_FOLDER.value] = scene.image_folder
         else:
-            ret["files"] = [
+            ret[wsk.PATH_FILES.value] = [
                 file.path for file in scene.image_paths
             ]
         return ret

@@ -176,8 +176,8 @@ class TextureSchema(PipeSchema):
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
         dic = {
-            "node": ImageTextureTargeter.extract_data(context),
-            "textures": PathListSelector.extract_data(context)
+            wsk.TEXTURE.value: ImageTextureTargeter.extract_data(context),
+            wsk.PATH.value: PathListSelector.extract_data(context)
         }
         return dic
 

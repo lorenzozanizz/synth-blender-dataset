@@ -140,7 +140,7 @@ class IntensityValidator(PipeValidator):
     @staticmethod
     def validate(pipe: PipelineOperation, config: dict) -> bool:
         # Just ensure that the node does exist and ensure the distribution is OK.
-        val_ok = ValueTargeterValidator.validate(partial_config=config[wsk.VALUE.value])
+        val_ok = LabeledNodeValidator.validate(partial_config=config[wsk.VALUE.value])
         dis_ok = NodeDistributionSelectorValidator.validate(partial_config=config[wsk.NODE.value])
         return val_ok and dis_ok
 
@@ -192,6 +192,15 @@ class FocalLengthValidator(PipeValidator):
         # Just check that the distribution is fine
         dis_ok = NodeDistributionSelectorValidator.validate(partial_config=config[wsk.SIMPLE.value])
         return dis_ok
+
+
+@ValidatorRegistry.register(PipeNames.TEXTURE.value)
+class TextureValidator(PipeValidator):
+    @staticmethod
+    def validate(pipe: PipelineOperation, config: dict) -> bool:
+        nod_ok = LabeledNodeValidator.validate(partial_config=config[wsk.TEXTURE.value])
+        img_ok = PathListSelectorValidator.validate(partial_config=config[wsk.PATH.value])
+        return nod_ok and img_ok
 
 
 class WidgetValidator(metaclass=ABCMeta):
@@ -272,26 +281,22 @@ class ObjectTargeterValidator(WidgetValidator):
         return True
 
 #
-class ImageTextureTargeterValidator(WidgetValidator):
-
-    @staticmethod
-    def validate(partial_config: dict) -> bool:
-        """
-
-        :param partial_config:
-        :return:
-        """
-
-        # Ensure that all specified paths exist and are properly read accessible.
-        pass
-
-
-#
 class PathListSelectorValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
-        pass
+        is_folder = partial_config[wsk.PATH_USE_FOLDER.value]
+        # Only ensure that the list is non-empty, do not perform the directory check here
+        # instead the existence of the folder is checked at runtime when loading textures.
+        if not is_folder:
+            file_list = partial_config[wsk.PATH_FILES.value]
+            if not file_list:
+                return False
+        else:
+            directory = partial_config[wsk.PATH_FOLDER.value]
+            if not directory:
+                return False
+        return True
 
 
 #
@@ -371,7 +376,7 @@ class PropertyTargeterValidator(WidgetValidator):
         pass
 
 
-class ValueTargeterValidator(WidgetValidator):
+class LabeledNodeValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:

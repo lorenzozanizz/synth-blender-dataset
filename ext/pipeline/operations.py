@@ -12,8 +12,9 @@ from ..utils.logger import UniqueLogger
 from ..distribution.computation import SamplerCompiler, Distribution
 from ..distribution.bezier import BezierDistribution, BezierCurve
 
-from typing import Any, List, Tuple
+from typing import Any, List, Tuple, Callable
 from abc import ABCMeta, abstractmethod
+import os
 
 import bpy
 
@@ -231,6 +232,105 @@ class RandomizeIntensityOperation(PipelineOperation):
         return RandomizeIntensityOperation.PropertyValueContext(self.node)
 
 
+@OperationRegistry.register(PipeNames.TEXTURE.value)
+class RandomizeTextureOperation(PipelineOperation):
+
+    def __init__(self):
+        self.node = None
+        self.image_paths = None
+        self.use_folder_mode = None
+        self.image_folder = None
+        self.distribution = None
+
+    def compile(self, context, config: dict):
+        """
+
+        :param context:
+        :param config:
+        :return:
+        """
+
+        # Extract texture node target
+        node_config = config[wsk.TEXTURE.value]
+        material_name = node_config["material"]
+        node_label = node_config["label"]
+
+        # Get the material and find the target node
+        material = bpy.data.materials.get(material_name)
+        if not material or not material.use_nodes:
+            return
+
+        nodes = material.node_tree.nodes
+        self.node = next(
+            (node for node in nodes if node.label == node_label),
+            None
+        )
+        # Extract image paths/folder configuration
+        path_config = config[wsk.PATH.value]
+        self.use_folder_mode = path_config[wsk.PATH_USE_FOLDER.value]
+
+        # Load all image paths from folder, if the selection already specifies individual items
+        # just use those
+        if self.use_folder_mode:
+            self.image_folder = path_config[wsk.PATH_FOLDER.value]
+            self.image_paths = self._load_images_from_folder(self.image_folder)
+        else:
+            self.image_paths = path_config[wsk.PATH_FILES.value]
+
+        self.distribution = SamplerCompiler.make_distribution(
+            Distribution.CATEGORICAL_UNIFORM.name, 1, n=len(self.image_paths) - 1)
+
+    @staticmethod
+    def _load_images_from_folder(folder_path: str) -> list:
+        """Load all image file paths from a folder"""
+        image_extensions = {'.png', '.jpg', '.jpeg', '.bmp', '.exr', '.tiff', '.webp'}
+        images = []
+
+        try:
+            for file in os.listdir(folder_path):
+                if os.path.splitext(file)[1].lower() in image_extensions:
+                    images.append(os.path.join(folder_path, file))
+        except (OSError, FileNotFoundError):
+            return []
+
+        return sorted(images)
+
+    def execute(self, context):
+        if not self.node or not self.image_paths:
+            return
+        # Select a random image path
+        selected_material_idx = min(max(0, int(self.distribution.sample()[0])), len(self.image_paths) - 1)
+        selected_path = self.image_paths[selected_material_idx]
+
+        image = bpy.data.images.load(selected_path, check_existing=True)
+        if self.node.type == 'TEX_IMAGE':
+            self.node.image = image
+
+    class TextureContext:
+
+        def __init__(self, node):
+            self.node = node
+            self.prev_image = None
+
+        def __enter__(self):
+            """Store the current image"""
+            if self.node and self.node.type == 'TEX_IMAGE':
+                self.prev_image = self.node.image
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            """Restore the previous image"""
+            if self.node and self.node.type == 'TEX_IMAGE':
+                self.node.image = self.prev_image
+
+    def get_global_context(self):
+        """Get context manager for global (full render) state"""
+        return RandomizeTextureOperation.TextureContext(self.node)
+
+    def get_frame_context(self):
+        """Get context manager for per-frame state"""
+        return RandomizeTextureOperation.TextureContext(self.node)
+
+
 @OperationRegistry.register(PipeNames.POSITION.value)
 class RandomizePositionOperation(NumericRandomOperation):
 
@@ -283,7 +383,7 @@ class RandomizeMoveOperation(PipelineOperation):
         # The distribution will be compiled ( a discrete uniform )
         self.positions = config[wsk.POSITION.value][wsk.POSITION_LIST.value]
         self.distribution = SamplerCompiler.make_distribution(
-        Distribution.CATEGORICAL_UNIFORM.name, 1, n=len(self.positions) - 1)
+            Distribution.CATEGORICAL_UNIFORM.name, 1, n=len(self.positions) - 1)
 
     def execute(self, context):
         # One dimensional result, a discrete uniform variable
@@ -294,6 +394,60 @@ class RandomizeMoveOperation(PipelineOperation):
         for item in self.targets:
             obj = bpy.data.objects[item]
             obj.location = position
+
+
+class SimpleMaterialPropertyOperation(PipelineOperation):
+
+    def compile(self, context, config: dict):
+        pass
+
+    def execute(self, context):
+        pass
+
+    @abstractmethod
+    def assign_prop(self) -> None:
+        pass
+
+    @abstractmethod
+    def get_prop(self) -> Any:
+        pass
+
+    class SimplePropertyContext(ContextManager):
+
+        def __init__(self, get_prop: Callable, set_prop: Callable):
+            self.prop = None
+            self.get = get_prop
+            self.set = set_prop
+
+        def __enter__(self):
+            self.prop = self.get()
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            self.set(self.prop)
+
+    def get_global_context(self):
+        return SimpleMaterialPropertyOperation.SimplePropertyContext()
+
+    def get_frame_context(self):
+        simpleMaterialPropertyContext = SimpleMaterialPropertyOperation.SimplePropertyContext()
+
+
+class RoughnessMaterialPropertyOperation(SimpleMaterialPropertyOperation):
+
+    def assign_prop(self):
+        pass
+
+    def get_prop(self) -> Any:
+        pass
+
+class MetallicMaterialPropertyOperation(SimpleMaterialPropertyOperation):
+
+    def assign_prop(self):
+        pass
+
+    def get_prop(self) -> Any:
+        pass
+
 
 
 @OperationRegistry.register(PipeNames.MATERIAL.value)
