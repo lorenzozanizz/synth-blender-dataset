@@ -803,8 +803,8 @@ class ValueTargeter(EditorWidget):
     def extract_data(context) -> dict:
         scene = context.scene
         return {
-            "material": scene.targeted_value_node.mat_name,
-            "label": scene.targeted_value_node.node_label,
+            wsk.VALUE_MATERIAL.value: scene.targeted_value_node.mat_name,
+            wsk.VALUE_LABEL.value: scene.targeted_value_node.node_label,
         }
 
 

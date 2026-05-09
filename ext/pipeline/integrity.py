@@ -343,5 +343,30 @@ class ValueTargeterValidator(WidgetValidator):
 
     @staticmethod
     def validate(partial_config: dict) -> bool:
-        pass
+
+        material = partial_config[wsk.VALUE_MATERIAL.value]
+        if not material:
+            return False
+        try:
+            tree = bpy.data.materials.get(material)
+            label = partial_config[wsk.VALUE_LABEL.value]
+        except KeyError:
+            return False
+        UniqueLogger.quick_log("Tree label: " + tree.__str__() + " " + label.__str__())
+        if not tree or not tree.use_nodes:
+            return False
+        node_tree = tree.node_tree
+        found_node = None
+
+        for node in node_tree.nodes:
+            UniqueLogger.quick_log("Found node: " + node.label)
+            if node.label == label:
+                found_node = node
+                break
+
+        if not found_node:
+            return False
+        return True
+
+
 

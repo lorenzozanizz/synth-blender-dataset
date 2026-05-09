@@ -198,7 +198,10 @@ class RandomizeIntensityOperation(PipelineOperation):
 
         # Extract a value, then find the target node and change its value.
         value = self.distribution.sample()[0]
-        self.node.outputs[0].data.value = value
+        if self.offset_mode:
+            self.node.outputs[0].default_value += value
+        else:
+            self.node.outputs[0].default_value = value
 
     class PropertyValueContext:
 
