@@ -252,11 +252,12 @@ class TypedNodeCaptureOperator(Operator):
     bl_idname = Labels.CAPTURE_TYPED_NODE.value
     bl_label = "Capture a Typed node"
 
-    node_type: StringProperty(default="")           # type: ignore
+    node_type: StringProperty(default="")         # type: ignore
+    node_id: StringProperty(default="")           # type: ignore
 
     def execute(self, context):
         scene = context.scene
-        selected, mat_name = get_selected_node_and_material(self, context, self.node_type)
+        selected, mat_name = get_selected_node_and_material(self, context, self.node_id)
 
         if not selected:
             return { 'CANCELLED' }

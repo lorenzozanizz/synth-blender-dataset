@@ -262,3 +262,27 @@ class MoveAlongLineOperation(PipeDrawer):
         ObjectTargeter.draw(layout, context)
         typed = TypedObjectTargeter(obj_type="CURVE")
         typed.draw(layout, context)
+
+class SimpleMaterialPropertyEditor(PipeDrawer):
+
+    @staticmethod
+    def draw_editor(layout, context) -> None:
+        # Simple properties only have the distribution to edit.
+        typed_selector = TypedNodeTargeter(text="Shader Node:")
+        typed_selector.draw(layout, context)
+        NodeDistributionSelector.draw(layout, context, dim=1)
+
+@OperationDrawerRegistry.register(PipeNames.ROUGHNESS.value)
+class RoughnessEditor(SimpleMaterialPropertyEditor):
+    pass
+
+@OperationDrawerRegistry.register(PipeNames.METALLIC.value)
+class MetallicEditor(SimpleMaterialPropertyEditor):
+    pass
+
+@OperationDrawerRegistry.register(PipeNames.BASE_COLOR.value)
+class ColorEditor:
+
+    @staticmethod
+    def draw_editor(layout, context) -> None:
+        pass

@@ -107,14 +107,18 @@ class WidgetSerializationKeys(Enum):
     # Incomplete, a bit messy for now!
     PROPERTY = ""
 
+    SHADER_NODE    = "shader_node"
+    SHADER_MATERIAL             = "shader_mat"
+    SHADER_LABEL                = "label"
+
     VALUE   = "value"
     VALUE_MATERIAL              = "material"
     VALUE_LABEL                 = "label"
 
-    POSITION = "positions"
+    POSITION                    = "positions"   # Parent name
     POSITION_LIST               = "positions"
 
-    SIMPLE  = "distribution"
+    SIMPLE                      = "distribution" # ^ Parent name
     SIMPLE_PRESET_NAME          = "preset"
     SIMPLE_OFFSET_MODE          = "do_offset"
     SIMPLE_DISCRETIZE           = "do_discretize"

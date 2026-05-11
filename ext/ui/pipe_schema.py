@@ -253,16 +253,44 @@ class MaterialSimplePropertySchema(PipeSchema):
         return dic
 
 
-@PipeSchemaRegistry.register(PipeNames.METALLIC.value)
-class MetallicSchema(MaterialSimplePropertySchema):
-    pass
+class SimpleMaterialPropertySchema(PipeSchema):
+
+    @staticmethod
+    def extract_config_from_ui(context, operation) -> dict:
+        dic = {
+            wsk.SHADER_NODE.value: TypedNodeTargeter.extract_data(context),
+            wsk.NODE.value: NodeDistributionSelector.extract_data(context),
+        }
+        return dic
+
+    @staticmethod
+    def apply_config_to_ui(context, operation, config) -> None:
+        if not config:
+            NodeDistributionSelector.reset(context)
+            TypedNodeTargeter.reset(context)
+        else:
+            TypedNodeTargeter.setup_from_config(config[wsk.SHADER_NODE.value], context)
+            NodeDistributionSelector.setup_from_config(config["distribution"], context, dim=1)
+
 
 @PipeSchemaRegistry.register(PipeNames.ROUGHNESS.value)
-class RoughnessSchema(MaterialSimplePropertySchema):
+class RoughnessEditor(SimpleMaterialPropertySchema):
     pass
 
+@PipeSchemaRegistry.register(PipeNames.METALLIC.value)
+class MetallicEditor(SimpleMaterialPropertySchema):
+    pass
+
+@PipeSchemaRegistry.register(PipeNames.BASE_COLOR.value)
+class ColorEditor:
+
+    @staticmethod
+    def draw_editor(layout, context) -> None:
+        pass
+
+
 @PipeSchemaRegistry.register(PipeNames.INTENSITY.value)
-class RandomizeNodeIntensitySchema:
+class RandomizeNodeIntensitySchema(PipeSchema):
 
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:

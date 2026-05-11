@@ -1,8 +1,24 @@
 site_name: Gensynth Documentation & Tutorials
 theme:
   name: material
+  features:
+    - navigation.tabs              # Top tabs instead of sidebar
+    - navigation.tabs.sticky       # Tabs stay at top when scrolling
+    - navigation.instant           # Instant loading (no page reload)
+    - search.suggest               # Search suggestions
+    - search.highlight             # Highlight search results
+    - content.code.copy            # Copy button on code blocks
+    - toc.integrate                # Table of contents in sidebar
+  palette:
+    - scheme: default
+      primary: blue
+      accent: cyan
+  font:
+    text: Roboto
+    code: Roboto Mono
 nav:
   - Home: index.md
+  - Getting Started: setup.md
   - Architecture:
     - Overview: architecture/architecture_overview.md
     - Distributions: architecture/distributions.md
@@ -11,7 +27,6 @@ nav:
     - Serialization: architecture/serialization.md
     # ... more files coming
   - Tutorials:
-    - Setup: tutorials/00-setup.md
     - Classes & Entities: tutorials/01_classes_entities.md
     - Create Pipeline: tutorials/02_create_pipeline.md
     - Labeling: tutorials/03_labeling.md
@@ -20,4 +35,4 @@ nav:
     - Shader Randomization: tutorials/06_shader_randomize.md
     # ... more files coming
   - Examples:
-    - Product Classification: examples/00_prod_classification.md
+    - Product Classification: examples/01_prod_classification.md

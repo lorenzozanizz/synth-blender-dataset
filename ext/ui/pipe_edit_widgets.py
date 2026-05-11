@@ -311,7 +311,53 @@ class ImageTextureTargeter(EditorWidget):
         mat_prop = scene.targeted_node
         text_label = f"{mat_prop.mat_name} > {mat_prop.node_label}" if (mat_prop.mat_name and mat_prop.node_label) else "None"
         box.label(text=text_label, icon='OBJECT_DATA')
-        box.operator(Labels.CAPTURE_TYPED_NODE.value, text="Capture", icon='EYEDROPPER').node_type = 'ShaderNodeTexImage'
+        box.operator(Labels.CAPTURE_TYPED_NODE.value, text="Capture", icon='EYEDROPPER').node_id = 'ShaderNodeTexImage'
+
+class TypedNodeTargeter(EditorWidget):
+
+    def __init__(self, node_id: str = None, node_type: str = None, attributes: tuple[str] = None,
+                 text: str = "Node:"):
+        self.node_id = node_id
+        self.node_type = node_type
+        self.attributes = attributes
+
+        self.text = text
+
+    def draw(self, layout, context) -> None:
+
+        scene = context.scene
+        box = layout.box().row()
+        box.label(text=self.text)
+
+        mat_prop = scene.targeted_node
+        text_label = f"{mat_prop.mat_name} > {mat_prop.node_label}" if (
+                    mat_prop.mat_name and mat_prop.node_label) else "None"
+        box.label(text=text_label, icon='OBJECT_DATA')
+        if self.node_id:
+            box.operator(Labels.CAPTURE_TYPED_NODE.value, text="Capture", icon='EYEDROPPER').node_id = self.node_id
+        elif self.node_type:
+            box.operator(Labels.CAPTURE_TYPED_NODE.value, text="Capture", icon='EYEDROPPER').node_type = self.node_type
+
+    @staticmethod
+    def reset(context) -> None:
+        scene = context.scene
+        scene.targeted_node.mat_name = ""
+        scene.targeted_node.node_label = ""
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        scene = context.scene
+        scene.targeted_node.mat_name = config["material"]
+        scene.targeted_node.node_label = config["label"]
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        scene = context.scene
+        return {
+            "material": scene.targeted_node.mat_name,
+            "label": scene.targeted_node.node_label,
+        }
+
 
 #
 class PathListSelector(EditorWidget):
@@ -792,7 +838,7 @@ class ValueTargeter(EditorWidget):
         mat_prop = scene.targeted_node
         text_label = f"{mat_prop.mat_name} > {mat_prop.node_label}" if (mat_prop.mat_name and mat_prop.node_label) else "None"
         box.label(text=text_label, icon='OBJECT_DATA')
-        box.operator(Labels.CAPTURE_TYPED_NODE.value, text="Capture Selected", icon='EYEDROPPER').node_type = 'ShaderNodeValue'
+        box.operator(Labels.CAPTURE_TYPED_NODE.value, text="Capture Selected", icon='EYEDROPPER').node_id = 'ShaderNodeValue'
 
     @staticmethod
     def setup_from_config(config: dict, context) -> None:

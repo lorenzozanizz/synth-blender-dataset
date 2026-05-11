@@ -152,21 +152,28 @@ class SelectValidator(PipeValidator):
         obj_ok = ObjectTargeterValidator.validate(config[wsk.OBJECT.value])
         return obj_ok
 
-class MaterialPropertyValidator(PipeValidator):
+class SimpleMaterialPropertyValidator(PipeValidator):
+
     @staticmethod
     def validate(pipe: PipelineOperation, config: dict) -> bool:
-        dis_ok = NodeDistributionSelectorValidator.validate(partial_config=config[wsk.NODE.value])
-        mat_ok = MaterialSelectorValidator.validate(partial_config=config[wsk.MATERIAL.value])
-        return dis_ok and mat_ok
-
-
-@ValidatorRegistry.register(PipeNames.METALLIC.value)
-class MetallicValidator(MaterialPropertyValidator):
-    pass
+        sha_ok = LabeledNodeValidator.validate(config[wsk.SHADER_NODE.value])
+        dis_ok = NodeDistributionSelectorValidator.validate(config[wsk.SIMPLE.value])
+        return dis_ok and sha_ok
 
 @ValidatorRegistry.register(PipeNames.ROUGHNESS.value)
-class RoughnessValidator(MaterialPropertyValidator):
+class RoughnessEditor(SimpleMaterialPropertyValidator):
     pass
+
+@ValidatorRegistry.register(PipeNames.METALLIC.value)
+class MetallicEditor(SimpleMaterialPropertyValidator):
+    pass
+
+@ValidatorRegistry.register(PipeNames.BASE_COLOR.value)
+class ColorEditor:
+
+    @staticmethod
+    def draw_editor(layout, context) -> None:
+        pass
 
 @ValidatorRegistry.register(PipeNames.BEZIER_LOCK.value)
 class CameraBezierLockValidator(PipeValidator):
@@ -397,14 +404,12 @@ class LabeledNodeValidator(WidgetValidator):
             label = partial_config[wsk.VALUE_LABEL.value]
         except KeyError:
             return False
-        UniqueLogger.quick_log("Tree label: " + tree.__str__() + " " + label.__str__())
         if not tree or not tree.use_nodes:
             return False
         node_tree = tree.node_tree
         found_node = None
 
         for node in node_tree.nodes:
-            UniqueLogger.quick_log("Found node: " + node.label)
             if node.label == label:
                 found_node = node
                 break

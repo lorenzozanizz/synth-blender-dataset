@@ -406,8 +406,8 @@ class SimpleMaterialPropertyOperation(PipelineOperation):
     def compile(self, context, config: dict):
         self.distribution = SamplerCompiler.compile(config[wsk.NODE_DISTRIBUTION.value], dim=1)
 
-        node_label = config[wsk.VALUE.value][wsk.VALUE_LABEL.value]
-        material = config[wsk.VALUE.value][wsk.VALUE_MATERIAL.value]
+        node_label = config[wsk.SHADER_NODE.value][wsk.SHADER_LABEL.value]
+        material = config[wsk.SHADER_NODE.value][wsk.SHADER_MATERIAL.value]
         # Already extract the target node.
         material = bpy.data.materials.get(material)
         nodes = material.node_tree.nodes
@@ -425,7 +425,7 @@ class SimpleMaterialPropertyOperation(PipelineOperation):
         pass
 
     @abstractmethod
-    def get_prop(self) -> Any:
+    def get_prop(self, node: Any) -> Any:
         pass
 
     class SimplePropertyContext(ContextManager):
@@ -437,7 +437,7 @@ class SimpleMaterialPropertyOperation(PipelineOperation):
             self.set = set_prop
 
         def __enter__(self):
-            self.prop = self.get()
+            self.prop = self.get(self.node)
 
         def __exit__(self, exc_type, exc_val, exc_tb):
             # No offset, just reset the value to the initial value.
@@ -485,23 +485,47 @@ class SelectOperation(PipelineOperation):
             RandomizeVisibilityOperation.hide(obj)
 
 
-
+@OperationRegistry.register(PipeNames.ROUGHNESS.value)
 class RoughnessMaterialPropertyOperation(SimpleMaterialPropertyOperation):
 
     def set_prop(self, node: Any, value: Any, offset: bool) -> None:
-        pass
+        for inp in node.inputs:
+            if inp.name.lower() == 'roughness':
+                if offset:
+                    inp.default_value += value
+                else:
+                    inp.default_value = value
+                return
+        # Do nothing if the property is not found.
+        return
 
-    def get_prop(self) -> Any:
-        pass
 
+    def get_prop(self, node) -> Any:
+        for inp in node.inputs:
+            if inp.name.lower() == 'roughness':
+                return inp.default_value
+        return 0
 
+@OperationRegistry.register(PipeNames.METALLIC.value)
 class MetallicMaterialPropertyOperation(SimpleMaterialPropertyOperation):
 
     def set_prop(self, node: Any, value: Any, offset: bool) -> None:
-        pass
+        for inp in node.inputs:
+            if inp.name.lower() == 'metallic':
+                if offset:
+                    inp.default_value += value
+                else:
+                    inp.default_value = value
+                return
+        # Do nothing if the property is not found.
+        return
 
-    def get_prop(self) -> Any:
-        pass
+
+    def get_prop(self, node) -> Any:
+        for inp in node.inputs:
+            if inp.name.lower() == 'metallic':
+                return inp.default_value
+        return 0
 
 
 @OperationRegistry.register(PipeNames.MATERIAL.value)
