@@ -310,3 +310,12 @@ class LightTemperatureEditor(SimpleLightAttributeEditor):
 @OperationDrawerRegistry.register(PipeNames.POWER.value)
 class LightPowerEditor(SimpleLightAttributeEditor):
     pass
+
+@OperationDrawerRegistry.register(PipeNames.COLOR.value)
+class LightColorEditor(PipeDrawer):
+
+    @staticmethod
+    def draw_editor(layout, context) -> None:
+        typed_selector = TypedObjectTargeter(obj_type="LIGHT")
+        typed_selector.draw(layout, context)
+        ColorDistributionSelector.draw(layout, context)

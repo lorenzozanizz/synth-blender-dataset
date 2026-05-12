@@ -2,6 +2,7 @@ from typing import Union
 
 from ..operators.names import Labels
 from ..distribution.computation import Distribution
+from ..distribution.color import ColorDistribution
 from ..distribution.nodes import get_tree_dimensionality
 from ..constants import WidgetSerializationKeys
 from ..utils.logger import UniqueLogger
@@ -9,7 +10,8 @@ from ..utils.logger import UniqueLogger
 from abc import ABC, abstractmethod
 
 import bpy
-from bpy.props import StringProperty, FloatVectorProperty, PointerProperty
+from bpy.props import (StringProperty, FloatVectorProperty, PointerProperty, FloatProperty,
+                       EnumProperty, IntProperty, CollectionProperty)
 from bpy.types import UIList, PropertyGroup, Material
 
 wsk = WidgetSerializationKeys
@@ -105,6 +107,24 @@ class DistributionTreeList(UIList):
             row.label(text="Broken Tree Link", icon='ERROR')
 
 
+class PaletteItem(PropertyGroup):
+    """ Represents a single color item in a palette """
+    color: FloatVectorProperty(                             # type: ignore
+        name="Color",
+        description="RGBA color value",
+        subtype='COLOR',
+        size=4,
+        min=0.0,
+        max=1.0,
+        default=(1.0, 1.0, 1.0, 1.0)
+    )
+    weight: FloatProperty(                                  # type: ignore
+        name="Weight",
+        description="Selection weight for this color",
+        default=1.0,
+        min=0.0,
+        soft_max=10.0
+    )
 
 class EditorWidget(ABC):
     """
@@ -702,23 +722,264 @@ class SimplifiedDistributionSelector(EditorWidget):
 
 #
 class ColorDistributionSelector(EditorWidget):
+    """
+    Maps color distributions to their required properties.
+    Used for serialization and UI drawing.
+    """
+
+    _distribution_map = {
+        ColorDistribution.UNIFORM_COLOR.name: [],
+        ColorDistribution.UNIFORM_HSV.name: ['hsv_sat_min', 'hsv_sat_max', 'hsv_val_min', 'hsv_val_max'],
+        ColorDistribution.GAUSSIAN_RGB.name: ['base_color', 'gaussian_variance'],
+        ColorDistribution.PALETTE_SAMPLER.name: ['palette_items'],
+    }
+
+    _name_prefix = "color_dist_"
 
     @staticmethod
-    def draw(layout, context) -> None:
-        pass
-
-    @staticmethod
-    def extract_data(context) -> dict:
-        pass
-
-    @staticmethod
-    def setup_from_config(config: dict, context) -> None:
-        pass
+    def enum_name() -> str:
+        """Get the property name for the color distribution enum"""
+        return f"{ColorDistributionSelector._name_prefix}preset"
 
     @staticmethod
     def reset(context) -> None:
-        pass
+        """Reset all color distribution settings to defaults"""
+        scene = context.scene
 
+        setattr(scene, ColorDistributionSelector.enum_name(), 'NONE')
+
+        # Reset HSV properties
+        scene.color_dist_hsv_sat_min = 0.5
+        scene.color_dist_hsv_sat_max = 1.0
+        scene.color_dist_hsv_val_min = 0.7
+        scene.color_dist_hsv_val_max = 1.0
+
+        # Reset Gaussian properties
+        scene.color_dist_base_color = (1.0, 1.0, 1.0)
+        scene.color_dist_gaussian_variance = 0.1
+
+        # Clear palette
+        scene.color_dist_palette_items.clear()
+        scene.color_dist_palette_index = 0
+
+        # Clear gradient
+        scene.color_dist_gradient_items.clear()
+        scene.color_dist_gradient_index = 0
+
+    @staticmethod
+    def setup_from_config(config: dict, context) -> None:
+        """Configure color distribution from a dictionary"""
+        scene = context.scene
+        preset_name = config.get("preset", "NONE")
+        params = config.get("parameters", {})
+
+        setattr(scene, ColorDistributionSelector.enum_name(), preset_name)
+
+        # Configure HSV parameters
+        if "hsv_sat_min" in params:
+            scene.color_dist_hsv_sat_min = params["hsv_sat_min"]
+        if "hsv_sat_max" in params:
+            scene.color_dist_hsv_sat_max = params["hsv_sat_max"]
+        if "hsv_val_min" in params:
+            scene.color_dist_hsv_val_min = params["hsv_val_min"]
+        if "hsv_val_max" in params:
+            scene.color_dist_hsv_val_max = params["hsv_val_max"]
+
+        # Configure Gaussian parameters
+        if "base_color" in params:
+            scene.color_dist_base_color = params["base_color"]
+        if "gaussian_variance" in params:
+            scene.color_dist_gaussian_variance = params["gaussian_variance"]
+
+        # Configure palette
+        if "palette_items" in params:
+            scene.color_dist_palette_items.clear()
+            for item_data in params["palette_items"]:
+                item = scene.color_dist_palette_items.add()
+                item.color = item_data["color"]
+                item.weight = item_data["weight"]
+
+        # Configure gradient
+        if "gradient_items" in params:
+            scene.color_dist_gradient_items.clear()
+            for item_data in params["gradient_items"]:
+                item = scene.color_dist_gradient_items.add()
+                item.color = item_data["color"]
+                item.weight = item_data["weight"]
+
+    @staticmethod
+    def extract_data(context) -> dict:
+        """Extract complete color distribution configuration"""
+        scene = context.scene
+        preset = getattr(scene, ColorDistributionSelector.enum_name(), "NONE")
+
+        return {
+            "preset": preset,
+            "parameters": ColorDistributionSelector.extract_parameters(context)
+        }
+
+    @staticmethod
+    def extract_parameters(context) -> dict:
+        """Extract parameters for the selected color distribution"""
+        scene = context.scene
+        preset = (getattr(scene, ColorDistributionSelector.enum_name(), "") or "NONE").upper()
+
+        ret = {}
+
+        if preset == "NONE":
+            return ret
+
+        # Extract HSV parameters
+        if preset == ColorDistribution.UNIFORM_HSV.name:
+            ret["hsv_sat_min"] = scene.color_dist_hsv_sat_min
+            ret["hsv_sat_max"] = scene.color_dist_hsv_sat_max
+            ret["hsv_val_min"] = scene.color_dist_hsv_val_min
+            ret["hsv_val_max"] = scene.color_dist_hsv_val_max
+
+        # Extract Gaussian parameters
+        elif preset == ColorDistribution.GAUSSIAN_RGB.name:
+            ret["base_color"] = tuple(scene.color_dist_base_color)
+            ret["gaussian_variance"] = scene.color_dist_gaussian_variance
+
+        # Extract palette
+        elif preset == ColorDistribution.PALETTE_SAMPLER.name:
+            palette_items = []
+            for item in scene.color_dist_palette_items:
+                palette_items.append({
+                    "color": tuple(item.color),
+                    "weight": item.weight
+                })
+            ret["palette_items"] = palette_items
+
+        # Extract gradient
+        elif preset == ColorDistribution.GRADIENT_SAMPLER.name:
+            gradient_items = []
+            for item in scene.color_dist_gradient_items:
+                gradient_items.append({
+                    "color": tuple(item.color),
+                    "weight": item.weight
+                })
+            ret["gradient_items"] = gradient_items
+
+        return ret
+
+    @staticmethod
+    def draw(layout, context) -> None:
+        """Draw the color distribution selector UI"""
+        scene = context.scene
+        box = layout.box()
+        box.label(text="Color Distribution")
+
+        # Distribution preset selection
+        box.prop(scene, ColorDistributionSelector.enum_name())
+
+        preset = (getattr(scene, ColorDistributionSelector.enum_name(), "") or "NONE").upper()
+
+        if preset == "NONE":
+            box.label(text="No color distribution selected.")
+            return
+
+        # Draw distribution-specific UI
+        ColorDistributionSelector._draw_preset_options(box, scene, preset)
+
+    @staticmethod
+    def _draw_uniform_hsv(layout, scene):
+        box = layout.box()
+        box.label(text="HSV Constraints")
+
+        row = box.row(align=True)
+        row.prop(scene, "color_dist_hsv_sat_min")
+        row.prop(scene, "color_dist_hsv_sat_max")
+
+        row = box.row(align=True)
+        row.prop(scene, "color_dist_hsv_val_min")
+        row.prop(scene, "color_dist_hsv_val_max")
+
+    @staticmethod
+    def _draw_palette_sampler(layout, scene):
+        box = layout.box()
+        box.label(text="Color Palette")
+
+        # Palette list with add/remove buttons
+        row = box.row()
+        row.template_list(
+            "UI_UL_list", "color_dist_palette",
+            scene, "color_dist_palette_items",
+            scene, "color_dist_palette_index",
+            rows=4
+        )
+
+        # Add/Remove buttons
+        col = row.column(align=True)
+        col.operator("scene.color_palette_add", icon='ADD', text="")
+        col.operator("scene.color_palette_remove", icon='REMOVE', text="")
+
+        # Properties of active palette item
+        if scene.color_dist_palette_items:
+            active_item = scene.color_dist_palette_items[scene.color_dist_palette_index]
+
+            item_box = box.box()
+            item_box.label(text="Active Color")
+            item_box.prop(active_item, "color")
+            item_box.prop(active_item, "weight")
+
+    @staticmethod
+    def _draw_gradient_rgb(layout, scene):
+
+        box = layout.box()
+        box.label(text="Gradient Colors")
+        box.label(text="Colors are sampled continuously along the gradient", icon='INFO')
+
+        # Gradient list with add/remove buttons
+        row = box.row()
+        row.template_list(
+            "UI_UL_list", "color_dist_gradient",
+            scene, "color_dist_gradient_items",
+            scene, "color_dist_gradient_index",
+            rows=4
+        )
+
+        # Add/Remove buttons
+        col = row.column(align=True)
+        col.operator("scene.color_gradient_add", icon='ADD', text="")
+        col.operator("scene.color_gradient_remove", icon='REMOVE', text="")
+
+        # Properties of active gradient item
+        if scene.color_dist_gradient_items:
+            active_item = scene.color_dist_gradient_items[scene.color_dist_gradient_index]
+
+            item_box = box.box()
+            item_box.label(text="Active Color")
+            item_box.prop(active_item, "color")
+            item_box.label(text="Position (0 = start, 1 = end)")
+            item_box.prop(active_item, "weight")
+
+    @staticmethod
+    def _draw_gaussian_rgb(layout, scene):
+        box = layout.box()
+        box.label(text="Gaussian Parameters")
+
+        box.prop(scene, "color_dist_base_color")
+        box.prop(scene, "color_dist_gaussian_variance")
+
+    @staticmethod
+    def _draw_preset_options(layout, scene, preset: str) -> None:
+        """Draw UI elements specific to the selected distribution"""
+
+        if preset == ColorDistribution.UNIFORM_COLOR.name:
+            layout.label(text="No parameters required. Uniform distribution over all colors.", icon='INFO')
+
+        elif preset == ColorDistribution.UNIFORM_HSV.name:
+            ColorDistributionSelector._draw_uniform_hsv(layout, scene)
+
+        elif preset == ColorDistribution.GAUSSIAN_RGB.name:
+            ColorDistributionSelector._draw_gaussian_rgb(layout, scene)
+
+        elif preset == ColorDistribution.PALETTE_SAMPLER.name:
+            ColorDistributionSelector._draw_palette_sampler(layout, scene)
+
+        elif preset == ColorDistribution.GRADIENT_SAMPLER.name:
+            ColorDistributionSelector._draw_gradient_rgb(layout, scene)
 
 #
 class PositionListSelector(EditorWidget):

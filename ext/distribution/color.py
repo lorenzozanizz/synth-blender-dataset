@@ -135,8 +135,8 @@ class PresetColorSampler:
 
 class ColorDistribution(Enum):
     """ """
-    UNIFORM_COLOR   = "Uniform Color"
-    UNIFORM_HSV     = "Uniform HSV Color"
-    GAUSSIAN_RGB    = "Gaussian RGB Color"
-    PALETTE_SAMPLER = "Palette Sampler"
-
+    UNIFORM_COLOR       = "Uniform Color"
+    UNIFORM_HSV         = "Uniform HSV Color"
+    GAUSSIAN_RGB        = "Gaussian RGB Color"
+    PALETTE_SAMPLER     = "Palette Sampler"
+    GRADIENT_SAMPLER    = "Gradient RGB Sampler"

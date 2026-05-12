@@ -49,9 +49,9 @@ class Labels(Enum):
     CAPTURE_TEXTURE_NODE    = "randomizer.capture_texture"
     # ( Capture the currently selected objects, either a single one or a group )
     CAPTURE_OBJECTS         = "randomizer.capture_objects"
-    #
+    # ( Capture a node of a given shader node type )
     CAPTURE_TYPED_NODE      = "randomizer.capture_typed_node"
-
+    # ( Capture a single object of the given object type )
     TYPED_SINGLE_OBJ_CAPT   = "randomizer.typed_single_obj_capture"
     # ( Select the position of the cursor )
     ADD_CURSOR_POS          = "randomizer.select_cursor"
@@ -135,6 +135,15 @@ class Labels(Enum):
     REMOVE_DISTRIBUTION     = "randomizer.remove_distribution"
     # ( Add a distribution to the distribution selector list )
     ADD_DISTRIBUTION        = "randomizer.add_distribution"
+    # ( Add a new color to the random palette )
+    ADD_PALETTE_ITEM        = "randomizer.add_palette_item"
+    # ( Remove a color from the random palette)
+    REMOVE_PALETTE_ITEM     = "randomizer.remove_palette_item"
+    # ( Add a gradient item to the random spectrum of colors )
+    ADD_GRADIENT_ITEM       = "randomizer.add_gradient_item"
+    # ( Remove a gradient item to teh random spectrum of colors )
+    REMOVE_GRADIENT_ITEM    = "randomizer.remove_gradient_item"
+
 
     # ------------- Default namespace names ---------------
     # |

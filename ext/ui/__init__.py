@@ -2,9 +2,9 @@ from .panels import RandomizerPanel, SettingsPanel, InfoPanel
 from .pipeline_list_viewer import (RegistrationPanel, AddCameraCategoryPipeMenu, AddLightingCategoryPipeMenu,
                                    AddObjectCategoryPipeMenu, AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu,
                                    PipelineOperationsList, AddExperimentalCategoryPipeMenu)
-from .properties import ext_ui_properties, distribution_settings, operation_properties
+from .properties import ext_ui_properties, distribution_settings, operation_properties, color_distribution_settings
 from .pipe_editor import (DistributionTreeList, PathsUIList, ImagePath, PositionsUIList, ObjectName, TypedNodeProperty,
-                          ObjectPosition, MaterialListItem, MaterialUIList)
+                          ObjectPosition, MaterialListItem, MaterialUIList, PaletteItem)
 from .labeling_panel import LabelingPanel, LabelClassesUIList, ObjectLabelsUIList, LabelRulesUIList, NamedEntitiesUIList
 from .formatting_config import LabelConfigDataProperty
 
@@ -29,12 +29,13 @@ classes = (
     AddLightingCategoryPipeMenu, AddObjectCategoryPipeMenu, PipelineOperationsList, AddExperimentalCategoryPipeMenu,
     AddMaterialCategoryPipeMenu, AddConstraintCategoryPipeMenu, DistributionTreeList, PathsUIList,
     ImagePath, PositionsUIList, ObjectPosition, MaterialListItem, MaterialUIList, ObjectName, TypedNodeProperty,
-    LabelClassesUIList, ObjectLabelsUIList, LabelRulesUIList, NamedEntitiesUIList, LabelConfigDataProperty
+    LabelClassesUIList, ObjectLabelsUIList, LabelRulesUIList, NamedEntitiesUIList, LabelConfigDataProperty, PaletteItem
 )
 
 # Update the main UI properties of the pipeline with settings for the configuration of each pipe's distributions
 # and properties regarding the pipeline operations
 ext_ui_properties.update(operation_properties)
 ext_ui_properties.update(distribution_settings)
+ext_ui_properties.update(color_distribution_settings)
 
 properties = ext_ui_properties

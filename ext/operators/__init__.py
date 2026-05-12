@@ -8,7 +8,8 @@ from .pipeline_ops import (EditPipeOperator, PipeAddOperator, MenuOperator, Pipe
                            IntoFolderOperator, ViewTargetSelectedOperator, CaptureCursorPositionOperator,
                            TypedSingleObjectTargeter, TypedNodeCaptureOperator)
 from .distribution_ops import (AddDistributionOperator, RemoveDistributionOperator, AddImagePathOperator,
-                               RemoveImagePathOperator)
+                               RemoveImagePathOperator, ColorGradientRemoveOperator, ColorGradientAddOperator,
+                               ColorPaletteAddOperator, ColorPaletteRemoveOperator)
 from .core_ops import GenerateOperator, PreviewOperator
 from .labeling_ops import (AddLabelRuleOperator, RemoveLabelRuleOperator, AddLabelClassOperator, RemoveObjectLabelOperator,
                            AddObjectLabelOperator, RemoveLabelClassOperator, TargetObjectsLabelOperator,

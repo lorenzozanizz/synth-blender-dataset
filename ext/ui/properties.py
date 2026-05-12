@@ -14,8 +14,9 @@ from bpy.props import (
 )
 
 from .formatting_config import LabelConfigDataProperty
-from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TypedNodeProperty
+from .pipe_editor import ImagePath, ObjectPosition, MaterialListItem, ObjectName, TypedNodeProperty, PaletteItem
 from ..distribution.computation import ONE_D_DISTRIBUTIONS, UPPER_D_DISTRIBUTIONS
+from ..distribution.color import ColorDistribution
 from ..core.io.strategies import SupportedFormats
 
 # UI properties for the main panel, output panel and class panel.
@@ -194,4 +195,76 @@ distribution_settings = {
     # if its worth the hassle, for now keep that feature incomplete in this version!
     # 'dist_cov_matrix': ...
 
+}
+
+color_dist_enum = [
+    ('NONE', 'None', 'No color distribution'),
+    (ColorDistribution.UNIFORM_COLOR.name, ColorDistribution.UNIFORM_COLOR.value, 'Uniform Random RGB'),
+    (ColorDistribution.UNIFORM_HSV.name, ColorDistribution.UNIFORM_HSV.value, 'Uniform Random HSV'),
+    (ColorDistribution.GAUSSIAN_RGB.name, ColorDistribution.GAUSSIAN_RGB.value, 'Gaussian RGB'),
+    (ColorDistribution.PALETTE_SAMPLER.name, ColorDistribution.PALETTE_SAMPLER.value, 'Weighted Palette Sampling'),
+]
+
+color_distribution_settings = {
+    'color_dist_preset': EnumProperty(
+        name="Color Distribution",
+        description="Select a color distribution method",
+        items=color_dist_enum,
+        default='NONE'
+    ),
+    'color_dist_hsv_sat_min': FloatProperty(
+        name="Saturation Min",
+        description="Minimum saturation value",
+        default=0.5,
+        min=0.0,
+        max=1.0
+    ),
+    'color_dist_hsv_sat_max': FloatProperty(
+        name="Saturation Max",
+        description="Maximum saturation value",
+        default=1.0,
+        min=0.0,
+        max=1.0
+    ),
+    'color_dist_hsv_val_min': FloatProperty(
+        name="Value Min",
+        description="Minimum value (brightness)",
+        default=0.7,
+        min=0.0,
+        max=1.0
+    ),
+    'color_dist_hsv_val_max': FloatProperty(
+        name="Value Max",
+        description="Maximum value (brightness)",
+        default=1.0,
+        min=0.0,
+        max=1.0
+    ),
+    'color_dist_base_color': FloatVectorProperty(
+        name="Base Color",
+        description="Center color for Gaussian distribution",
+        subtype='COLOR',
+        size=3,
+        min=0.0,
+        max=1.0,
+        default=(1.0, 1.0, 1.0)
+    ),
+    'color_dist_gaussian_variance': FloatProperty(
+        name="Variance",
+        description="Standard deviation for Gaussian distribution",
+        default=0.1,
+        min=0.0,
+        soft_max=1.0
+    ),
+    'color_dist_palette_items': CollectionProperty(
+        type=PaletteItem,
+        name="Palette Colors",
+        description="Colors and weights for palette-based sampling"
+    ),
+    'color_dist_palette_index': IntProperty(
+        name="Palette Index",
+        description="Active palette item index",
+        min=0,
+        default=0
+    )
 }

@@ -368,4 +368,5 @@ class AddExperimentalCategoryPipeMenu(Menu):
 
     def draw(self, context):
         layout = self.layout
+        layout.label(text='Experimental Operations')
 
