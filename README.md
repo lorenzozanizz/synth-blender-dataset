@@ -1,4 +1,4 @@
-# Gensynth
+# Rendersynth
 
 [![Documentation](https://img.shields.io/badge/docs-mkdocs-blue)](https://lorenzozanizz.github.io/gensynth)
 [![Architecture](https://img.shields.io/badge/architecture-docs-informational)](./docs/architecture)
