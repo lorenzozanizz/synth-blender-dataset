@@ -1,6 +1,6 @@
 from .names import Labels
 
-from ..pipeline.integrity import ValidatorRegistry
+from ..pipeline.integrity import PipelineScanner, ValidatorRegistry
 from ..utils.logger import UniqueLogger
 from ..ui.pipe_schema import PipeSchemaRegistry, PipeSchema
 
@@ -115,14 +115,7 @@ class ScanPipelineOperator(Operator):
     def execute(self, context):
         scene = context.scene
         pipeline = scene.pipeline_data
-        found_not_valid = 0
-        for pipe in pipeline.operations:
-            op_type = pipe.operation_type
-            validator = ValidatorRegistry.get(op_type)
-            config = loads(pipe.config)
-            if validator and not validator.validate(pipe, config):
-                pipe.valid = False
-                found_not_valid += 1
+        found_not_valid = PipelineScanner.scan(pipeline)
 
         self.report({ 'INFO' },
             f"Scanned {len(pipeline.operations)} operation{'s' if len(pipeline.operations) > 1 else ''}, "

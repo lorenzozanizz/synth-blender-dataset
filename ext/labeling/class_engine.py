@@ -31,6 +31,81 @@ class ClassificationEngine:
             ret_data[name] = components
         return ret_data
 
+    def extract_class_labels_data(self) -> Dict[str, Any]:
+        """
+                Fully serializes the labeling configuration into JSON-compatible format.
+                See extract_labels.py for implementation details.
+                """
+        label_data = self.ctx.scene.labeling_data
+        labels = label_data.direct_labels
+        classes = label_data.label_classes
+        mapping_rules = label_data.label_rules
+        entities = label_data.entities
+
+        # Serialize label classes
+        classes_data = []
+        for cls in classes:
+            classes_data.append({
+                "name": cls.name,
+                "class_id": cls.class_id,
+                "parent_id": cls.parent_id,
+                "color": list(cls.color),
+            })
+
+        # Serialize direct labels
+        direct_labels_data = []
+        for label in labels:
+            obj_names = [obj_name.obj_name for obj_name in label.obj_names]
+            direct_labels_data.append({
+                "assignment_id": label.assignment_id,
+                "obj_names": obj_names,
+                "class_id": label.class_id,
+                "is_entity": label.is_entity,
+            })
+
+        # Serialize label rules
+        rules_data = []
+        for rule in mapping_rules:
+            rule_entry = {
+                "rule_type": rule.rule_type,
+                "class_id": rule.class_id,
+            }
+
+            if rule.rule_type == 'MATERIAL':
+                rule_entry["material_name"] = rule.material_name
+            elif rule.rule_type == 'NAME_CONTAINS':
+                rule_entry["name_filter"] = rule.name_filter
+            elif rule.rule_type == 'COLLECTION':
+                rule_entry["collection_name"] = rule.collection_name
+
+            rules_data.append(rule_entry)
+
+        # Serialize entities
+        entities_data = []
+        for entity in entities:
+            obj_names = [obj_name.obj_name for obj_name in entity.obj_names]
+            entities_data.append({
+                "entity_id": entity.entity_id,
+                "entity_name": entity.entity_name,
+                "obj_names": obj_names,
+            })
+
+        # Compile complete configuration
+        serialized_data = {
+            "settings": {
+                "do_superclasses": label_data.do_superclasses,
+                "use_rules": label_data.use_rules,
+                "use_entities": label_data.use_entities,
+                "default_class": label_data.default_class,
+            },
+            "label_classes": classes_data,
+            "direct_labels": direct_labels_data,
+            "label_rules": rules_data,
+            "entities": entities_data,
+        }
+
+        return serialized_data
+
     def classify_visible_objects(self, target_blender_objects: Iterable[Any]) -> None:
         """
 

@@ -133,3 +133,24 @@ class AddFolderOperator(Operator):
         new_op.operation_type = "Folder"
         new_op.enabled = True
         return { 'FINISHED' }
+
+
+class VisualizeLandmarkConstellationOperator(Operator):
+    pass
+
+
+class InterruptConstellationOperator(Operator):
+    pass
+
+
+class SwitchLabelingTabOperator(Operator):
+
+    bl_idname = Labels.SWITCH_LABEL_SECTION.value
+    bl_label = "Switch Labeling mode"
+
+    tab: StringProperty()                               # type: ignore
+
+    def execute(self, context):
+
+        context.window_manager['labeling_tab'] = self.tab
+        return {'FINISHED'}

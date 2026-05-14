@@ -82,8 +82,6 @@ class Labels(Enum):
     LOAD_PIPELINE_JSON      = "randomizer.load_pipeline"
     # ( Open the log file directory using operative system utils. A bit messy on w11 noteblock )
     OPEN_LOG_DIRECTORY      = "randomizer.open_log_file"
-    # ( Switch the labeling section [UI operation] )
-    SWITCH_LABEL_SECTION    = "randomizer.switch_label_section"
 
     # ------------- Names inside graphical_ops.py ---------------
     # |
@@ -99,6 +97,8 @@ class Labels(Enum):
     PIPE_UP_OPERATION_      = "randomizer.up_operation"
     # ( Open the editor for the selected distribution in another workflow sidebar)
     OPEN_DISTRI_EDITOR      = "randomizer.open_distribution_editor"
+    # ( Switch the labeling section [UI operation] )
+    SWITCH_LABEL_SECTION    = "randomizer.switch_label_section"
 
     # ------------- Names inside labeling_ops.py ---------------
     # |

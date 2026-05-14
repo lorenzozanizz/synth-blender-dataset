@@ -5,6 +5,7 @@ from abc import ABCMeta, abstractmethod
 from enum import Enum
 from dataclasses import dataclass
 from typing import Union, Optional
+from json import loads
 
 import bpy
 
@@ -462,3 +463,30 @@ class LabeledNodeValidator(WidgetValidator):
         if not found_node:
             return False
         return True
+
+
+class PipelineScanner:
+    """
+
+    """
+
+    @staticmethod
+    def scan(pipeline_data) -> int:
+        """
+
+        :param pipeline_data:
+        :return:
+        """
+
+        found_not_valid = 0
+        for pipe in pipeline_data.operations:
+            op_type = pipe.operation_type
+            validator = ValidatorRegistry.get(op_type)
+            if not validator:
+                continue
+            config = loads(pipe.config)
+            validate_result = validator.validate(pipe, config)
+            pipe.valid = validate_result
+            if not validate_result:
+                found_not_valid += 1
+        return found_not_valid

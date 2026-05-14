@@ -338,9 +338,10 @@ class FocalLengthSchema(PipeSchema):
     @staticmethod
     def extract_config_from_ui(context, operation) -> dict:
         dic = {
-            wsk.NODE_DISTRIBUTION.value: NodeDistributionSelector.extract_data(context)
+            wsk.NODE_DISTRIBUTION.value: NodeDistributionSelector.extract_data(context, dim=1)
         }
         return dic
+
 
     @staticmethod
     def apply_config_to_ui(context, operation, config) -> None:
