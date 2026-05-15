@@ -27,6 +27,7 @@ nav:
     - Serialization: architecture/serialization.md
     # ... more files coming
   - Tutorials:
+    - Onboarding: tutorials/00_landing.md
     - Classes & Entities: tutorials/01_classes_entities.md
     - Create Pipeline: tutorials/02_create_pipeline.md
     - Labeling: tutorials/03_labeling.md
@@ -35,6 +36,7 @@ nav:
     - Shader Randomization: tutorials/06_shader_randomize.md
     # ... more files coming
   - Examples:
+    - Onboarding: examples/00_landing.md
     - Product Classification: examples/01_prod_classification.md
     - Image Segmentation: examples/02_image_segmentation.md
     - Pose Estimation: examples/03_pose_estimation.md

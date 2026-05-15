@@ -71,11 +71,18 @@ class LabelingOrchestrator:
         # Step 2] Extract the visible entities which are going to be bound and classified by the
         # extractor and classifier
 
-        res_x = int(self.ctx.scene.render.resolution_x * self.config.ray_casting_ratio)
-        res_y = int(self.ctx.scene.render.resolution_y * self.config.ray_casting_ratio)
+        # Provide a default value for certain parameters, le the extractor express its needs for ray
+        # casting.
+        casting_params = {
+            'resolution_x': int(self.ctx.scene.render.resolution_x * self.config.ray_casting_ratio),
+            'resolution_y': int(self.ctx.scene.render.resolution_y * self.config.ray_casting_ratio)
+        }
+        casting_params.update(self.extractor.ray_casting_needs())
+
         self.visible_objects = get_visible_objects_from_camera(
             self.ctx.scene, depsgraph, render_cfg.camera,
-            resolution_x=res_x, resolution_y=res_y, compute_mapping=True)
+            **casting_params, compute_mapping=True,
+        )
 
         # Compute the bbox/polygon/etc from the scene using the given camera and ray tracing
         self.classifier.classify_visible_objects(

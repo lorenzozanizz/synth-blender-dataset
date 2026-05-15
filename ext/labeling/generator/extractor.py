@@ -68,3 +68,6 @@ class Extractor(metaclass=ABCMeta):
         """ Get the mappings from object to bounding boxes """
         pass
 
+    def ray_casting_needs(self):
+        return {}
+

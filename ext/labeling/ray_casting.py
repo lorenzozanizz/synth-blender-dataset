@@ -47,10 +47,12 @@ class PolygonConvexHull:
 
 
 def get_visible_objects_from_camera(scene, depsgraph,
-                                    camera,
-                                    resolution_x: int = 4, resolution_y: int = 4,
-                                    num_ray: int = 0,
-                                    compute_mapping: bool = False,
+        camera,
+        resolution_x: int = 4, resolution_y: int = 4,
+        num_ray: int = 0,
+        compute_mapping: bool = False,
+        compute_dist: bool = False,
+        compute_normal: bool = False
     ) -> Union[Set[Any], Dict[Any, List]]:
     """
 
@@ -61,6 +63,8 @@ def get_visible_objects_from_camera(scene, depsgraph,
     :param resolution_y:
     :param num_ray:
     :param compute_mapping:
+    :param compute_dist:
+    :param compute_normal:
     :return:
     """
     # Get vectors which define view frustum of camera
@@ -84,7 +88,7 @@ def get_visible_objects_from_camera(scene, depsgraph,
     z_dir = top_left[2]
 
     hit_data = set()
-    bounding_boxes_mappings: Dict[Any, List[Tuple[int, int]]] = defaultdict(list)
+    bounding_boxes_mappings: Dict[Any, List] = defaultdict(list)
     # iterate over all X/Y coordinates
     for x in x_range:
         for y in y_range:
@@ -94,15 +98,33 @@ def get_visible_objects_from_camera(scene, depsgraph,
             pixel_vector.rotate(camera_quaternion)
             pixel_vector.normalize()
 
-            is_hit, _, _, _, hit_obj, _ = scene.ray_cast(depsgraph, camera_translation, pixel_vector)
+            is_hit, location, normal, _, hit_obj, _ = scene.ray_cast(depsgraph, camera_translation, pixel_vector)
 
-            if is_hit:
-                hit_data.add(hit_obj)
-                # Keep track of all hits
-                if compute_mapping:
-                    x_normalized = (x - top_left[0]) / (top_right[0] - top_left[0]) * 2 - 1
-                    y_normalized = (y - top_left[1]) / (bottom_left[1] - top_left[1]) * 2 - 1
+            if not is_hit:
+                continue
+            hit_data.add(hit_obj)
+            # Keep track of all hits
+            if compute_mapping:
+
+                init_tup: tuple = ()
+                # Compute normal if required
+                if compute_normal:
+
+                    init_tup += normal,
+                # Compute distance if required
+                if compute_dist:
+                    distance = (location - camera_translation).length
+                    init_tup += distance,
+
+                x_normalized = (x - top_left[0]) / (top_right[0] - top_left[0]) * 2 - 1
+                y_normalized = (y - top_left[1]) / (bottom_left[1] - top_left[1]) * 2 - 1
+
+                # Just keep track of tuples, do not burden API user with a list with 1 item.
+                if not compute_normal and not compute_dist:
                     bounding_boxes_mappings[hit_obj].append((x_normalized, y_normalized))
+                else:
+                    bounding_boxes_mappings[hit_obj].append( init_tup + ((x_normalized, y_normalized),) )
+
 
     if not compute_mapping:
         return hit_data
