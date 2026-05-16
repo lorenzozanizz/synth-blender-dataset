@@ -30,16 +30,24 @@ nav:
     - Pipeline Execution: architecture/pipeline_execution.md
     - Preview: architecture/preview.md
     - User Interface: architecture/ui.md
+    - Non-destructiveness: architecture/context_restoring.md
 
     # ... more files coming
   - Tutorials:
     - Onboarding: tutorials/00_landing.md
-    - Classes & Entities: tutorials/01_classes_entities.md
-    - Create Pipeline: tutorials/02_create_pipeline.md
-    - Labeling: tutorials/03_labeling.md
-    - Distributions: tutorials/04_distributions.md
-    - Create Labeling Formats: tutorials/05_new_label_format.md
-    - Shader Randomization: tutorials/06_shader_randomize.md
+    - 1 - Classes & Entities: tutorials/01_classes_entities.md
+    - 2 - Create Pipeline: tutorials/02_create_pipeline.md
+    - 3 - Labeling: tutorials/03_labeling.md
+    - 4 - Distributions: tutorials/04_distributions.md
+    - 5 - Create Labeling Formats: tutorials/05_new_label_format.md
+    - 6 - Shader Randomization: tutorials/06_shader_randomize.md
+    - 7 - Common Pitfalls: tutorials/07_common_pitfalls.md
+    - 8 - Matching Labeling and Formats: tutorials/08_matching_labeling_generation.md
+    - 9 - Batch Generation: tutorials/09_batch_generation.md
+    - 10 - Preview: tutorials/10_preview.md
+    - 11 - Importing and Exporting: tutorials/11_import_export.md
+    - 12 - Labeling Rigs and Key: tutorials/12_labeling_rigs.md
+
     # ... more files coming
   - Examples:
     - Onboarding: examples/00_landing.md

@@ -16,8 +16,14 @@ class SupportedFormats(Enum):
     PASCAL_VOC = "Pascal VOC"
     CVAT_XML_IMAGES = "CVAT XML Images"
 
+    # Point clouds .pcd with varying degrees of detail
+    PCD_CLASS_COLOR = "PCD Class Color"
+    PCD_CLASS = "PCD Class"
+    PCD = "PCD"
+
 
 from .coco_strategy import *
 from .yolo_strategy import *
 from .pascal_strategy import *
 from .cvat_xml_strategy import *
+from .pcloud_strategy import *

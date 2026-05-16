@@ -109,7 +109,7 @@ class Executor:
                             # Run generation pipeline (handles extraction + formatting)
                             self.labeling_orchestrator.process_shot(
                                 render_cfg,
-                                rendered_data_path=Path(write_path).name,
+                                rendered_data_path=write_path,
                                 depsgraph=self.ctx.evaluated_depsgraph_get()
                             )
 

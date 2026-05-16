@@ -160,7 +160,7 @@ class PreviewGenerator:
                     with TimingContext(self.timings, 'labeling'):
                         self.labeling_orchestrator.process_shot(
                             render_cfg=render_cfg,
-                            rendered_data_path=Path(self.path).name,
+                            rendered_data_path=self.path,
                             depsgraph=self.ctx.evaluated_depsgraph_get()
                         )
 

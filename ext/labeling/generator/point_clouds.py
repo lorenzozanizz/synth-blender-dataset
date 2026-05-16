@@ -1,4 +1,6 @@
 from typing import Callable
+import bpy
+from pathlib import Path
 
 from .data_structure import *
 
@@ -6,30 +8,34 @@ from ..ray_casting import (union_bounding_boxes, compute_camera_space_boxes, get
                            estimate_visibility_3d, compute_bbox_area, compute_area_ratio)
 from ..class_engine import ClassificationEngine
 from .extractor import Extractor, LabelData
+from ...utils.logger import UniqueLogger
 from ...utils.timer import TimingContext
 
 
-class BoundingBoxExtractor(Extractor):
+class PointCloudExtractor(Extractor):
     """ Encapsulates bbox extraction logic """
 
-    def __init__(self, context):
+    def __init__(self, context, extract_color=False):
         self.ctx = context
+        self.extract_color = extract_color
 
         self.timings: Dict[str, float] = dict()
         self.visible_objects = dict()
         self.visible_entities = dict()
         self.estimated_visibility = dict()
 
-
     def extract(self,
         visible_objects: Dict[Any, list],
         classifier: ClassificationEngine,
         entity_data,
         camera,
-        estimate_visibility: bool = True, **kwargs
+        estimate_visibility: bool = True,
+        rendered_shot_data: Any = None,
+        **kwargs
     ) -> LabelData:
         """
 
+        :param rendered_shot_data:
         :param visible_objects:
         :param classifier:
         :param entity_data:
@@ -39,6 +45,18 @@ class BoundingBoxExtractor(Extractor):
         :return:
         """
         ret_data = LabelData()
+
+        image_data = None
+        if self.extract_color:
+            if not rendered_shot_data:
+                raise RuntimeError("Cannot extract color for point cloud labeling without rendered shot data. ")
+            if img := bpy.data.images.get(rendered_shot_data):
+                bpy.data.images.remove(img)
+            bpy.ops.image.open(filepath=rendered_shot_data)
+            name = Path(rendered_shot_data).name
+            image_data = bpy.data.images[name]
+            UniqueLogger.quick_log(image_data.__str__())
+            UniqueLogger.quick_log(image_data.pixels.__str__())
 
         with (TimingContext(self.timings, 'labeling')):
 
@@ -59,6 +77,10 @@ class BoundingBoxExtractor(Extractor):
                     vis, orig_bbox = estimate_visibility_3d(
                         obj, camera, deps, self.ctx, self.ctx.scene.render, bbox, area_func=compute_bbox_area)
                     self.estimated_visibility[obj] = float(vis)
+
+                if self.extract_color:
+                    cloud_data = self.extract_color_data(image_data, cloud_data)
+
                 ret_data.add(
                     Label(obj.name, cls, point_cloud=cloud_data,
                           bbox=bbox, visibility=self.estimated_visibility.get(obj), annotation_type="bbox",
@@ -109,6 +131,11 @@ class BoundingBoxExtractor(Extractor):
                            area_func_1=compute_bbox_area, area_func_2=compute_bbox_area)
 
                 total_cloud = set.union(*(set(ps) for ps in clouds))
+
+                if self.extract_color:
+                    cloud_data = self.extract_color_data(image_data, cloud_data)
+
+
                 ret_data.add(
                     Label(entity_name, cls,
                           bbox=total_visible_bbox,
@@ -148,3 +175,33 @@ class BoundingBoxExtractor(Extractor):
     def get_bbox_entities(self) -> dict:
         """ Get the mappings from object to bounding boxes """
         return self.visible_entities
+
+    def extract_color_data(self, image: Any, cloud_data: Iterable) -> Iterable:
+        """
+
+        :param image:
+        :param cloud_data:
+        :return:
+        """
+        ps = set()
+        width = image.width
+        height = image.height
+        pixels = image.pixels
+        for p in cloud_data:
+            x_p = min(width, max(0, int((p[0] + 1) * width / 2)))
+            y_p = min(height, max(0, height - int((p[1] + 1) * height / 2)))
+            ps.add((p, self.get_rgb_color(pixels, x_p, y_p, width)))
+        return ps
+
+    @staticmethod
+    def get_rgb_color(pixels, x_p, y_p, width) -> tuple:
+        """
+
+        :param pixels:
+        :param x_p:
+        :param y_p:
+        :param width:
+        :return:
+        """
+        # Assume RGBA pixels...
+        return tuple(pixels[(y_p*width+x_p)*4:(y_p*width+x_p)*4+3])

@@ -78,6 +78,7 @@ class YoloFormatter(IOStrategy):
             self.marked_img_ids.add(shot_idx)
 
         return {
+            # Notice that geometry from the Label data is expressed in the camera centered -1..1 coordinate space.
             'bbox': convert_camera_centered_to_yolo(bbox),
             'id': label.cls.class_id
         }

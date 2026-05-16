@@ -89,6 +89,19 @@ class UltralyticsYoloConfigHandler(LabelConfigHandler):
         pass
 
 
+@LabelingConfigRegistry.register(SupportedFormats.PCD_CLASS_COLOR.value)
+class PCDClassColorConfigHandler(LabelConfigHandler):
+
+    @staticmethod
+    def draw(context, layout) -> None:
+        pass
+
+    @staticmethod
+    def extract(context) -> dict:
+        pass
+
+
+
 class LabelConfigDataProperty(PropertyGroup):
     """
 
