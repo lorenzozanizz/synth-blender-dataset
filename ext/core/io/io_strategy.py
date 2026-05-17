@@ -2,6 +2,7 @@ from abc import ABCMeta, abstractmethod
 from typing import Any
 from collections.abc import Collection
 from os import makedirs
+from contextlib import nullcontext, AbstractContextManager
 
 from ...labeling.generator.data_structure import *
 from ..configurations import RenderConfig, BatchMetadata, WritingConfig
@@ -124,3 +125,10 @@ class IOStrategy(metaclass=ABCMeta):
         """
         for directory in dirs:
             makedirs(directory, exist_ok=True)
+
+    @staticmethod
+    def get_context() -> AbstractContextManager:
+        # Default implementation: do nothing.
+        # If a particular strategy has to change the blender context, it must implement a
+        # side effect free context manager.
+        return nullcontext()

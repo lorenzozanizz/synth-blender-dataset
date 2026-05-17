@@ -12,6 +12,11 @@ This guarantee is implemented through a two-level context manager system that ev
 
 ## How it works
 
+What follows is a brief description of context mananaging in various aspects of the extension
+architecture. 
+
+### Operations and Pipeline execution
+
 Every operation class implements two methods:
 
 - `get_global_context()` returns a context manager that is entered once before the first frame of the batch and exited once after the last. It is responsible for capturing the pre-generation state of whatever the operation targets.
@@ -32,6 +37,13 @@ with NestedPipelineContext:
 Contexts are exited in reverse registration order (last-registered exits first), matching the natural expectation that the last thing applied is the first thing undone.
 
 If an exception is raised mid-batch — a render error, a missing object, anything — the `with` blocks still exit, and the try/finally in `Executor.execute` ensures `wm.progress_end()` is also called. Scene state restoration is not contingent on the batch completing successfully.
+
+### Writing and labeling
+
+When the orchestrator objects being generation, it merges the pipeline's `FullContext` with a context manager 
+extracted from the file writer object (the `IOManager`). The `IOManager` obtains the context manager of its inner `IOStrategy`, returning a 
+null (empty) context when no context is specified. This is used for example to temporarily edit the scene's compositor nodes when generating 
+depth maps and normal maps. 
 
 ---
 

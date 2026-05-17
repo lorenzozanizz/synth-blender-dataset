@@ -4,9 +4,12 @@ label generation process.
 
 Classes: LabelingOrchestrator
 """
+from contextlib import AbstractContextManager
+from typing import Dict, Collection, Any, Optional, Union
 
-
+from pathlib import Path
 from .configurations import LabelExtractionConfig, RenderConfig, GenerationConfig, BatchMetadata
+
 from .io import OutputWriter
 
 from ..labeling.generator import LabelData
@@ -14,10 +17,7 @@ from ..labeling.class_engine import ClassificationEngine
 from ..labeling.generator import Extractor, BoundingBoxExtractor
 from ..labeling.generator.point_clouds import PointCloudExtractor
 from ..labeling.ray_casting import get_visible_objects_from_camera
-
-from typing import Dict, Collection, Any, Optional, Union
-
-from pathlib import Path
+from ..utils.other import MultiContext
 
 
 class LabelingOrchestrator:
@@ -108,7 +108,7 @@ class LabelingOrchestrator:
 
         return
 
-    def begin_generation(self, gen_cfg: GenerationConfig) -> None:
+    def begin_generation(self, gen_cfg: GenerationConfig) -> AbstractContextManager:
         """
 
         :return:
@@ -120,6 +120,11 @@ class LabelingOrchestrator:
             self.classifier.get_classes()
         )
         self.writer.begin_batch(batch_metadata)
+
+        writing_ctx = self.writer.get_context()
+        extraction_ctx = self.extractor.get_context()
+
+        return MultiContext(writing_ctx, extraction_ctx)
 
     def end_generation(self) -> None:
         """ Hook for the end of generation of the orchestrator. Internally, this

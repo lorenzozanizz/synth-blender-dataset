@@ -2,6 +2,8 @@ from typing import Callable
 import bpy
 from pathlib import Path
 
+from jedi.inference.context import AbstractContext
+
 from .data_structure import *
 
 from ..ray_casting import (union_bounding_boxes, compute_camera_space_boxes, get_minimal_bounding_box_fast,

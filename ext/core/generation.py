@@ -1,7 +1,5 @@
 import random
 import bpy
-from pathlib import Path
-
 
 from ..pipeline.bpy_properties import PipelineData
 from ..pipeline.context import NestedPipelineContext
@@ -11,6 +9,7 @@ from .orchestrator import LabelingOrchestrator
 from .configurations import LabelExtractionConfig, GenerationConfig, WritingConfig, RenderConfig, BatchMetadata
 from .io import OutputWriter, IOStrategy
 from .io import LabelingFormatRegistry
+from ..utils.other import MultiContext
 
 
 class Executor:
@@ -76,10 +75,10 @@ class Executor:
             with update_viewport:
 
                 # Hint the labeling orchestrator that generation is commencing
-                self.labeling_orchestrator.begin_generation(self.parameters)
-
+                labeling_context = self.labeling_orchestrator.begin_generation(self.parameters)
                 full_context = self.compile_contexts()
-                with full_context:
+                # And join the two contextes together
+                with MultiContext(labeling_context, full_context):
 
                     for shot_idx in range(start_idx, start_idx + amount):
                         # Frame context enters/exits each iteration

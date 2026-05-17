@@ -8,7 +8,7 @@ Classes: Extractor
 
 from abc import abstractmethod, ABCMeta
 from typing import Any, Dict, Callable
-from collections.abc import Iterable
+from contextlib import nullcontext
 
 from .data_structure import *
 
@@ -81,4 +81,9 @@ class Extractor(metaclass=ABCMeta):
     @staticmethod
     def ray_casting_needs() -> dict[str, Any]:
         return {}
+
+    @staticmethod
+    def get_context():
+        # Default implementation
+        return nullcontext()
 

@@ -2,6 +2,7 @@ from collections.abc import Collection
 from pathlib import Path
 from os.path import join, isfile
 from os import listdir
+from contextlib import nullcontext, AbstractContextManager
 
 import re
 
@@ -137,6 +138,8 @@ class OutputWriter:
             return self._analyze_folder_last_index(self.get_image_folder(), prefix)
         return 0
 
+
+
     @staticmethod
     def _analyze_folder_last_index(path_root: str | Path, prefix) -> int:
         """ Analyze the given folder searching for all files with the correct name schema.
@@ -166,4 +169,10 @@ class OutputWriter:
         last_index = max(indices) if indices else -1
         next_index = last_index + 1
         return next_index
+
+    def get_context(self) -> AbstractContextManager:
+        if self.io_strategy is None:
+            return nullcontext()
+        else:
+            return self.io_strategy.get_context()
 

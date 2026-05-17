@@ -1,3 +1,4 @@
+from contextlib import AbstractContextManager
 from typing import Iterable, Any, Union, Callable
 
 import bpy
@@ -15,7 +16,9 @@ from .data_structure import *
 
 class PixelMapExtractor(Extractor):
 
-    def __init__(self, context):
+
+
+    def __init__(self, context, datatype: str='depth'):
         self.ctx = context
 
         self.timings: dict[str, float] = dict()
@@ -26,6 +29,7 @@ class PixelMapExtractor(Extractor):
         # Per pixel data map. This will be lazily initialized as a numpy array with required
         # pixel information.
         self.data_map = None
+        self.datatype = datatype
 
     def extract(self,
         visible_objects: dict[Any, list],
@@ -49,14 +53,10 @@ class PixelMapExtractor(Extractor):
         if self.data_map is None:
 
             pass
-        else:
-            # just a quick check, ensure the dimensions are still the same, just as a
-            # sanity check.
-            if img := bpy.data.images.get(self.path):
-                bpy.data.images.remove(img)
-            elif img := bpy.data.images.get(self._preview_name):
-                bpy.data.images.remove(img)
-            bpy.ops.image.open(filepath=self.path)
+        # just a quick check, ensure the dimensions are still the same, just as a
+        # sanity check.
+        if True:
+            pass
 
         with (TimingContext(self.timings, 'labeling')):
             pass
@@ -95,3 +95,31 @@ class PixelMapExtractor(Extractor):
 
     def ray_casting_needs(self):
         pass
+
+    class CompositorNodesContext:
+
+        def __init__(self, context, datatype: str):
+            self.data_type = datatype
+            self.ctx = context
+            self.prev_scene_use_nodes = None
+            self.prev_scene_render_layer_normal = None
+            self.prev_scene_render_layer_z = None
+
+        def __enter__(self):
+            scene = self.ctx.scene
+
+            # Initially extract the current render layer data.
+            self.prev_scene_use_nodes = scene.use_nodes
+            self.prev_scene_render_layer_z = scene.view_layers["ViewLayer"].use_pass_z
+            self.prev_scene_render_layer_normal = scene.view_layers["ViewLayer"].use_pass_normal
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            scene = self.ctx.scene
+
+            # First restore the previous scene render layer data.
+            scene.use_nodes = self.prev_scene_use_nodes
+            scene.view_layers["ViewLayer"].use_pass_z = self.prev_scene_render_layer_z
+            scene.view_layers["ViewLayer"].use_pass_normal = self.prev_scene_render_layer_normal
+
+    def get_context(self) -> AbstractContextManager:
+        return PixelMapExtractor.CompositorNodesContext(self.ctx, self.datatype)
