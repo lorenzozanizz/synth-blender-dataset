@@ -3,6 +3,8 @@ from typing import Iterable, Any, Union, Callable
 
 import bpy
 
+
+from ..compositing_utils import NodeCompositor
 from .. import Extractor, LabelData
 from ..class_engine import ClassificationEngine
 from ...utils.timer import TimingContext
@@ -18,18 +20,20 @@ class PixelMapExtractor(Extractor):
 
 
 
-    def __init__(self, context, datatype: str='depth'):
+    def __init__(
+        self, context, datatype: Literal['depth', 'normal'] ='depth', normalize_depth: bool = True,
+        black_near: bool = True
+    ):
         self.ctx = context
 
-        self.timings: dict[str, float] = dict()
-        self.visible_objects = dict()
-        self.visible_entities = dict()
-        self.estimated_visibility = dict()
-
+        self.timings = {}
         # Per pixel data map. This will be lazily initialized as a numpy array with required
         # pixel information.
         self.data_map = None
+
+        self.black_near = black_near
         self.datatype = datatype
+        self.normalized_depth = normalize_depth
 
     def extract(self,
         visible_objects: dict[Any, list],
@@ -65,10 +69,10 @@ class PixelMapExtractor(Extractor):
 
     def get_estimated_visibility(self) -> dict[Union[str, Any], float]:
         """ Get the estimated visibility for entities and objects """
-        return self.estimated_visibility
+        return {}
 
     def get_visible_entities(self):
-        return self.visible_entities.keys()
+        return ()
 
     def get_labeling_time(self) -> float:
         """ Get the time it took to compute the boxes and the visible objects """
@@ -76,22 +80,19 @@ class PixelMapExtractor(Extractor):
 
     def get_visible_objects(self) -> Iterable[Any]:
         """ Get the visible objects """
-        return self.visible_objects.keys()
+        return ()
 
     def map_boxes(self, conv_func: Callable = None) -> Iterable[Any]:
         """ Get the camera centered bounding boxes """
-        if not conv_func:
-            return self.visible_objects.values()
-        else:
-            return (conv_func(bbox) for bbox in self.visible_objects.values())
+        return ()
 
     def get_bbox_objects(self) -> dict:
         """ Get the mappings from object to bounding boxes """
-        return self.visible_objects
+        return {}
 
     def get_bbox_entities(self) -> dict:
         """ Get the mappings from object to bounding boxes """
-        return self.visible_entities
+        return {}
 
     def ray_casting_needs(self):
         pass
@@ -104,12 +105,14 @@ class PixelMapExtractor(Extractor):
     # ! This code is very brittle to breaking changes in the Blender architecture !
     class CompositorNodesContext:
 
-        def __init__(self, context, datatype: str):
-            self.data_type = datatype
+        def __init__(self, context, config: dict):
+            self.config = config
             self.ctx = context
             self.prev_scene_use_nodes = None
             self.prev_scene_render_layer_normal = None
             self.prev_scene_render_layer_z = None
+
+            self.compositor = NodeCompositor(context=self.ctx)
 
         def __enter__(self):
             scene = self.ctx.scene
@@ -119,13 +122,60 @@ class PixelMapExtractor(Extractor):
             self.prev_scene_render_layer_z = scene.view_layers["ViewLayer"].use_pass_z
             self.prev_scene_render_layer_normal = scene.view_layers["ViewLayer"].use_pass_normal
 
+            if self.config.get('datatype') == 'depth':
+                # We have to instruct the rendering pass to preserve the depth data.
+                scene.view_layers["ViewLayer"].use_pass_z = True
+            elif self.config.get('datatype') == 'normal':
+                # We have to instruct the rendering pass to preserve the normal
+                scene.view_layers["ViewLayer"].use_pass_normal = True
+
+            # Create the composite nodes: first create tbe nodes, then link them together and
+            # finally set the node defaults (e.g. config the nodes)
+            self.compositor.gen_nodes(self.name_types_depth)
+            self.compositor.link_nodes(self.link_mappings_depth)
+            self.compositor.set_node_defaults(self.default_assignments_depth)
+
+            # Register the nodes together so that we can remove them at the same time when exiting
+            self.compositor.register_names_as_group('depth_tree', self.name_types_depth.keys())
+
         def __exit__(self, exc_type, exc_val, exc_tb):
             scene = self.ctx.scene
 
             # First restore the previous scene render layer data.
             scene.use_nodes = self.prev_scene_use_nodes
             scene.view_layers["ViewLayer"].use_pass_z = self.prev_scene_render_layer_z
+
             scene.view_layers["ViewLayer"].use_pass_normal = self.prev_scene_render_layer_normal
 
+            # Remove the composite nodes
+            self.compositor.delete_node_group('depth_tree')
+            self.compositor.unregister_group('depth_tree')
+
+        name_types_depth = {
+            'render_layer': ('CompositorNodeRLayers', []),
+            'file_output': ('CompositorNodeOutputFile', []),
+            'invert_node': ('CompositorNodeInvert', []),
+            'normalize_node': ('CompositorNodeNormalize', []),
+            'combine_node': ('CompositorNodeCombineColor', [])
+        }
+
+        link_mappings_depth = {
+            (('render_layer', 'normalize_node'), ('Depth', 0)),
+            (('normalize_node', 'combine_node'), (0, 2)),
+            (('combine_node', 'invert_node'), (0, 1)),
+            (('invert_node', 'file_output'), (0, 0))
+        }
+
+        default_assignments_depth = {
+            'file_output': (('base_path', ''), ),
+            'combine_node': (('mode', 'HSV'),)
+        }
+
+
     def get_context(self) -> AbstractContextManager:
-        return PixelMapExtractor.CompositorNodesContext(self.ctx, self.datatype)
+        config = {
+            'datatype': self.datatype,
+            'normalize_depth': self.normalized_depth,
+            'black_near': self.black_near,
+        }
+        return PixelMapExtractor.CompositorNodesContext(self.ctx, config)
