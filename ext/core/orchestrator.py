@@ -167,3 +167,6 @@ class LabelingOrchestrator:
     def get_io_timing(self) -> float:
         """ """
         pass
+
+    def prepare_for_shot(self, shot_idx):
+        pass

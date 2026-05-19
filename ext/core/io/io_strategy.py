@@ -1,7 +1,5 @@
 from abc import ABCMeta, abstractmethod
-from typing import Any
 from collections.abc import Collection
-from os import makedirs
 from contextlib import nullcontext, AbstractContextManager
 
 from ...labeling.generator.data_structure import *
@@ -10,6 +8,8 @@ from ..configurations import RenderConfig, BatchMetadata, WritingConfig
 # This is requierd here for typing purposes, for some reason pycharm does not detect
 # the dataclasses below with the reimport
 from dataclasses import dataclass
+
+from ...labeling.writing_folder_structure import FolderStructure
 
 
 @dataclass
@@ -46,7 +46,7 @@ class FormatSpecification:
 file_type = str
 extension = str
 
-class IOStrategy(metaclass=ABCMeta):
+class IOStrategy(metaclass=ABCMeta, FolderStructure):
     """Define what a format needs; don't directly write files"""
 
     def __init__(self, write_config: WritingConfig, format_config: dict) -> None:
@@ -105,26 +105,6 @@ class IOStrategy(metaclass=ABCMeta):
     def get_storage_spec(self) -> StorageSpec:
         """Declare directory structure and naming"""
         pass
-
-    @abstractmethod
-    def get_subdir_for(self, shot_id: Union[int, ], f_type: file_type | Literal["image"]) -> str:
-        pass
-
-    @abstractmethod
-    def get_filename_for(self, shot_id: Union[int,  ], f_type: file_type | Literal["image"]) -> str:
-        pass
-
-    @abstractmethod
-    def ensure_directories(self) -> None:
-        """ Create all the required directories for the given IO strategy """
-        pass
-
-    @staticmethod
-    def _make_dirs(dirs: list[str]) -> None:
-        """
-        """
-        for directory in dirs:
-            makedirs(directory, exist_ok=True)
 
     @staticmethod
     def get_context() -> AbstractContextManager:

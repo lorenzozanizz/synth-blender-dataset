@@ -101,6 +101,8 @@ class Executor:
                             # require to sample the pixel colors directly from the rendered scene!
                             write_path = self.writer.get_image_write_path()
 
+                            self.labeling_orchestrator.prepare_for_shot(shot_idx=shot_idx)
+
                             # Renders
                             scene.render.filepath = write_path
                             bpy.ops.render.render(write_still=True)
