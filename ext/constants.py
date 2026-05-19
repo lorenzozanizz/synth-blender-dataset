@@ -46,6 +46,7 @@ class PipeNames(Enum):
     LINE        = "Line"
     SELECT      = "Select"
     SPHERICAL   = "Sphere"          # (x)
+    SCATTER     = "Scatter"         # (x)
 
     # Material
     MATERIAL    = "Material"

@@ -103,53 +103,7 @@ class PixelMapExtractor(Extractor):
     # was very helpful in the basics, and Blender's console was used to infer the
     # nodes IDs.
     # ! This code is very brittle to breaking changes in the Blender architecture !
-    class CompositorNodesContext:
-
-        def __init__(self, context, config: dict):
-            self.config = config
-            self.ctx = context
-            self.prev_scene_use_nodes = None
-            self.prev_scene_render_layer_normal = None
-            self.prev_scene_render_layer_z = None
-
-            self.compositor = NodeCompositor(context=self.ctx)
-
-        def __enter__(self):
-            scene = self.ctx.scene
-
-            # Initially extract the current render layer data.
-            self.prev_scene_use_nodes = scene.use_nodes
-            self.prev_scene_render_layer_z = scene.view_layers["ViewLayer"].use_pass_z
-            self.prev_scene_render_layer_normal = scene.view_layers["ViewLayer"].use_pass_normal
-
-            if self.config.get('datatype') == 'depth':
-                # We have to instruct the rendering pass to preserve the depth data.
-                scene.view_layers["ViewLayer"].use_pass_z = True
-            elif self.config.get('datatype') == 'normal':
-                # We have to instruct the rendering pass to preserve the normal
-                scene.view_layers["ViewLayer"].use_pass_normal = True
-
-            # Create the composite nodes: first create tbe nodes, then link them together and
-            # finally set the node defaults (e.g. config the nodes)
-            self.compositor.gen_nodes(self.name_types_depth)
-            self.compositor.link_nodes(self.link_mappings_depth)
-            self.compositor.set_node_defaults(self.default_assignments_depth)
-
-            # Register the nodes together so that we can remove them at the same time when exiting
-            self.compositor.register_names_as_group('depth_tree', self.name_types_depth.keys())
-
-        def __exit__(self, exc_type, exc_val, exc_tb):
-            scene = self.ctx.scene
-
-            # First restore the previous scene render layer data.
-            scene.use_nodes = self.prev_scene_use_nodes
-            scene.view_layers["ViewLayer"].use_pass_z = self.prev_scene_render_layer_z
-
-            scene.view_layers["ViewLayer"].use_pass_normal = self.prev_scene_render_layer_normal
-
-            # Remove the composite nodes
-            self.compositor.delete_node_group('depth_tree')
-            self.compositor.unregister_group('depth_tree')
+    class CompositorDepthContext:
 
         name_types_depth = {
             'render_layer': ('CompositorNodeRLayers', []),
@@ -171,11 +125,130 @@ class PixelMapExtractor(Extractor):
             'combine_node': (('mode', 'HSV'),)
         }
 
+        def __init__(self, context, config: dict):
+            self.config = config
+            self.ctx = context
+            self.prev_scene_use_nodes = None
+            self.prev_scene_render_layer_z = None
+
+            self.compositor = NodeCompositor(context=self.ctx)
+
+        def __enter__(self):
+            scene = self.ctx.scene
+
+            # Initially extract the current render layer data.
+            self.prev_scene_use_nodes = scene.use_nodes
+            self.prev_scene_render_layer_z = scene.view_layers["ViewLayer"].use_pass_z
+            self.prev_scene_render_layer_normal = scene.view_layers["ViewLayer"].use_pass_normal
+
+            # We have to instruct the rendering pass to preserve the depth data.
+            scene.view_layers["ViewLayer"].use_pass_z = True
+
+            # Create the composite nodes: first create tbe nodes, then link them together and
+            # finally set the node defaults (e.g. config the nodes)
+            self.compositor.gen_nodes(self.name_types_depth)
+            self.compositor.link_nodes(self.link_mappings_depth)
+            self.compositor.set_node_defaults(self.default_assignments_depth)
+
+            # Register the nodes together so that we can remove them at the same time when exiting
+            self.compositor.register_names_as_group('depth_tree', self.name_types_depth.keys())
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            scene = self.ctx.scene
+
+            # First restore the previous scene render layer data.
+            scene.use_nodes = self.prev_scene_use_nodes
+            scene.view_layers["ViewLayer"].use_pass_z = self.prev_scene_render_layer_z
+
+            # Remove the composite nodes
+            self.compositor.delete_node_group('depth_tree')
+            self.compositor.unregister_group('depth_tree')
+
+
+    class CompositorNormalContext:
+
+        name_types_normals = {
+            'render_layer': ('CompositorNodeRLayers', []),
+            'file_output': ('CompositorNodeOutputFile', []),
+            'normalize_node': ('ShaderNodeVectorMath', [{"name": "operation", "value": "NORMALIZE"}]),
+            'add_node': ('ShaderNodeVectorMath', [{"name": "operation", "value": "ADD"}]),
+            'multiply_node': ('ShaderNodeVectorMath', [{"name": "operation", "value": "MULTIPLY"}]),
+            'separate_xyz': ('ShaderNodeSeparateXYZ', []),
+            'combine_color': ('CompositorNodeCombineColor', [])
+        }
+
+        link_mappings_normals = {
+            (('render_layer', 'normalize_node'), ('Normal', 0)),
+            (('normalize_node', 'add_node'), (0, 0)),
+            (('add_node', 'multiply_node'), (0, 0)),
+            (('multiply_node', 'separate_xyz'), (0, 0)),
+            (('separate_xyz', 'combine_color'), (0, 0)),
+            (('separate_xyz', 'combine_color'), (1, 1)),
+            (('separate_xyz', 'combine_color'), (2, 2)),
+            (('combine_color', 'file_output'), (0, 0))
+        }
+
+        default_assignments_normal = {
+            'add_node': (
+                (1, 0, 1.0),
+                (1, 1, 1.0),
+                (1, 2, 1.0),
+            ),
+            'multiply_node': (
+                (1, 0, 0.5),
+                (1, 1, 0.5),
+                (1, 2, 0.5),
+            ),
+            'file_output': (
+                ('base_path', 'C:/Users/picul/Documents/Generations/'),
+            )
+        }
+
+        def __init__(self, context, config: dict):
+            self.config = config
+            self.ctx = context
+            self.prev_scene_use_nodes = None
+            self.prev_scene_render_layer_normal = None
+
+            self.compositor = NodeCompositor(context=self.ctx)
+
+        def __enter__(self):
+            scene = self.ctx.scene
+
+            # Initially extract the current render layer data.
+            self.prev_scene_use_nodes = scene.use_nodes
+            self.prev_scene_render_layer_z = scene.view_layers["ViewLayer"].use_pass_z
+            self.prev_scene_render_layer_normal = scene.view_layers["ViewLayer"].use_pass_normal
+
+            # We have to instruct the rendering pass to preserve the normal
+            scene.view_layers["ViewLayer"].use_pass_normal = True
+
+            # Create the composite nodes: first create tbe nodes, then link them together and
+            # finally set the node defaults (e.g. config the nodes)
+            self.compositor.gen_nodes(self.name_types_normals)
+            self.compositor.link_nodes(self.link_mappings_normals)
+            self.compositor.set_node_defaults(self.default_assignments_normal)
+
+            # Register the nodes together so that we can remove them at the same time when exiting
+            self.compositor.register_names_as_group('normal', self.name_types_normals.keys())
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            scene = self.ctx.scene
+
+            # First restore the previous scene render layer data.
+            scene.use_nodes = self.prev_scene_use_nodes
+            scene.view_layers["ViewLayer"].use_pass_normal = self.prev_scene_render_layer_normal
+
+            # Remove the composite nodes
+            self.compositor.delete_node_group('normal')
+            self.compositor.unregister_group('normal')
 
     def get_context(self) -> AbstractContextManager:
         config = {
-            'datatype': self.datatype,
             'normalize_depth': self.normalized_depth,
             'black_near': self.black_near,
         }
-        return PixelMapExtractor.CompositorNodesContext(self.ctx, config)
+        if self.datatype == 'depth':
+            return PixelMapExtractor.CompositorDepthContext(self.ctx, config)
+        else:
+            return PixelMapExtractor.CompositorNormalContext(self.ctx, config)
